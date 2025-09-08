@@ -1,4 +1,4 @@
-# Sistema Integral para Consultoría de Idiomas en Inglés
+# Sistema Integral para Consultora de Idiomas en Inglés
 
 Este proyecto es un sistema integral que automatiza la gestión de una consultora de idiomas en inglés. Permite registrar estudiantes, programar clases, rastrear progresos, manejar pagos y generar reportes, facilitando la administración y el seguimiento académico y financiero.
 
@@ -8,7 +8,7 @@ Este proyecto es un sistema integral que automatiza la gestión de una consultor
   - Registro de datos personales.
   - Historial académico: asistencia, calificaciones y certificaciones.
   - Cursos y niveles de inglés (A1–C2).
-  - Búsquedas filtradas por estado (inscrito, en curso, graduado).
+  - Búsquedas filtradas por estado (inscripto, en curso, graduado).
 
 - **Gestión de Servicios (Cursos y Clases):**
   - Catálogo de cursos grupales, individuales y corporativos.
