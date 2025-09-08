@@ -60,7 +60,7 @@ Este proyecto es un sistema integral que automatiza la gestión de una consultor
 
 1. Clonar el repositorio
 ```bash
-git clone https://github.com/your-username/PPIV_Consultora_De_Idiomas.git
+git clone https://github.com/romarvz/PPIV_Consultora_De_Idiomas.git
 ```
 
 2. Instalar dependencias
