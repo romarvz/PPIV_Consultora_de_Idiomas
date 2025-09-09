@@ -51,7 +51,7 @@ Este proyecto es un sistema integral que automatiza la gestión de una consultor
 
 ## Tecnologías
 
-- **Frontend:** React.js
+- **Frontend:** React.js + Vite
 - **Backend:** Node.js
 - **Base de datos:** MongoDB
 - **Integración:** Firebase
@@ -82,7 +82,7 @@ npm install
 ```bash
 # Frontend
 cd client
-npm start
+npm run dev
 
 # Backend
 cd server
@@ -100,10 +100,15 @@ El proyecto sigue una arquitectura cliente-servidor con separación clara de res
 
 ## Scripts Disponibles
 
-- `npm run dev`: Inicia el servidor de desarrollo
+### Frontend (client/)
+- `npm run dev`: Inicia el servidor de desarrollo con Vite
+- `npm run build`: Genera la versión de producción
+- `npm run preview`: Previsualiza la build de producción
+
+### Backend (server/)
+- `npm run dev`: Inicia el servidor de desarrollo con nodemon
 - `npm start`: Inicia la aplicación en producción
 - `npm test`: Ejecuta las pruebas
-- `npm run build`: Genera la versión de producción
 
 ## Contribución
 
