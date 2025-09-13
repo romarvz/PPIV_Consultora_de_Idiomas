@@ -69,12 +69,24 @@ git clone https://github.com/romarvz/PPIV_Consultora_De_Idiomas.git
 cd client
 npm install
 
+**Paquetes principales instalados en el frontend:**
+- axios
+- react-router-dom
+- @hookform/resolvers
+- react-hook-form
+- yup
 # Backend
 cd server
 npm install
 ```
 
 3. Configurar variables de entorno
+**Paquetes principales instalados en el backend:**
+- bcryptjs
+- jsonwebtoken
+- express-validator
+- helmet
+- morgan
 - Crear archivo `.env` en la raíz del proyecto
 - Añadir las variables necesarias (MongoDB URI, Firebase config, etc.)
 
