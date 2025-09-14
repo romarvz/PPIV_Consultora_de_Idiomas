@@ -48,6 +48,9 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Crear índice para email
+userSchema.index({ email: 1 });
+
 // Hash password antes de guardar
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();

@@ -1,0 +1,177 @@
+GUÍA COMPLETA DE APIs - CONSULTORA DE IDIOMAS
+PRUEBAS CON THUNDER CLIENT
+
+CONFIGURACIÓN INICIAL
+- Servidor: http://localhost:5000
+- Headers para JSON: Content-Type: application/json
+- Headers para autenticación: Authorization: Bearer [TOKEN]
+
+==========================================
+GESTIÓN DE USUARIOS
+==========================================
+
+1. REGISTRAR USUARIO
+Función: Crear cuenta nueva (estudiante, profesor, admin)
+
+URL: POST http://localhost:5000/api/auth/register
+Headers: Content-Type: application/json
+Body:
+{
+  "email": "estudiante@test.com",
+  "password": "Test123456",
+  "confirmPassword": "Test123456",
+  "firstName": "Maria",
+  "lastName": "Gonzalez",
+  "role": "estudiante"
+}
+
+Roles disponibles: estudiante, profesor, admin
+
+------------------------------------------
+
+2. LOGIN (INICIAR SESIÓN)
+Función: Autenticarse y obtener token
+
+URL: POST http://localhost:5000/api/auth/login
+Headers: Content-Type: application/json
+Body:
+{
+  "email": "estudiante@test.com",
+  "password": "Test123456"
+}
+
+Respuesta: Token JWT válido por 7 días
+
+------------------------------------------
+
+3. VER PERFIL
+Función: Obtener información del usuario logueado
+
+URL: GET http://localhost:5000/api/auth/profile
+Headers: 
+   Content-Type: application/json
+   Authorization: Bearer [TU_TOKEN]
+
+------------------------------------------
+
+4. ACTUALIZAR PERFIL
+Función: Modificar datos personales
+
+URL: PUT http://localhost:5000/api/auth/profile
+Headers: 
+   Content-Type: application/json
+   Authorization: Bearer [TU_TOKEN]
+Body:
+{
+  "firstName": "Maria José",
+  "lastName": "Gonzalez Silva",
+  "phone": "+54911123456"
+}
+
+------------------------------------------
+
+5. CAMBIAR CONTRASEÑA
+Función: Actualizar password
+
+URL: PUT http://localhost:5000/api/auth/change-password
+Headers: 
+   Content-Type: application/json
+   Authorization: Bearer [TU_TOKEN]
+Body:
+{
+  "currentPassword": "Test123456",
+  "newPassword": "NuevaPass123",
+  "confirmPassword": "NuevaPass123"
+}
+
+------------------------------------------
+
+6. LOGOUT (CERRAR SESIÓN)
+Función: Invalidar token actual
+
+URL: POST http://localhost:5000/api/auth/logout
+Headers: 
+   Content-Type: application/json
+   Authorization: Bearer [TU_TOKEN]
+
+------------------------------------------
+
+7. VERIFICAR TOKEN
+Función: Comprobar si el token es válido
+
+URL: GET http://localhost:5000/api/auth/verify-token
+Headers: 
+   Content-Type: application/json
+   Authorization: Bearer [TU_TOKEN]
+
+==========================================
+ENDPOINTS DE PRUEBA
+==========================================
+
+8. TEST GENERAL
+URL: GET http://localhost:5000/api/auth/test
+Headers: Sin headers especiales
+
+9. TEST BASE DE DATOS
+URL: GET http://localhost:5000/api/auth/db-test
+Headers: Sin headers especiales
+
+==========================================
+EJEMPLOS DE FLUJO COMPLETO
+==========================================
+
+FLUJO 1: NUEVO ESTUDIANTE
+1. Registro → Obtener token
+2. Ver perfil → Verificar datos
+3. Actualizar perfil → Agregar teléfono
+4. Cambiar contraseña → Mejorar seguridad
+5. Logout → Cerrar sesión
+
+FLUJO 2: USUARIO EXISTENTE
+1. Login → Obtener token
+2. Verificar token → Confirmar validez
+3. Ver perfil → Revisar información
+4. Logout → Cerrar sesión
+
+==========================================
+CASOS DE ERROR PARA PROBAR
+==========================================
+
+Errores de validación:
+- Email inválido: "email": "mal-formato"
+- Password débil: "password": "123"
+- Campos faltantes: Sin firstName
+
+Errores de autenticación:
+- Login con email inexistente
+- Login con password incorrecta
+- Token inválido o expirado
+
+Errores de permisos:
+- Crear admin sin ser admin
+- Acceder a perfil sin token
+
+==========================================
+NOTAS IMPORTANTES
+==========================================
+
+1. Guardar tokens: Copia el token del registro/login para usarlo en otras pruebas
+2. Orden de pruebas: Siempre registrar/login antes de probar endpoints protegidos
+3. Headers importantes: No olvides Authorization: Bearer [TOKEN]
+4. Roles: Admin puede crear otros admins, resto solo puede crear estudiantes
+5. Tokens expiran: Duran 7 días, después hay que hacer login otra vez
+
+==========================================
+PASOS EN THUNDER CLIENT
+==========================================
+
+Para cada prueba:
+1. Crear nueva request
+2. Seleccionar método (GET, POST, PUT)
+3. Copiar la URL
+4. Ir a pestaña Headers y agregar los headers necesarios
+5. Si es POST/PUT, ir a pestaña Body, seleccionar JSON y pegar el JSON
+6. Hacer clic en Send
+7. Revisar la respuesta
+
+¡Con esto pueden probar toda la funcionalidad de usuarios!
