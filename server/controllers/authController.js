@@ -28,7 +28,7 @@ const register = async (req, res) => {
     const validationError = handleValidationErrors(req, res);
     if (validationError) return validationError;
 
-    const { email, password, firstName, lastName, role, phone } = req.body;
+    const { email, password, firstName, lastName, role, phone, nivel, estadoAcademico, especialidades, tarifaPorHora, disponibilidad } = req.body;
 
     // Verificar si el usuario ya existe
     const existingUser = await userService.findUserByEmail(email);
@@ -59,6 +59,16 @@ const register = async (req, res) => {
       role: role || 'estudiante',
       phone
     };
+
+    // Agregar campos específicos según el rol
+    if (role === 'estudiante') {
+      if (nivel) userData.nivel = nivel;
+      if (estadoAcademico) userData.estadoAcademico = estadoAcademico;
+    } else if (role === 'profesor') {
+      if (especialidades) userData.especialidades = especialidades;
+      if (tarifaPorHora) userData.tarifaPorHora = tarifaPorHora;
+      if (disponibilidad) userData.disponibilidad = disponibilidad;
+    }
 
     const user = await userService.createUser(userData);
 
@@ -315,11 +325,187 @@ const logout = async (req, res) => {
   }
 };
 
+// @desc    Obtener estudiantes con filtros
+// @route   GET /api/auth/students
+// @access  Private (Admin/Profesor)
+const getStudents = async (req, res) => {
+  try {
+    const { nivel, estadoAcademico, page = 1, limit = 10 } = req.query;
+    
+    // Construir filtros
+    const filters = { role: 'estudiante' };
+    if (nivel) filters.nivel = nivel;
+    if (estadoAcademico) filters.estadoAcademico = estadoAcademico;
+    
+    // Paginación
+    const skip = (page - 1) * limit;
+    
+    const students = await userService.findUsersWithFilters(filters, skip, parseInt(limit));
+    const total = await userService.countUsersWithFilters(filters);
+    
+    res.json({
+      success: true,
+      data: {
+        students,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en getStudents:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// @desc    Obtener profesores con filtros
+// @route   GET /api/auth/professors
+// @access  Private (Admin)
+const getProfessors = async (req, res) => {
+  try {
+    const { especialidad, page = 1, limit = 10 } = req.query;
+    
+    // Construir filtros
+    const filters = { role: 'profesor' };
+    if (especialidad) filters.especialidades = { $in: [especialidad] };
+    
+    // Paginación
+    const skip = (page - 1) * limit;
+    
+    const professors = await userService.findUsersWithFilters(filters, skip, parseInt(limit));
+    const total = await userService.countUsersWithFilters(filters);
+    
+    res.json({
+      success: true,
+      data: {
+        professors,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en getProfessors:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// @desc    Actualizar información académica (estudiantes)
+// @route   PUT /api/auth/update-academic-info
+// @access  Private (Estudiante)
+const updateAcademicInfo = async (req, res) => {
+  try {
+    const validationError = handleValidationErrors(req, res);
+    if (validationError) return validationError;
+
+    const userId = req.user.id;
+    const { nivel, estadoAcademico } = req.body;
+
+    // Verificar que el usuario es estudiante
+    const user = await userService.findUserById(userId);
+    if (user.role !== 'estudiante') {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo los estudiantes pueden actualizar información académica',
+        code: 'UNAUTHORIZED_ROLE'
+      });
+    }
+
+    const updateData = {};
+    if (nivel) updateData.nivel = nivel;
+    if (estadoAcademico) updateData.estadoAcademico = estadoAcademico;
+
+    const updatedUser = await userService.updateUser(userId, updateData);
+
+    res.json({
+      success: true,
+      message: 'Información académica actualizada exitosamente',
+      data: {
+        user: updatedUser.toJSON()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en updateAcademicInfo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// @desc    Actualizar información de enseñanza (profesores)
+// @route   PUT /api/auth/update-teaching-info
+// @access  Private (Profesor)
+const updateTeachingInfo = async (req, res) => {
+  try {
+    const validationError = handleValidationErrors(req, res);
+    if (validationError) return validationError;
+
+    const userId = req.user.id;
+    const { especialidades, tarifaPorHora, disponibilidad } = req.body;
+
+    // Verificar que el usuario es profesor
+    const user = await userService.findUserById(userId);
+    if (user.role !== 'profesor') {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo los profesores pueden actualizar información de enseñanza',
+        code: 'UNAUTHORIZED_ROLE'
+      });
+    }
+
+    const updateData = {};
+    if (especialidades) updateData.especialidades = especialidades;
+    if (tarifaPorHora) updateData.tarifaPorHora = tarifaPorHora;
+    if (disponibilidad) updateData.disponibilidad = disponibilidad;
+
+    const updatedUser = await userService.updateUser(userId, updateData);
+
+    res.json({
+      success: true,
+      message: 'Información de enseñanza actualizada exitosamente',
+      data: {
+        user: updatedUser.toJSON()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en updateTeachingInfo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
   changePassword,
-  logout
+  logout,
+  getStudents,
+  getProfessors,
+  updateAcademicInfo,
+  updateTeachingInfo
 };

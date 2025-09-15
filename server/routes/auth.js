@@ -8,7 +8,11 @@ const {
   getProfile,
   updateProfile,
   changePassword,
-  logout
+  logout,
+  getStudents,
+  getProfessors,
+  updateAcademicInfo,
+  updateTeachingInfo
 } = require('../controllers/authController');
 
 // Importar middlewares
@@ -22,7 +26,9 @@ const {
   validateRegister,
   validateLogin,
   validateUpdateProfile,
-  validateChangePassword
+  validateChangePassword,
+  validateUpdateAcademicInfo,
+  validateUpdateTeachingInfo
 } = require('../validators/authValidators');
 
 
@@ -32,6 +38,50 @@ router.get('/test', (req, res) => {
     message: 'Auth routes working correctly',
     timestamp: new Date().toISOString()
   });
+});
+
+// ENDPOINT TEMPORAL PARA CREAR PRIMER ADMIN
+router.post('/create-first-admin', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Verificar si ya existe un admin
+    const existingAdmin = await User.findOne({ role: 'admin' });
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe un administrador'
+      });
+    }
+
+    // Crear primer admin
+    const adminData = {
+      email: 'admin@consultora.com',
+      password: 'Admin123456',
+      firstName: 'Super',
+      lastName: 'Admin',
+      role: 'admin'
+    };
+
+    const admin = new User(adminData);
+    await admin.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Primer administrador creado exitosamente',
+      data: {
+        email: admin.email,
+        role: admin.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Error creando primer admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando administrador'
+    });
+  }
 });
 
 router.get('/db-test', async (req, res) => {
@@ -91,5 +141,14 @@ router.get('/verify-token', authenticateToken, (req, res) => {
     }
   });
 });
+
+// Nuevas rutas para gestión de usuarios por rol
+router.get('/students', authenticateToken, getStudents);
+
+router.get('/professors', authenticateToken, requireAdmin, getProfessors);
+
+router.put('/update-academic-info', authenticateToken, validateUpdateAcademicInfo, updateAcademicInfo);
+
+router.put('/update-teaching-info', authenticateToken, validateUpdateTeachingInfo, updateTeachingInfo);
 
 module.exports = router;

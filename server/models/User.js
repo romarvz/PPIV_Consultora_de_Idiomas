@@ -37,6 +37,62 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  
+  // Campos específicos para ESTUDIANTES
+  nivel: {
+    type: String,
+    enum: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+    required: function() { 
+      return this.role === 'estudiante'; 
+    }
+  },
+  estadoAcademico: {
+    type: String,
+    enum: ['inscrito', 'en_curso', 'graduado', 'suspendido'],
+    default: function() { 
+      return this.role === 'estudiante' ? 'inscrito' : undefined; 
+    }
+  },
+  
+  // Campos específicos para PROFESORES
+  especialidades: [{
+    type: String,
+    enum: ['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol']
+  }],
+  tarifaPorHora: {
+    type: Number,
+    min: [0, 'La tarifa no puede ser negativa'],
+    required: function() { 
+      return this.role === 'profesor'; 
+    }
+  },
+  disponibilidad: {
+    lunes: [{ 
+      inicio: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+      fin: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ }
+    }],
+    martes: [{ 
+      inicio: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+      fin: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ }
+    }],
+    miercoles: [{ 
+      inicio: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+      fin: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ }
+    }],
+    jueves: [{ 
+      inicio: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+      fin: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ }
+    }],
+    viernes: [{ 
+      inicio: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+      fin: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ }
+    }],
+    sabado: [{ 
+      inicio: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+      fin: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ }
+    }]
+  },
+  
   createdAt: {
     type: Date,
     default: Date.now

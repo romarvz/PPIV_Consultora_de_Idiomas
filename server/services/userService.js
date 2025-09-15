@@ -28,10 +28,38 @@ async function getUserProfile(userId) {
   return await User.findById(userId).select('-password');
 }
 
+// Buscar usuario por ID (incluye password para validaciones)
+async function findUserById(userId) {
+  return await User.findById(userId);
+}
+
+// Actualizar usuario
+async function updateUser(userId, updateData) {
+  return await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
+}
+
+// Buscar usuarios con filtros
+async function findUsersWithFilters(filters, skip = 0, limit = 10) {
+  return await User.find(filters)
+    .select('-password')
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+}
+
+// Contar usuarios con filtros
+async function countUsersWithFilters(filters) {
+  return await User.countDocuments(filters);
+}
+
 module.exports = {
   createUser,
   findUserByEmail,
   validatePassword,
   generateToken,
-  getUserProfile
+  getUserProfile,
+  findUserById,
+  updateUser,
+  findUsersWithFilters,
+  countUsersWithFilters
 };

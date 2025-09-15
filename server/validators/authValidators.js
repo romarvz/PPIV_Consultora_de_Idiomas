@@ -43,8 +43,49 @@ const validateRegister = [
   
   body('phone')
     .optional()
-    .isMobilePhone('es-AR')
-    .withMessage('Número de teléfono inválido')
+    .custom((value) => {
+      if (!value) return true; // Si está vacío, está bien
+      // Permitir formatos más flexibles
+      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,15}$/;
+      if (!phoneRegex.test(value)) {
+        throw new Error('Número de teléfono inválido. Use entre 8-15 dígitos');
+      }
+      return true;
+    }),
+  
+  // Validaciones específicas para ESTUDIANTES
+  body('nivel')
+    .if(body('role').equals('estudiante'))
+    .isIn(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+    .withMessage('Nivel debe ser: A1, A2, B1, B2, C1 o C2'),
+    
+  body('estadoAcademico')
+    .if(body('role').equals('estudiante'))
+    .optional()
+    .isIn(['inscrito', 'en_curso', 'graduado', 'suspendido'])
+    .withMessage('Estado académico debe ser: inscrito, en_curso, graduado o suspendido'),
+  
+  // Validaciones específicas para PROFESORES
+  body('especialidades')
+    .if(body('role').equals('profesor'))
+    .isArray({ min: 1 })
+    .withMessage('Debe seleccionar al menos una especialidad'),
+    
+  body('especialidades.*')
+    .if(body('role').equals('profesor'))
+    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
+    .withMessage('Especialidad inválida'),
+    
+  body('tarifaPorHora')
+    .if(body('role').equals('profesor'))
+    .isFloat({ min: 0 })
+    .withMessage('La tarifa por hora debe ser un número mayor o igual a 0'),
+    
+  body('disponibilidad')
+    .if(body('role').equals('profesor'))
+    .optional()
+    .isObject()
+    .withMessage('Disponibilidad debe ser un objeto válido')
 ];
 
 // Validaciones para login
@@ -80,8 +121,14 @@ const validateUpdateProfile = [
   
   body('phone')
     .optional()
-    .isMobilePhone('es-AR')
-    .withMessage('Número de teléfono inválido')
+    .custom((value) => {
+      if (!value) return true;
+      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,15}$/;
+      if (!phoneRegex.test(value)) {
+        throw new Error('Número de teléfono inválido. Use entre 8-15 dígitos');
+      }
+      return true;
+    })
 ];
 
 // Validaciones para cambio de contraseña
@@ -105,9 +152,47 @@ const validateChangePassword = [
     })
 ];
 
+// Validaciones para actualizar información académica (estudiantes)
+const validateUpdateAcademicInfo = [
+  body('nivel')
+    .optional()
+    .isIn(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+    .withMessage('Nivel debe ser: A1, A2, B1, B2, C1 o C2'),
+    
+  body('estadoAcademico')
+    .optional()
+    .isIn(['inscrito', 'en_curso', 'graduado', 'suspendido'])
+    .withMessage('Estado académico debe ser: inscrito, en_curso, graduado o suspendido')
+];
+
+// Validaciones para actualizar información de enseñanza (profesores)
+const validateUpdateTeachingInfo = [
+  body('especialidades')
+    .optional()
+    .isArray({ min: 1 })
+    .withMessage('Debe seleccionar al menos una especialidad'),
+    
+  body('especialidades.*')
+    .optional()
+    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
+    .withMessage('Especialidad inválida'),
+    
+  body('tarifaPorHora')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('La tarifa por hora debe ser un número mayor o igual a 0'),
+    
+  body('disponibilidad')
+    .optional()
+    .isObject()
+    .withMessage('Disponibilidad debe ser un objeto válido')
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
   validateUpdateProfile,
-  validateChangePassword
+  validateChangePassword,
+  validateUpdateAcademicInfo,
+  validateUpdateTeachingInfo
 };
