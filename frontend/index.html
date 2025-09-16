@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard Consultora de Idiomas</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+
+    <body>
+        <!-- Login -->
+        <div class="login-container" id="login-container">
+            <h1>Consultora de Idiomas</h1>
+            <p>Selecciona tu rol para ingresar</p>
+            <button onclick="login('student')">Alumno</button>
+            <button onclick="login('teacher')">Docente</button>
+            <button onclick="login('admin')">Administrador</button>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard hidden" id="dashboard">
+            <aside class="sidebar">
+                <h2>Menú</h2>
+                <ul>
+                    <li onclick="showSection('inicio')">Inicio</li>
+                    <li onclick="showSection('clases')">Clases</li>
+                    <li onclick="showSection('pagos')">Pagos</li>
+                    <li onclick="showSection('perfil')">Perfil</li>
+                    <li onclick="logout()">Cerrar sesión</li>
+                </ul>
+            </aside>
+
+            <main class="main-content">
+                <section id="inicio" class="section">Bienvenido al dashboard</section>
+                <section id="clases" class="section hidden">Aquí verás tus próximas clases.</section>
+                <section id="pagos" class="section hidden">Aquí puedes ver tus pagos.</section>
+                <section id="perfil" class="section hidden">Aquí está tu perfil.</section>
+            </main>
+        </div>
+
+        <script src="script.js"></script>
+    </body>
+
+</html>
