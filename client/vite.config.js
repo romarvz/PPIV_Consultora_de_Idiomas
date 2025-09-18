@@ -7,5 +7,13 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     host: true
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        demo: 'public/demo.html'
+      }
+    }
   }
 })

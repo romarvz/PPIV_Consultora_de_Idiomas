@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { LogIn } from 'lucide-react'
 import './Login.css'
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, onBack }) => {
   const [credentials, setCredentials] = useState({
     email: '',
     password: ''
@@ -38,6 +38,11 @@ const Login = ({ onLogin }) => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
+          {onBack && (
+            <button onClick={onBack} className="back-button">
+              ← Volver
+            </button>
+          )}
           <h1 className="login-title">Lingua Academy</h1>
           <p className="login-subtitle">Sistema de Gestión de Idiomas</p>
         </div>

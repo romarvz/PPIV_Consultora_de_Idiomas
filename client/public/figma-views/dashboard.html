@@ -4,36 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Lingua Academy</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background-color: #f8fafc; color: #334155; }
-        .header { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .logo { color: #1e40af; font-size: 1.5rem; font-weight: 700; }
-        .user-info { display: flex; align-items: center; gap: 1rem; }
-        .btn { background: #e2e8f0; color: #334155; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; }
-        .nav-bar { background: white; border-bottom: 1px solid #e2e8f0; padding: 0 2rem; }
-        .nav-menu { display: flex; gap: 0; max-width: 1200px; margin: 0 auto; }
-        .nav-item { display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; color: #64748b; text-decoration: none; border-bottom: 2px solid transparent; font-size: 0.875rem; font-weight: 500; }
-        .nav-item.active { color: #1e40af; border-bottom-color: #1e40af; background: #f8fafc; }
-        .nav-icon { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-        .content { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .card { background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { display: flex; align-items: center; gap: 1rem; }
-        .stat-icon { width: 48px; height: 48px; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; color: white; }
-        .stat-value { font-size: 1.875rem; font-weight: 700; color: #0f172a; }
-        .stat-label { font-size: 0.875rem; color: #64748b; }
-        .alert { padding: 0.75rem; margin-bottom: 0.75rem; border-left: 4px solid; border-radius: 0.375rem; }
-        .alert-warning { background: #fef3c7; border-left-color: #f59e0b; color: #92400e; }
-        .alert-info { background: #dbeafe; border-left-color: #1e40af; color: #1e40af; }
-        .alert-success { background: #dcfce7; border-left-color: #10b981; color: #166534; }
-    </style>
+    <link rel="stylesheet" href="../css/figma-dashboard.css">
 </head>
 <body>
     <div class="header">
         <div class="logo">Lingua Academy</div>
         <div class="user-info">
-            <span style="color: #64748b;">Demo - Administrador</span>
+            <span class="user-role">Demo - Administrador</span>
             <button class="btn">Salir</button>
         </div>
     </div>
@@ -55,13 +32,13 @@
     </div>
 
     <div class="content">
-        <h1 style="font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Bienvenido, Administrador</h1>
-        <p style="color: #64748b; margin-bottom: 2rem;">Resumen de actividades del sistema</p>
+        <h1 class="page-title">Bienvenido, Administrador</h1>
+        <p class="page-subtitle">Resumen de actividades del sistema</p>
         
         <div class="stats-grid">
             <div class="card stat-card">
                 <div class="stat-icon" style="background: #1e40af;">
-                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.5;">
+                    <svg viewBox="0 0 24 24">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                     </svg>
@@ -73,7 +50,7 @@
             </div>
             <div class="card stat-card">
                 <div class="stat-icon" style="background: #10b981;">
-                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.5;">
+                    <svg viewBox="0 0 24 24">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                     </svg>
                 </div>
@@ -84,7 +61,7 @@
             </div>
             <div class="card stat-card">
                 <div class="stat-icon" style="background: #8b5cf6;">
-                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.5;">
+                    <svg viewBox="0 0 24 24">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                     </svg>
                 </div>
@@ -95,7 +72,7 @@
             </div>
             <div class="card stat-card">
                 <div class="stat-icon" style="background: #f59e0b;">
-                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.5;">
+                    <svg viewBox="0 0 24 24">
                         <line x1="12" y1="1" x2="12" y2="3"/>
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                     </svg>
@@ -108,7 +85,7 @@
         </div>
         
         <div class="card">
-            <h3 style="color: #0f172a; margin-bottom: 1rem;">Alertas y Notificaciones</h3>
+            <h3 class="section-title">Alertas y Notificaciones</h3>
             <div class="alert alert-warning">5 estudiantes con pagos vencidos</div>
             <div class="alert alert-info">3 profesores requieren actualización de disponibilidad</div>
             <div class="alert alert-success">12 nuevas inscripciones esta semana</div>

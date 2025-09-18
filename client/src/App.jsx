@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
 import Login from './components/Auth/Login'
+import LandingPage from './components/Landing/LandingPage'
 import Dashboard from './components/Dashboard/Dashboard'
 import StudentManagement from './components/Students/StudentManagement'
 import CourseManagement from './components/Courses/CourseManagement'
@@ -14,17 +15,28 @@ import './App.css'
 
 function App() {
   const [user, setUser] = useState(null)
+  const [showLogin, setShowLogin] = useState(false)
 
   const handleLogin = (userData) => {
     setUser(userData)
+    setShowLogin(false)
   }
 
   const handleLogout = () => {
     setUser(null)
+    setShowLogin(false)
+  }
+
+  const handleShowLogin = () => {
+    setShowLogin(true)
+  }
+
+  if (showLogin && !user) {
+    return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} />
   }
 
   if (!user) {
-    return <Login onLogin={handleLogin} />
+    return <LandingPage onLogin={handleShowLogin} />
   }
 
   return (
