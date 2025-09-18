@@ -1,0 +1,46 @@
+.companies-page {
+  padding: 20px;
+}
+
+.modal-content.large {
+  max-width: 800px;
+  width: 95%;
+}
+
+.company-form {
+  max-width: none;
+}
+
+.form-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+}
+
+.form-section h3 {
+  color: #2c3e50;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.text-muted {
+  color: #6c757d !important;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .modal-content.large {
+    width: 98%;
+    margin: 10px;
+  }
+  
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+}

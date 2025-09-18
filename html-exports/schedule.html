@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agenda - Sistema Integral</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background-color: #f5f5f5; padding: 20px; }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .page-header h1 { font-size: 28px; color: #2c3e50; margin: 0; }
+    
+    .header-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    
+    .view-selector {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary { background-color: #007bff; color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    
+    .schedule-calendar {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .calendar-header h2 {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 20px;
+    }
+    
+    .calendar-content { padding: 20px; }
+    
+    .week-view { display: flex; flex-direction: column; }
+    
+    .week-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background-color: #e9ecef;
+      margin-bottom: 10px;
+    }
+    
+    .day-header {
+      background-color: #f8f9fa;
+      padding: 15px 10px;
+      text-align: center;
+    }
+    
+    .day-name {
+      font-size: 12px;
+      color: #6c757d;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    
+    .day-number {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    .week-content {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      min-height: 400px;
+    }
+    
+    .day-column {
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 10px;
+      background-color: #fafafa;
+    }
+    
+    .class-item {
+      background-color: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 8px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .class-title {
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 2px;
+    }
+    
+    .class-time {
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Agenda de Clases</h1>
+    <div class="header-actions">
+      <div class="view-selector">
+        <button class="btn btn-secondary">Día</button>
+        <button class="btn btn-primary">Semana</button>
+        <button class="btn btn-secondary">Mes</button>
+      </div>
+      <button class="btn btn-primary">+ Programar Clase</button>
+    </div>
+  </div>
+
+  <div class="schedule-calendar">
+    <div class="calendar-header">
+      <button class="btn btn-secondary">←</button>
+      <h2>15/01/2024 - 21/01/2024</h2>
+      <button class="btn btn-secondary">→</button>
+    </div>
+
+    <div class="calendar-content">
+      <div class="week-view">
+        <div class="week-header">
+          <div class="day-header">
+            <div class="day-name">Dom</div>
+            <div class="day-number">14</div>
+          </div>
+          <div class="day-header">
+            <div class="day-name">Lun</div>
+            <div class="day-number">15</div>
+          </div>
+          <div class="day-header">
+            <div class="day-name">Mar</div>
+            <div class="day-number">16</div>
+          </div>
+          <div class="day-header">
+            <div class="day-name">Mié</div>
+            <div class="day-number">17</div>
+          </div>
+          <div class="day-header">
+            <div class="day-name">Jue</div>
+            <div class="day-number">18</div>
+          </div>
+          <div class="day-header">
+            <div class="day-name">Vie</div>
+            <div class="day-number">19</div>
+          </div>
+          <div class="day-header">
+            <div class="day-name">Sáb</div>
+            <div class="day-number">20</div>
+          </div>
+        </div>
+        
+        <div class="week-content">
+          <div class="day-column"></div>
+          
+          <div class="day-column">
+            <div class="class-item">
+              <div class="class-title">Inglés Básico A1</div>
+              <div class="class-time">09:00</div>
+            </div>
+            <div class="class-item">
+              <div class="class-title">Inglés Intermedio B1</div>
+              <div class="class-time">14:30</div>
+            </div>
+          </div>
+          
+          <div class="day-column">
+            <div class="class-item">
+              <div class="class-title">Inglés Avanzado C1</div>
+              <div class="class-time">10:00</div>
+            </div>
+          </div>
+          
+          <div class="day-column">
+            <div class="class-item">
+              <div class="class-title">Inglés Básico A1</div>
+              <div class="class-time">16:00</div>
+            </div>
+          </div>
+          
+          <div class="day-column">
+            <div class="class-item">
+              <div class="class-title">Inglés Intermedio B1</div>
+              <div class="class-time">11:00</div>
+            </div>
+          </div>
+          
+          <div class="day-column"></div>
+          <div class="day-column"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
