@@ -325,7 +325,7 @@
                     <h1>Sistema Integral de Gestión de Idiomas</h1>
                     <p>Automatiza la gestión de tu consultora de idiomas con nuestra plataforma completa. Gestiona estudiantes, cursos, pagos y reportes desde un solo lugar.</p>
                     <div class="hero-buttons">
-                        <button onclick="showApp()" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                        <button onclick="showDemo()" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
                             Probar Sistema
                         </button>
                         <a href="#servicios" class="btn btn-secondary" style="padding: 0.75rem 2rem; font-size: 1rem; background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
@@ -502,8 +502,12 @@
 
 
     <script>
-        function showApp() {
+        function showDemo() {
             window.location.href = 'demo.html';
+        }
+        
+        function showApp() {
+            window.location.href = 'http://localhost:5173';
         }
 
         function showLanding() {
