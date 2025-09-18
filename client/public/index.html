@@ -1,12 +1,543 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema Integral - Consultoría de Idiomas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lingua Academy - Sistema Integral de Gestión de Idiomas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-blue: #3b82f6;
+            --light-blue: #dbeafe;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-900: #0f172a;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--gray-700);
+            background-color: var(--white);
+        }
+
+        .landing-page {
+            display: block;
+        }
+
+        .app-container {
+            display: none;
+        }
+
+        .header {
+            background-color: var(--white);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-weight: 500;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-blue);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-blue);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-300);
+        }
+
+        .main {
+            margin-top: 80px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: var(--white);
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .features {
+            padding: 6rem 2rem;
+            background-color: var(--gray-50);
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 3rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background-color: var(--white);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--gray-100);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: var(--gray-600);
+        }
+
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--gray-600);
+        }
+
+        .cta {
+            padding: 6rem 2rem;
+            text-align: center;
+            background-color: var(--white);
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        .footer {
+            background-color: var(--gray-900);
+            color: var(--white);
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: var(--gray-300);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .footer-section a:hover {
+            color: var(--white);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--gray-700);
+            padding-top: 1rem;
+            text-align: center;
+            color: var(--gray-300);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-menu {
+                gap: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+    <div class="landing-page" id="landing">
+        <header class="header">
+            <nav class="nav">
+                <a href="#" class="logo" onclick="showLanding()">Lingua Academy</a>
+                <ul class="nav-menu">
+                    <li><a href="#inicio" class="nav-link">Inicio</a></li>
+                    <li><a href="#servicios" class="nav-link">Servicios</a></li>
+                    <li><a href="#nosotros" class="nav-link">Nosotros</a></li>
+                    <li><a href="#contacto" class="nav-link">Contacto</a></li>
+                    <li><button onclick="showApp()" class="btn btn-primary">Acceder al Sistema</button></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="main">
+            <section class="hero" id="inicio">
+                <div class="hero-content">
+                    <h1>Sistema Integral de Gestión de Idiomas</h1>
+                    <p>Automatiza la gestión de tu consultora de idiomas con nuestra plataforma completa. Gestiona estudiantes, cursos, pagos y reportes desde un solo lugar.</p>
+                    <div class="hero-buttons">
+                        <button onclick="showApp()" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                            Probar Sistema
+                        </button>
+                        <a href="#servicios" class="btn btn-secondary" style="padding: 0.75rem 2rem; font-size: 1rem; background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                            Ver Funcionalidades
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features" id="servicios">
+                <div class="features-container">
+                    <h2>Funcionalidades Principales</h2>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <h3>Gestión de Estudiantes</h3>
+                            <p>Registro completo de estudiantes con historial académico, niveles de inglés y seguimiento de progreso personalizado.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                </svg>
+                            </div>
+                            <h3>Catálogo de Cursos</h3>
+                            <p>Administra cursos grupales, individuales y corporativos con diferentes modalidades y niveles de dificultad.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                            </div>
+                            <h3>Agenda y Reservas</h3>
+                            <p>Programación inteligente de clases con control de disponibilidad y notificaciones automáticas.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M3 21h18"/>
+                                    <path d="M5 21V7l8-4v18"/>
+                                    <path d="M19 21V11l-6-4"/>
+                                </svg>
+                            </div>
+                            <h3>Gestión Empresarial</h3>
+                            <p>Manejo completo de clientes corporativos con seguimiento de empleados y facturación especializada.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="1" y="5" width="22" height="14" rx="7" ry="7"/>
+                                    <path d="M8 11h8"/>
+                                    <path d="M8 15h6"/>
+                                </svg>
+                            </div>
+                            <h3>Pagos y Facturación</h3>
+                            <p>Sistema integrado de pagos con múltiples métodos y generación automática de comprobantes.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <line x1="18" y1="20" x2="18" y2="10"/>
+                                    <line x1="12" y1="20" x2="12" y2="4"/>
+                                    <line x1="6" y1="20" x2="6" y2="14"/>
+                                </svg>
+                            </div>
+                            <h3>Reportes Avanzados</h3>
+                            <p>Informes detallados de progreso académico, ingresos, asistencias y métricas de rendimiento.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="cta" id="nosotros">
+                <div class="cta-container">
+                    <h2>¿Listo para optimizar tu consultora de idiomas?</h2>
+                    <p>Accede al sistema de demostración y explora todas las funcionalidades disponibles. Usuarios de prueba incluidos para cada rol.</p>
+                    <div style="background-color: var(--gray-50); padding: 2rem; border-radius: 0.5rem; margin: 2rem 0;">
+                        <h3 style="color: var(--gray-900); margin-bottom: 1rem;">Usuarios de Prueba Disponibles:</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; text-align: left;">
+                            <div>
+                                <strong>Administrador:</strong><br>
+                                admin@linguaacademy.com<br>
+                                Contraseña: 123456
+                            </div>
+                            <div>
+                                <strong>Profesor:</strong><br>
+                                profesor@linguaacademy.com<br>
+                                Contraseña: 123456
+                            </div>
+                            <div>
+                                <strong>Estudiante:</strong><br>
+                                estudiante@linguaacademy.com<br>
+                                Contraseña: 123456
+                            </div>
+                            <div>
+                                <strong>Empresa:</strong><br>
+                                empresa@linguaacademy.com<br>
+                                Contraseña: 123456
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="showApp()" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                        Acceder al Sistema
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer" id="contacto">
+            <div class="footer-container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>Lingua Academy</h3>
+                        <p>Sistema integral para la gestión de consultoras de idiomas en inglés.</p>
+                        <p>Automatiza procesos, mejora la experiencia del estudiante y optimiza tu negocio.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Funcionalidades</h3>
+                        <a href="#servicios">Gestión de Estudiantes</a>
+                        <a href="#servicios">Programación de Clases</a>
+                        <a href="#servicios">Pagos y Facturación</a>
+                        <a href="#servicios">Reportes Avanzados</a>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Soporte</h3>
+                        <a href="#">Documentación</a>
+                        <a href="#">Guías de Usuario</a>
+                        <a href="#">Centro de Ayuda</a>
+                        <a href="#">Contacto Técnico</a>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Contacto</h3>
+                        <p>Email: info@linguaacademy.com</p>
+                        <p>Teléfono: +54 11 1234-5678</p>
+                        <p>Horario: Lun-Vie 9:00-18:00</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Lingua Academy. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="app-container" id="app">
+        <div id="root">
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;">
+                <div style="text-align: center;">
+                    <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top: 3px solid #1e40af; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                    <p style="color: #64748b;">Cargando sistema...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+
+    <script>
+        function showApp() {
+            window.location.href = 'demo.html';
+        }
+
+        function showLanding() {
+            document.getElementById('landing').style.display = 'block';
+            document.getElementById('app').style.display = 'none';
+            document.body.style.margin = '0';
+            document.body.style.padding = '0';
+        }
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                header.style.backdropFilter = 'blur(10px)';
+            } else {
+                header.style.backgroundColor = 'var(--white)';
+                header.style.backdropFilter = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

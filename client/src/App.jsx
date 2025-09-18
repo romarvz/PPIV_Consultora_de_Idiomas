@@ -1,10 +1,48 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import Layout from './components/Layout/Layout'
+import Login from './components/Auth/Login'
+import Dashboard from './components/Dashboard/Dashboard'
+import StudentManagement from './components/Students/StudentManagement'
+import CourseManagement from './components/Courses/CourseManagement'
+import ClassScheduling from './components/Classes/ClassScheduling'
+import CompanyManagement from './components/Companies/CompanyManagement'
+import TeacherManagement from './components/Teachers/TeacherManagement'
+import PaymentManagement from './components/Payments/PaymentManagement'
+import Reports from './components/Reports/Reports'
+import './App.css'
 
 function App() {
+  const [user, setUser] = useState(null)
+
+  const handleLogin = (userData) => {
+    setUser(userData)
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+  }
+
+  if (!user) {
+    return <Login onLogin={handleLogin} />
+  }
+
   return (
-    <div>
-      <h1>Sistema Integral - Consultoría de Idiomas</h1>
-    </div>
+    <Router>
+      <Layout user={user} onLogout={handleLogout}>
+        <Routes>
+          <Route path="/" element={<Dashboard user={user} />} />
+          <Route path="/students" element={<StudentManagement />} />
+          <Route path="/courses" element={<CourseManagement />} />
+          <Route path="/classes" element={<ClassScheduling />} />
+          <Route path="/companies" element={<CompanyManagement />} />
+          <Route path="/teachers" element={<TeacherManagement />} />
+          <Route path="/payments" element={<PaymentManagement />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Layout>
+    </Router>
   )
 }
 
