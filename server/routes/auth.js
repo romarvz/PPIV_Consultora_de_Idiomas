@@ -8,6 +8,7 @@ const {
   getProfile,
   updateProfile,
   changePassword,
+  changePasswordForced,
   logout,
   getStudents,
   getProfessors,
@@ -24,9 +25,12 @@ const {
 // Importar validadores
 const {
   validateRegister,
+  validateRegisterFromAdmin,
+  validateRegisterAdmin,
   validateLogin,
   validateUpdateProfile,
   validateChangePassword,
+  validateChangePasswordForced,
   validateUpdateAcademicInfo,
   validateUpdateTeachingInfo
 } = require('../validators/authValidators');
@@ -114,7 +118,11 @@ router.get('/db-test', async (req, res) => {
 });
 
 
-router.post('/register', validateRegister, register);
+// Registro de usuarios (solo admins pueden registrar)
+router.post('/register', authenticateToken, requireAdmin, validateRegisterFromAdmin, register);
+
+// Registro específico de administradores
+router.post('/register-admin', authenticateToken, requireAdmin, validateRegisterAdmin, register);
 
 
 router.post('/login', validateLogin, login);
@@ -130,6 +138,9 @@ router.put('/profile', authenticateToken, validateUpdateProfile, updateProfile);
 
 
 router.put('/change-password', authenticateToken, validateChangePassword, changePassword);
+
+// Ruta para cambio de contraseña forzado (primera vez)
+router.put('/change-password-forced', authenticateToken, validateChangePasswordForced, changePasswordForced);
 
 
 router.get('/verify-token', authenticateToken, (req, res) => {

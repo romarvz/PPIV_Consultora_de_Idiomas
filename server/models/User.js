@@ -33,6 +33,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  dni: {
+    type: String,
+    required: function() { 
+      return this.role === 'estudiante' || this.role === 'profesor'; 
+    },
+    trim: true,
+    unique: true,
+    sparse: true // Permite que los admins no tengan DNI
+  },
+  mustChangePassword: {
+    type: Boolean,
+    default: function() {
+      return this.role === 'estudiante' || this.role === 'profesor';
+    }
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -46,11 +61,11 @@ const userSchema = new mongoose.Schema({
       return this.role === 'estudiante'; 
     }
   },
-  estadoAcademico: {
+  condicion: {
     type: String,
-    enum: ['inscrito', 'en_curso', 'graduado', 'suspendido'],
+    enum: ['inscripto', 'cursando', 'abandonado', 'graduado'],
     default: function() { 
-      return this.role === 'estudiante' ? 'inscrito' : undefined; 
+      return this.role === 'estudiante' ? 'inscripto' : undefined; 
     }
   },
   

@@ -8,12 +8,12 @@ const userService = require('../services/userService');
  * @returns {Object} { isValid: boolean, error?: string, code?: string }
  */
 const validateRolePermissions = async (role, authHeader) => {
-  // Solo admins pueden crear otros admins o profesores
-  if (role === 'admin' || role === 'profesor') {
+  // Solo admins pueden crear cualquier tipo de cuenta (admin, profesor, estudiante)
+  if (role === 'admin' || role === 'profesor' || role === 'estudiante') {
     if (!authHeader) {
       return {
         isValid: false,
-        error: 'Solo administradores pueden crear cuentas de administrador o profesor',
+        error: 'Solo administradores pueden registrar usuarios',
         code: 'ADMIN_REQUIRED'
       };
     }
@@ -34,7 +34,7 @@ const validateRolePermissions = async (role, authHeader) => {
       if (!requester || requester.role !== 'admin') {
         return {
           isValid: false,
-          error: 'Solo administradores pueden crear cuentas de administrador o profesor',
+          error: 'Solo administradores pueden registrar usuarios',
           code: 'ADMIN_REQUIRED'
         };
       }

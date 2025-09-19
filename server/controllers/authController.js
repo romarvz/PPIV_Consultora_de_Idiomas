@@ -28,7 +28,7 @@ const register = async (req, res) => {
     const validationError = handleValidationErrors(req, res);
     if (validationError) return validationError;
 
-    const { email, password, firstName, lastName, role, phone, nivel, estadoAcademico, especialidades, tarifaPorHora, disponibilidad } = req.body;
+    const { email, password, firstName, lastName, role, phone, dni, nivel, condicion, especialidades, tarifaPorHora, disponibilidad } = req.body;
 
     // Verificar si el usuario ya existe
     const existingUser = await userService.findUserByEmail(email);
@@ -53,17 +53,35 @@ const register = async (req, res) => {
     // Crear usuario usando el service
     const userData = {
       email: email.toLowerCase(),
-      password,
       firstName,
       lastName,
       role: role || 'estudiante',
       phone
     };
 
+    // Manejar password según el rol
+    if (role === 'admin') {
+      // Admin usa password proporcionado
+      userData.password = password;
+      userData.mustChangePassword = false;
+    } else {
+      // Estudiante/Profesor usa DNI como password temporal
+      if (!dni) {
+        return res.status(400).json({
+          success: false,
+          message: 'DNI es requerido para estudiantes y profesores',
+          code: 'DNI_REQUIRED'
+        });
+      }
+      userData.password = dni; // El modelo se encargará del hash
+      userData.dni = dni;
+      userData.mustChangePassword = true;
+    }
+
     // Agregar campos específicos según el rol
     if (role === 'estudiante') {
       if (nivel) userData.nivel = nivel;
-      if (estadoAcademico) userData.estadoAcademico = estadoAcademico;
+      if (condicion) userData.condicion = condicion;
     } else if (role === 'profesor') {
       if (especialidades) userData.especialidades = especialidades;
       if (tarifaPorHora) userData.tarifaPorHora = tarifaPorHora;
@@ -142,6 +160,22 @@ const login = async (req, res) => {
         success: false,
         message: 'Credenciales inválidas',
         code: 'INVALID_CREDENTIALS'
+      });
+    }
+
+    // Verificar si debe cambiar password
+    if (user.mustChangePassword) {
+      // Generar token temporal para cambio de password
+      const token = userService.generateToken(user._id);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Debe cambiar su contraseña',
+        data: {
+          token,
+          user: user.toJSON(),
+          mustChangePassword: true
+        }
       });
     }
 
@@ -330,12 +364,12 @@ const logout = async (req, res) => {
 // @access  Private (Admin/Profesor)
 const getStudents = async (req, res) => {
   try {
-    const { nivel, estadoAcademico, page = 1, limit = 10 } = req.query;
+    const { nivel, condicion, page = 1, limit = 10 } = req.query;
     
     // Construir filtros
     const filters = { role: 'estudiante' };
     if (nivel) filters.nivel = nivel;
-    if (estadoAcademico) filters.estadoAcademico = estadoAcademico;
+    if (condicion) filters.condicion = condicion;
     
     // Paginación
     const skip = (page - 1) * limit;
@@ -415,7 +449,7 @@ const updateAcademicInfo = async (req, res) => {
     if (validationError) return validationError;
 
     const userId = req.user.id;
-    const { nivel, estadoAcademico } = req.body;
+    const { nivel, condicion } = req.body;
 
     // Verificar que el usuario es estudiante
     const user = await userService.findUserById(userId);
@@ -429,7 +463,7 @@ const updateAcademicInfo = async (req, res) => {
 
     const updateData = {};
     if (nivel) updateData.nivel = nivel;
-    if (estadoAcademico) updateData.estadoAcademico = estadoAcademico;
+    if (condicion) updateData.condicion = condicion;
 
     const updatedUser = await userService.updateUser(userId, updateData);
 
@@ -497,12 +531,74 @@ const updateTeachingInfo = async (req, res) => {
   }
 };
 
+// @desc    Cambiar contraseña forzado (primera vez)
+// @route   POST /api/auth/change-password-forced
+// @access  Private
+const changePasswordForced = async (req, res) => {
+  try {
+    // Validar errores
+    const validationError = handleValidationErrors(req, res);
+    if (validationError) return validationError;
+
+    const { newPassword } = req.body;
+    const userId = req.user.userId;
+
+    // Buscar usuario
+    const user = await userService.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Verificar que debe cambiar password
+    if (!user.mustChangePassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'No es necesario cambiar la contraseña',
+        code: 'PASSWORD_CHANGE_NOT_REQUIRED'
+      });
+    }
+
+    // Actualizar password y marcar como cambiado
+    const updateData = {
+      password: newPassword,
+      mustChangePassword: false
+    };
+
+    const updatedUser = await userService.updateUser(userId, updateData);
+
+    // Generar nuevo token
+    const token = userService.generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: 'Contraseña cambiada exitosamente',
+      data: {
+        token,
+        user: updatedUser.toJSON()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en changePasswordForced:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
   changePassword,
+  changePasswordForced,
   logout,
   getStudents,
   getProfessors,

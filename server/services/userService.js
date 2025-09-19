@@ -35,6 +35,23 @@ async function findUserById(userId) {
 
 // Actualizar usuario
 async function updateUser(userId, updateData) {
+  // Si se está actualizando la contraseña, usar findById y save para activar middleware
+  if (updateData.password) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+    
+    // Actualizar campos
+    Object.keys(updateData).forEach(key => {
+      user[key] = updateData[key];
+    });
+    
+    await user.save();
+    return await User.findById(userId).select('-password');
+  }
+  
+  // Para otras actualizaciones, usar findByIdAndUpdate
   return await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
 }
 

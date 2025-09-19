@@ -21,18 +21,18 @@ node index.js
 
 ### **2. Crear Primer Administrador (Solo primera vez)**
 **Endpoint:** `POST http://localhost:5000/api/auth/create-first-admin`
-**Body:** Vacío
-**Respuesta esperada:**
+**Body:**
 ```json
 {
-  "success": true,
-  "message": "Primer administrador creado exitosamente",
-  "data": {
-    "email": "admin@consultora.com",
-    "role": "admin"
-  }
+  "email": "admin@consultora.com",
+  "password": "Admin123!",
+  "firstName": "Super",
+  "lastName": "Admin",
+  "dni": "99999999"
 }
 ```
+**Respuesta:**
+- Si ya existe un admin, retorna error.
 
 **Credenciales del Admin:**
 - Email: `admin@consultora.com`
@@ -55,6 +55,7 @@ node index.js
 - `firstName` - Nombre (2-50 caracteres, solo letras)
 - `lastName` - Apellido (2-50 caracteres, solo letras)
 - `nivel` - **OBLIGATORIO** (A1, A2, B1, B2, C1, C2)
+- `dni` - **OBLIGATORIO** (7-8 dígitos, único)
 
 #### **Campos opcionales:**
 - `role` - Por defecto "estudiante"
@@ -69,7 +70,8 @@ node index.js
   "confirmPassword": "Test123456",
   "firstName": "María",
   "lastName": "González",
-  "nivel": "B1"
+  "nivel": "B1",
+  "dni": "12345678"
 }
 ```
 
@@ -84,7 +86,8 @@ node index.js
   "role": "estudiante",
   "phone": "+54911234567",
   "nivel": "B1",
-  "estadoAcademico": "inscrito"
+  "estadoAcademico": "inscrito",
+  "dni": "87654321"
 }
 ```
 
@@ -128,6 +131,7 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 - `role` - Debe ser "profesor"
 - `especialidades` - **OBLIGATORIO** Array con al menos 1 idioma
 - `tarifaPorHora` - **OBLIGATORIO** Número ≥ 0
+- `dni` - **OBLIGATORIO** (7-8 dígitos, único)
 
 #### **Campos opcionales:**
 - `phone` - Teléfono (formato flexible)
@@ -152,7 +156,8 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
     "lunes": [{"inicio": "09:00", "fin": "12:00"}],
     "miercoles": [{"inicio": "14:00", "fin": "17:00"}],
     "viernes": [{"inicio": "16:00", "fin": "19:00"}]
-  }
+  },
+  "dni": "12345678"
 }
 ```
 
@@ -195,9 +200,8 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 - `firstName` - Nombre (2-50 caracteres, solo letras)
 - `lastName` - Apellido (2-50 caracteres, solo letras)
 - `role` - Debe ser "admin"
-
-#### **Campos opcionales:**
 - `phone` - Teléfono (formato flexible)
+- `dni` - **OBLIGATORIO** (7-8 dígitos, único)
 
 #### **Ejemplo:**
 ```json
@@ -208,7 +212,8 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
   "firstName": "Ana",
   "lastName": "López",
   "role": "admin",
-  "phone": "+54911234569"
+  "phone": "+54911234569",
+  "dni": "88888888"
 }
 ```
 
@@ -620,21 +625,177 @@ Authorization: Bearer [TOKEN]
 
 ---
 
-## 🎯 **PASOS PARA THUNDER CLIENT**
+# GUÍA ACTUALIZADA DE AUTENTICACIÓN Y REGISTRO
 
-### **Para cada prueba:**
-1. **Crear nueva request**
-2. **Seleccionar método** (GET, POST, PUT)
-3. **Copiar la URL** del endpoint
-4. **Ir a pestaña Headers** y agregar:
-   - `Content-Type: application/json` (siempre)
-   - `Authorization: Bearer [TOKEN]` (si requiere autenticación)
-5. **Si es POST/PUT:** Ir a pestaña Body, seleccionar JSON y pegar el JSON
-6. **Hacer clic en Send**
-7. **Revisar la respuesta** y copiar tokens si es necesario
+## 1. Registro y autenticación: conceptos clave
+
+- Solo los administradores pueden registrar usuarios (estudiantes, profesores, otros admins).
+- Para estudiantes y profesores, la contraseña inicial es el DNI (campo obligatorio y único).
+- Al primer login, el sistema obliga a cambiar la contraseña (`mustChangePassword: true`).
+- Admins pueden registrar otros admins, pero deben definir la contraseña y el DNI.
+- Todos los endpoints requieren `Content-Type: application/json`.
+- Para registrar usuarios, necesitas el token JWT de admin en el header `Authorization`.
 
 ---
 
-**🎉 ¡Con esta guía puedes probar todas las funcionalidades del sistema por rol!**
+## 2. Flujo completo de pruebas (Thunder Client)
 
-**💡 TIP:** Guarda los tokens en un archivo aparte para reutilizarlos en múltiples requests.
+### A. Crear el primer administrador
+
+**Endpoint:** `POST /api/auth/create-first-admin`
+**Body:**
+```json
+{
+  "email": "admin@consultora.com",
+  "password": "Admin123!",
+  "firstName": "Super",
+  "lastName": "Admin",
+  "dni": "99999999"
+}
+```
+**Respuesta:**
+- Si ya existe un admin, retorna error.
+
+---
+
+### B. Login como administrador
+
+**Endpoint:** `POST /api/auth/login`
+**Body:**
+```json
+{
+  "email": "admin@consultora.com",
+  "password": "Admin123!"
+}
+```
+**Respuesta:**
+- Recibes un token JWT en `data.token`.
+
+---
+
+### C. Registrar estudiante (solo admin)
+
+**Endpoint:** `POST /api/auth/register`
+**Headers:**
+- `Authorization: Bearer <token_admin>`
+
+**Body:**
+```json
+{
+  "email": "estudiante1@test.com",
+  "firstName": "Juan",
+  "lastName": "Perez",
+  "role": "estudiante",
+  "dni": "12345678",
+  "nivel": "A1",
+  "phone": "123456789"
+}
+```
+**Notas:**
+- El campo `dni` será la contraseña temporal.
+- El campo `mustChangePassword` estará en `true`.
+
+---
+
+### D. Registrar profesor (solo admin)
+
+**Endpoint:** `POST /api/auth/register`
+**Headers:**
+- `Authorization: Bearer <token_admin>`
+
+**Body:**
+```json
+{
+  "email": "profesor1@test.com",
+  "firstName": "Maria",
+  "lastName": "Garcia",
+  "role": "profesor",
+  "dni": "87654321",
+  "especialidades": ["ingles", "frances"],
+  "tarifaPorHora": 25.5,
+  "phone": "987654321"
+}
+```
+**Notas:**
+- El campo `dni` será la contraseña temporal.
+- El campo `mustChangePassword` estará en `true`.
+
+---
+
+### E. Registrar otro admin
+
+**Endpoint:** `POST /api/auth/register-admin`
+**Headers:**
+- `Authorization: Bearer <token_admin>`
+
+**Body:**
+```json
+{
+  "email": "admin2@consultora.com",
+  "password": "Admin456!",
+  "firstName": "Ana",
+  "lastName": "Lopez",
+  "role": "admin",
+  "dni": "88888888",
+  "phone": "111222333"
+}
+```
+**Notas:**
+- El admin define la contraseña y el DNI.
+
+---
+
+### F. Login de estudiante/profesor con DNI
+
+**Endpoint:** `POST /api/auth/login`
+**Body:**
+```json
+{
+  "email": "estudiante1@test.com",
+  "password": "12345678"
+}
+```
+**Respuesta:**
+- Si la contraseña es el DNI, la respuesta tendrá `mustChangePassword: true` y mensaje "Debe cambiar su contraseña".
+
+---
+
+### G. Cambio de contraseña forzado
+
+**Endpoint:** `PUT /api/auth/change-password-forced`
+**Headers:**
+- `Authorization: Bearer <token_usuario>`
+
+**Body:**
+```json
+{
+  "newPassword": "NuevaPassword123!"
+}
+```
+**Respuesta:**
+- Si el cambio es exitoso, `mustChangePassword` será `false`.
+
+---
+
+### H. Login normal después del cambio
+
+**Endpoint:** `POST /api/auth/login`
+**Body:**
+```json
+{
+  "email": "estudiante1@test.com",
+  "password": "NuevaPassword123!"
+}
+```
+**Respuesta:**
+- El login será exitoso y no pedirá cambio de contraseña.
+
+---
+
+## 3. Notas y recomendaciones
+
+- Todos los registros requieren token de admin.
+- Los estudiantes y profesores deben cambiar su contraseña en el primer login.
+- El campo `dni` debe ser único y numérico (7-8 dígitos).
+- Si tienes errores de validación, revisa los mensajes detallados en la respuesta.
+- Puedes probar todos los flujos en Thunder Client siguiendo los ejemplos de arriba.
