@@ -1,6 +1,6 @@
-# 📚 GUÍA COMPLETA DE APIs - SISTEMA DE CONSULTORÍA DE IDIOMAS
+#  GUÍA COMPLETA DE APIs - SISTEMA DE CONSULTORÍA DE IDIOMAS
 
-## 🚀 **FUNCIONALIDADES EXTENDIDAS POR ROL**
+##  **FUNCIONALIDADES EXTENDIDAS POR ROL**
 
 Esta guía detalla todos los endpoints del sistema, incluyendo las nuevas funcionalidades específicas por rol (estudiantes y profesores) con ejemplos completos para Thunder Client.
 
@@ -40,7 +40,7 @@ node index.js
 
 ---
 
-## 👥 **REGISTRO DE USUARIOS POR ROL**
+##  **REGISTRO DE USUARIOS POR ROL**
 
 ### **🎓 REGISTRO DE ESTUDIANTE (Acceso Público)**
 
@@ -112,24 +112,14 @@ node index.js
 
 ---
 
-### **👨‍🏫 REGISTRO DE PROFESOR (Solo Admin)**
+### ** REGISTRO DE PROFESOR (Solo Admin)**
 
 **Endpoint:** `POST http://localhost:5000/api/auth/register`
 **Headers:**
 ```
 Content-Type: application/json
-Authorization: Bearer [TOKEN_DE_ADMIN]
-```
-**Permisos:** Solo administradores pueden registrar profesores
-
-#### **Campos obligatorios:**
-- `email` - Email válido y único
-- `password` - Mínimo 6 caracteres (1 mayúscula, 1 minúscula, 1 número)
 - `confirmPassword` - Debe coincidir con password
 - `firstName` - Nombre (2-50 caracteres, solo letras)
-- `lastName` - Apellido (2-50 caracteres, solo letras)
-- `role` - Debe ser "profesor"
-- `especialidades` - **OBLIGATORIO** Array con al menos 1 idioma
 - `tarifaPorHora` - **OBLIGATORIO** Número ≥ 0
 - `dni` - **OBLIGATORIO** (7-8 dígitos, único)
 
@@ -183,7 +173,7 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 
 ---
 
-### **👑 REGISTRO DE ADMIN (Solo Admin)**
+### ** REGISTRO DE ADMIN (Solo Admin)**
 
 **Endpoint:** `POST http://localhost:5000/api/auth/register`
 **Headers:**
@@ -219,7 +209,7 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 
 ---
 
-## 🔐 **LOGIN POR ROL**
+##  **LOGIN POR ROL**
 
 ### **Login Universal (Cualquier Usuario)**
 **Endpoint:** `POST http://localhost:5000/api/auth/login`
@@ -270,13 +260,13 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 }
 ```
 
-**⚠️ IMPORTANTE:** Guarda el `token` para usarlo en requests que requieren autenticación.
+** IMPORTANTE:** Guarda el `token` para usarlo en requests que requieren autenticación.
 
 ---
 
-## ✏️ **ACTUALIZACIÓN DE INFORMACIÓN POR ROL**
+##  **ACTUALIZACIÓN DE INFORMACIÓN POR ROL**
 
-### **🎓 Actualizar Información Académica (Solo Estudiantes)**
+### ** Actualizar Información Académica (Solo Estudiantes)**
 
 **Endpoint:** `PUT http://localhost:5000/api/auth/update-academic-info`
 **Headers:**
@@ -323,7 +313,7 @@ Authorization: Bearer [TOKEN_DE_ESTUDIANTE]
 
 ---
 
-### **👨‍🏫 Actualizar Información de Enseñanza (Solo Profesores)**
+### ** Actualizar Información de Enseñanza (Solo Profesores)**
 
 **Endpoint:** `PUT http://localhost:5000/api/auth/update-teaching-info`
 **Headers:**
@@ -377,7 +367,7 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 
 ---
 
-### **🔄 Actualizar Perfil General (Cualquier Usuario)**
+### ** Actualizar Perfil General (Cualquier Usuario)**
 
 **Endpoint:** `PUT http://localhost:5000/api/auth/profile`
 **Headers:**
@@ -405,7 +395,7 @@ Authorization: Bearer [TOKEN_DEL_USUARIO]
 
 ## 📋 **ENDPOINTS DE CONSULTA CON FILTROS**
 
-### **📚 OBTENER ESTUDIANTES (Usuarios Autenticados)**
+### ** OBTENER ESTUDIANTES (Usuarios Autenticados)**
 
 **Endpoint:** `GET http://localhost:5000/api/auth/students`
 **Headers:**
@@ -457,7 +447,7 @@ Authorization: Bearer [TOKEN_CUALQUIER_USUARIO]
 
 ---
 
-### **👨‍🏫 OBTENER PROFESORES (Solo Admin)**
+### ** OBTENER PROFESORES (Solo Admin)**
 
 **Endpoint:** `GET http://localhost:5000/api/auth/professors`
 **Headers:**
@@ -511,14 +501,14 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 
 ---
 
-## 🔒 **OTROS ENDPOINTS IMPORTANTES**
+##  **OTROS ENDPOINTS IMPORTANTES**
 
 ### **👤 Ver Perfil Propio**
 **Endpoint:** `GET http://localhost:5000/api/auth/profile`
 **Headers:** `Authorization: Bearer [TOKEN]`
 **Permisos:** Usuario autenticado
 
-### **🔐 Cambiar Contraseña**
+### ** Cambiar Contraseña**
 **Endpoint:** `PUT http://localhost:5000/api/auth/change-password`
 **Headers:**
 ```
