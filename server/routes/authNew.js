@@ -13,7 +13,10 @@ const {
   getStudents,
   getProfessors,
   updateAcademicInfo,
-  updateTeachingInfo
+  updateTeachingInfo,
+  deactivateUser,
+  reactivateUser,
+  deleteUser
 } = require('../controllers/authControllerNew');
 
 // Importar middlewares
@@ -231,5 +234,16 @@ router.put('/update-academic-info', authenticateToken, validateUpdateAcademicInf
 
 // Actualizar información de enseñanza (solo profesores)
 router.put('/update-teaching-info', authenticateToken, validateUpdateTeachingInfo, updateTeachingInfo);
+
+// ==================== RUTAS DE GESTIÓN DE USUARIOS (SOLO ADMIN) ====================
+
+// Desactivar usuario (soft delete)
+router.put('/deactivate/:id', authenticateToken, requireAdmin, deactivateUser);
+
+// Reactivar usuario
+router.put('/reactivate/:id', authenticateToken, requireAdmin, reactivateUser);
+
+// Eliminar usuario permanentemente (hard delete)
+router.delete('/delete/:id', authenticateToken, requireAdmin, deleteUser);
 
 module.exports = router;

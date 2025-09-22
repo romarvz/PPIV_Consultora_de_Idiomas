@@ -681,6 +681,208 @@ const updateTeachingInfo = async (req, res) => {
   }
 };
 
+// @desc    Desactivar usuario (soft delete)
+// @route   PUT /api/auth/deactivate/:id
+// @access  Admin only
+const deactivateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar que es admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo los administradores pueden desactivar usuarios',
+        code: 'INSUFFICIENT_PERMISSIONS'
+      });
+    }
+
+    // Buscar usuario
+    const user = await findUserById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Validar que no puede desactivarse a sí mismo
+    if (user._id.toString() === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: 'No puedes desactivar tu propia cuenta',
+        code: 'SELF_DEACTIVATION_FORBIDDEN'
+      });
+    }
+
+    // Validar que solo puede desactivar estudiantes y profesores
+    if (user.role === 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'No se pueden desactivar otros administradores',
+        code: 'ADMIN_DEACTIVATION_FORBIDDEN'
+      });
+    }
+
+    // Desactivar usuario
+    user.isActive = false;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} desactivado exitosamente`,
+      data: {
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isActive: user.isActive
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en deactivateUser:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// @desc    Reactivar usuario
+// @route   PUT /api/auth/reactivate/:id
+// @access  Admin only
+const reactivateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar que es admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo los administradores pueden reactivar usuarios',
+        code: 'INSUFFICIENT_PERMISSIONS'
+      });
+    }
+
+    // Buscar usuario
+    const user = await findUserById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Reactivar usuario
+    user.isActive = true;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} reactivado exitosamente`,
+      data: {
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isActive: user.isActive
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en reactivateUser:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// @desc    Eliminar usuario permanentemente (hard delete)
+// @route   DELETE /api/auth/delete/:id
+// @access  Admin only
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar que es admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo los administradores pueden eliminar usuarios',
+        code: 'INSUFFICIENT_PERMISSIONS'
+      });
+    }
+
+    // Buscar usuario
+    const user = await findUserById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Validar que no puede eliminarse a sí mismo
+    if (user._id.toString() === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: 'No puedes eliminar tu propia cuenta',
+        code: 'SELF_DELETION_FORBIDDEN'
+      });
+    }
+
+    // Validar que solo puede eliminar estudiantes y profesores
+    if (user.role === 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'No se pueden eliminar otros administradores',
+        code: 'ADMIN_DELETION_FORBIDDEN'
+      });
+    }
+
+    // Guardar información del usuario antes de eliminar
+    const deletedUserInfo = {
+      _id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role
+    };
+
+    // Eliminar usuario permanentemente
+    await BaseUser.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} eliminado permanentemente`,
+      data: {
+        deletedUser: deletedUserInfo
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en deleteUser:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -692,5 +894,8 @@ module.exports = {
   getStudents,
   getProfessors,
   updateAcademicInfo,
-  updateTeachingInfo
+  updateTeachingInfo,
+  deactivateUser,
+  reactivateUser,
+  deleteUser
 };
