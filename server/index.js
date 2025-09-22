@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
 });
 
 // Rutas de autenticación
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/authNew');
 app.use('/api/auth', authRoutes);
 
 //middleware para cuando no encontramos ruta (solo GET y POST seguros)
