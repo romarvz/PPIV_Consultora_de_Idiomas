@@ -1,4 +1,4 @@
-# GUÍA COMPLETA DE APIs - SISTEMA DE CONSULTORÍA DE IDIOMAS
+﻿# GUÍA COMPLETA DE APIs - SISTEMA DE CONSULTORÍA DE IDIOMAS
 
 ## **ARQUITECTURA CON MODELOS DISCRIMINADOS**
 
@@ -37,11 +37,11 @@ node index.js
 **Body:**
 ```json
 {
-  "email": "admin@consultora.com",
-  "password": "Admin123!",
-  "firstName": "Super",
-  "lastName": "Admin",
-  "dni": "99999999"
+  "email": "admin@consultora.com",
+  "password": "Admin123!",
+  "firstName": "Super",
+  "lastName": "Admin",
+  "dni": "99999999"
 }
 ```
 **Respuesta:**
@@ -86,38 +86,38 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 #### **Ejemplo:**
 ```json
 {
-  "email": "estudiante.nuevo@test.com",
-  "firstName": "María",
-  "lastName": "González",
-  "role": "estudiante",
-  "dni": "12345678",
-  "nivel": "B1",
-  "estadoAcademico": "inscrito",
-  "phone": "+54911234567"
+  "email": "estudiante.nuevo@test.com",
+  "firstName": "María",
+  "lastName": "González",
+  "role": "estudiante",
+  "dni": "12345678",
+  "nivel": "B1",
+  "estadoAcademico": "inscrito",
+  "phone": "+54911234567"
 }
 ```
 
 #### **Respuesta exitosa:**
 ```json
 {
-  "success": true,
-  "message": "Usuario registrado exitosamente",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "_id": "...",
-      "email": "estudiante.nuevo@test.com",
-      "firstName": "María",
-      "lastName": "González",
-      "role": "estudiante",
-      "nivel": "B1",
-      "estadoAcademico": "inscrito",
-      "dni": "12345678",
-      "mustChangePassword": true,
-      "__t": "estudiante"
-    },
-    "temporaryPassword": "12345678"
-  }
+  "success": true,
+  "message": "Usuario registrado exitosamente",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "_id": "...",
+      "email": "estudiante.nuevo@test.com",
+      "firstName": "María",
+      "lastName": "González",
+      "role": "estudiante",
+      "nivel": "B1",
+      "estadoAcademico": "inscrito",
+      "dni": "12345678",
+      "mustChangePassword": true,
+      "__t": "estudiante"
+    },
+    "temporaryPassword": "12345678"
+  }
 }
 ```
 
@@ -152,44 +152,44 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 #### **Ejemplo:**
 ```json
 {
-  "email": "profesor.nuevo@test.com",
-  "firstName": "Carlos",
-  "lastName": "Rodríguez",
-  "role": "profesor",
-  "dni": "87654321",
-  "especialidades": ["ingles", "frances"],
-  "tarifaPorHora": 2500,
-  "phone": "+54911234568",
-  "disponibilidad": {
-    "lunes": [{"inicio": "09:00", "fin": "12:00"}],
-    "miercoles": [{"inicio": "14:00", "fin": "17:00"}],
-    "viernes": [{"inicio": "16:00", "fin": "19:00"}]
-  }
+  "email": "profesor.nuevo@test.com",
+  "firstName": "Carlos",
+  "lastName": "Rodríguez",
+  "role": "profesor",
+  "dni": "87654321",
+  "especialidades": ["ingles", "frances"],
+  "tarifaPorHora": 2500,
+  "phone": "+54911234568",
+  "disponibilidad": {
+    "lunes": [{"inicio": "09:00", "fin": "12:00"}],
+    "miercoles": [{"inicio": "14:00", "fin": "17:00"}],
+    "viernes": [{"inicio": "16:00", "fin": "19:00"}]
+  }
 }
 ```
 
 #### **Respuesta exitosa:**
 ```json
 {
-  "success": true,
-  "message": "Usuario registrado exitosamente",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "_id": "...",
-      "email": "profesor.nuevo@test.com",
-      "firstName": "Carlos",
-      "lastName": "Rodríguez",
-      "role": "profesor",
-      "especialidades": ["ingles", "frances"],
-      "tarifaPorHora": 2500,
-      "disponibilidad": { ... },
-      "dni": "87654321",
-      "mustChangePassword": true,
-      "__t": "profesor"
-    },
-    "temporaryPassword": "87654321"
-  }
+  "success": true,
+  "message": "Usuario registrado exitosamente",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "_id": "...",
+      "email": "profesor.nuevo@test.com",
+      "firstName": "Carlos",
+      "lastName": "Rodríguez",
+      "role": "profesor",
+      "especialidades": ["ingles", "frances"],
+      "tarifaPorHora": 2500,
+      "disponibilidad": { ... },
+      "dni": "87654321",
+      "mustChangePassword": true,
+      "__t": "profesor"
+    },
+    "temporaryPassword": "87654321"
+  }
 }
 ```
 
@@ -220,14 +220,14 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 #### **Ejemplo:**
 ```json
 {
-  "email": "admin2@consultora.com",
-  "password": "Admin123456",
-  "firstName": "Ana",
-  "lastName": "López",
-  "role": "admin",
-  "phone": "+54911234569",
-  "dni": "88888888",
-  "permisos": ["gestion_usuarios", "reportes"]
+  "email": "admin2@consultora.com",
+  "password": "Admin123456",
+  "firstName": "Ana",
+  "lastName": "López",
+  "role": "admin",
+  "phone": "+54911234569",
+  "dni": "88888888",
+  "permisos": ["gestion_usuarios", "reportes"]
 }
 ```
 
@@ -250,59 +250,59 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 ### **Ejemplo de primer login:**
 ```json
 {
-  "email": "estudiante.nuevo@test.com",
-  "password": "12345678"
+  "email": "estudiante.nuevo@test.com",
+  "password": "12345678"
 }
 ```
 
 ### **Respuesta primer login (cambio de contraseña requerido):**
 ```json
 {
-  "success": true,
-  "message": "Login exitoso. Debe cambiar su contraseña.",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "_id": "...",
-      "email": "estudiante.nuevo@test.com",
-      "firstName": "María",
-      "lastName": "González",
-      "role": "estudiante",
-      "nivel": "B1",
-      "mustChangePassword": true,
-      "__t": "estudiante"
-    },
-    "mustChangePassword": true
-  }
+  "success": true,
+  "message": "Login exitoso. Debe cambiar su contraseña.",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "_id": "...",
+      "email": "estudiante.nuevo@test.com",
+      "firstName": "María",
+      "lastName": "González",
+      "role": "estudiante",
+      "nivel": "B1",
+      "mustChangePassword": true,
+      "__t": "estudiante"
+    },
+    "mustChangePassword": true
+  }
 }
 ```
 
 ### **Login normal (password ya cambiada):**
 ```json
 {
-  "email": "admin@consultora.com",
-  "password": "Admin123!"
+  "email": "admin@consultora.com",
+  "password": "Admin123!"
 }
 ```
 
 ### **Respuesta login normal:**
 ```json
 {
-  "success": true,
-  "message": "Login exitoso",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "_id": "...",
-      "email": "admin@consultora.com",
-      "firstName": "Admin",
-      "lastName": "Principal",
-      "role": "admin",
-      "permisos": ["todos"],
-      "mustChangePassword": false,
-      "__t": "admin"
-    }
-  }
+  "success": true,
+  "message": "Login exitoso",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "_id": "...",
+      "email": "admin@consultora.com",
+      "firstName": "Admin",
+      "lastName": "Principal",
+      "role": "admin",
+      "permisos": ["todos"],
+      "mustChangePassword": false,
+      "__t": "admin"
+    }
+  }
 }
 ```
 
@@ -328,34 +328,34 @@ Authorization: Bearer [TOKEN_DEL_USUARIO]
 ### **Ejemplo:**
 ```json
 {
-  "currentPassword": "12345678",
-  "newPassword": "MiNuevaPass123!",
-  "confirmNewPassword": "MiNuevaPass123!"
+  "currentPassword": "12345678",
+  "newPassword": "MiNuevaPass123!",
+  "confirmNewPassword": "MiNuevaPass123!"
 }
 ```
 
 ### **Respuesta exitosa:**
 ```json
 {
-  "success": true,
-  "message": "Contraseña actualizada exitosamente",
-  "data": {
-    "user": {
-      "_id": "...",
-      "email": "estudiante.nuevo@test.com",
-      "firstName": "María",
-      "lastName": "González",
-      "role": "estudiante",
-      "mustChangePassword": false,
-      "__t": "estudiante"
-    }
-  }
+  "success": true,
+  "message": "Contraseña actualizada exitosamente",
+  "data": {
+    "user": {
+      "_id": "...",
+      "email": "estudiante.nuevo@test.com",
+      "firstName": "María",
+      "lastName": "González",
+      "role": "estudiante",
+      "mustChangePassword": false,
+      "__t": "estudiante"
+    }
+  }
 }
 ```
 
 ---
 
-##  **GESTIÓN DE INFORMACIÓN POR ROL**
+##  **GESTIÓN DE INFORMACIÓN POR ROL**
 
 ### **CONSULTAR USUARIOS (Solo Admin)**
 
@@ -381,41 +381,41 @@ GET http://localhost:5000/api/auth/users?role=profesor&page=1&limit=5
 ### **Respuesta exitosa:**
 ```json
 {
-  "success": true,
-  "data": {
-    "users": [
-      {
-        "_id": "...",
-        "email": "estudiante.nuevo@test.com",
-        "firstName": "María",
-        "lastName": "González",
-        "role": "estudiante",
-        "nivel": "B1",
-        "estadoAcademico": "inscrito",
-        "dni": "12345678",
-        "mustChangePassword": false,
-        "__t": "estudiante",
-        "createdAt": "2024-12-28T..."
-      },
-      {
-        "_id": "...",
-        "email": "profesor.nuevo@test.com",
-        "firstName": "Carlos",
-        "lastName": "Rodríguez",
-        "role": "profesor",
-        "especialidades": ["ingles", "frances"],
-        "tarifaPorHora": 2500,
-        "dni": "87654321",
-        "__t": "profesor",
-        "createdAt": "2024-12-28T..."
-      }
-    ],
-    "pagination": {
-      "current": 1,
-      "pages": 2,
-      "total": 11
-    }
-  }
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "_id": "...",
+        "email": "estudiante.nuevo@test.com",
+        "firstName": "María",
+        "lastName": "González",
+        "role": "estudiante",
+        "nivel": "B1",
+        "estadoAcademico": "inscrito",
+        "dni": "12345678",
+        "mustChangePassword": false,
+        "__t": "estudiante",
+        "createdAt": "2024-12-28T..."
+      },
+      {
+        "_id": "...",
+        "email": "profesor.nuevo@test.com",
+        "firstName": "Carlos",
+        "lastName": "Rodríguez",
+        "role": "profesor",
+        "especialidades": ["ingles", "frances"],
+        "tarifaPorHora": 2500,
+        "dni": "87654321",
+        "__t": "profesor",
+        "createdAt": "2024-12-28T..."
+      }
+    ],
+    "pagination": {
+      "current": 1,
+      "pages": 2,
+      "total": 11
+    }
+  }
 }
 ```
 
@@ -433,43 +433,43 @@ Authorization: Bearer [TOKEN_DEL_USUARIO]
 ### **Respuesta estudiante:**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "_id": "...",
-      "email": "estudiante.nuevo@test.com",
-      "firstName": "María",
-      "lastName": "González",
-      "role": "estudiante",
-      "nivel": "B1",
-      "estadoAcademico": "inscrito",
-      "dni": "12345678",
-      "phone": "+54911234567",
-      "mustChangePassword": false,
-      "__t": "estudiante"
-    }
-  }
+  "success": true,
+  "data": {
+    "user": {
+      "_id": "...",
+      "email": "estudiante.nuevo@test.com",
+      "firstName": "María",
+      "lastName": "González",
+      "role": "estudiante",
+      "nivel": "B1",
+      "estadoAcademico": "inscrito",
+      "dni": "12345678",
+      "phone": "+54911234567",
+      "mustChangePassword": false,
+      "__t": "estudiante"
+    }
+  }
 }
 ```
 
 ### **Respuesta profesor:**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "_id": "...",
-      "email": "profesor.nuevo@test.com",
-      "firstName": "Carlos",
-      "lastName": "Rodríguez",
-      "role": "profesor",
-      "especialidades": ["ingles", "frances"],
-      "tarifaPorHora": 2500,
-      "disponibilidad": { ... },
-      "dni": "87654321",
-      "__t": "profesor"
-    }
-  }
+  "success": true,
+  "data": {
+    "user": {
+      "_id": "...",
+      "email": "profesor.nuevo@test.com",
+      "firstName": "Carlos",
+      "lastName": "Rodríguez",
+      "role": "profesor",
+      "especialidades": ["ingles", "frances"],
+      "tarifaPorHora": 2500,
+      "disponibilidad": { ... },
+      "dni": "87654321",
+      "__t": "profesor"
+    }
+  }
 }
 ---
 
@@ -492,35 +492,35 @@ Authorization: Bearer [TOKEN_DE_ESTUDIANTE]
 #### **Ejemplo - Cambiar a en curso:**
 ```json
 {
-  "estadoAcademico": "en_curso"
+  "estadoAcademico": "en_curso"
 }
 ```
 
 #### **Ejemplo - Subir de nivel:**
 ```json
 {
-  "nivel": "B2",
-  "estadoAcademico": "en_curso"
+  "nivel": "B2",
+  "estadoAcademico": "en_curso"
 }
 ```
 
 #### **Respuesta exitosa:**
 ```json
 {
-  "success": true,
-  "message": "Información académica actualizada exitosamente",
-  "data": {
-    "user": {
-      "_id": "...",
-      "email": "estudiante.nuevo@test.com",
-      "firstName": "María",
-      "lastName": "González",
-      "role": "estudiante",
-      "nivel": "B2",
-      "estadoAcademico": "en_curso",
-      "__t": "estudiante"
-    }
-  }
+  "success": true,
+  "message": "Información académica actualizada exitosamente",
+  "data": {
+    "user": {
+      "_id": "...",
+      "email": "estudiante.nuevo@test.com",
+      "firstName": "María",
+      "lastName": "González",
+      "role": "estudiante",
+      "nivel": "B2",
+      "estadoAcademico": "en_curso",
+      "__t": "estudiante"
+    }
+  }
 }
 ```
 
@@ -544,57 +544,57 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 #### **Ejemplo - Actualizar tarifa:**
 ```json
 {
-  "tarifaPorHora": 3000
+  "tarifaPorHora": 3000
 }
 ```
 
 #### **Ejemplo - Agregar especialidad:**
 ```json
 {
-  "especialidades": ["ingles", "frances", "aleman"]
+  "especialidades": ["ingles", "frances", "aleman"]
 }
 ```
 
 #### **Ejemplo - Actualizar disponibilidad:**
 ```json
 {
-  "disponibilidad": {
-    "lunes": [{"inicio": "09:00", "fin": "12:00"}],
-    "miercoles": [{"inicio": "14:00", "fin": "17:00"}],
-    "viernes": [{"inicio": "16:00", "fin": "19:00"}],
-    "sabado": [{"inicio": "10:00", "fin": "13:00"}]
-  }
+  "disponibilidad": {
+    "lunes": [{"inicio": "09:00", "fin": "12:00"}],
+    "miercoles": [{"inicio": "14:00", "fin": "17:00"}],
+    "viernes": [{"inicio": "16:00", "fin": "19:00"}],
+    "sabado": [{"inicio": "10:00", "fin": "13:00"}]
+  }
 }
 ```
 
 #### **Respuesta exitosa:**
 ```json
 {
-  "success": true,
-  "message": "Información profesional actualizada exitosamente",
-  "data": {
-    "user": {
-      "_id": "...",
-      "email": "profesor.nuevo@test.com",
-      "firstName": "Carlos",
-      "lastName": "Rodríguez",
-      "role": "profesor",
-      "especialidades": ["ingles", "frances", "aleman"],
-      "tarifaPorHora": 3000,
-      "disponibilidad": { ... },
-      "__t": "profesor"
-    }
-  }
+  "success": true,
+  "message": "Información profesional actualizada exitosamente",
+  "data": {
+    "user": {
+      "_id": "...",
+      "email": "profesor.nuevo@test.com",
+      "firstName": "Carlos",
+      "lastName": "Rodríguez",
+      "role": "profesor",
+      "especialidades": ["ingles", "frances", "aleman"],
+      "tarifaPorHora": 3000,
+      "disponibilidad": { ... },
+      "__t": "profesor"
+    }
+  }
 }
 ```
-  "data": {
-    "user": {
-      "email": "sabrinaavalos@gmail.com",
-      "firstName": "Sabrina",
-      "nivel": "B2",
-      "estadoAcademico": "en_curso"
-    }
-  }
+  "data": {
+    "user": {
+      "email": "sabrinaavalos@gmail.com",
+      "firstName": "Sabrina",
+      "nivel": "B2",
+      "estadoAcademico": "en_curso"
+    }
+  }
 }
 ```
 
@@ -607,8 +607,8 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 #### **Error: "Token no proporcionado"**
 ```json
 {
-  "success": false,
-  "message": "Token no proporcionado"
+  "success": false,
+  "message": "Token no proporcionado"
 }
 ```
 **Solución:** Agregar header `Authorization: Bearer [TOKEN]`
@@ -616,8 +616,8 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 #### **Error: "Token inválido o expirado"**
 ```json
 {
-  "success": false,
-  "message": "Token inválido o expirado"
+  "success": false,
+  "message": "Token inválido o expirado"
 }
 ```
 **Solución:** Hacer login nuevamente para obtener token válido
@@ -625,8 +625,8 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 #### **Error: "Acceso denegado. Se requieren permisos de administrador"**
 ```json
 {
-  "success": false,
-  "message": "Acceso denegado. Se requieren permisos de administrador"
+  "success": false,
+  "message": "Acceso denegado. Se requieren permisos de administrador"
 }
 ```
 **Solución:** Usar token de usuario admin
@@ -638,22 +638,22 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 #### **Error: "El email ya está registrado"**
 ```json
 {
-  "success": false,
-  "message": "El email ya está registrado",
-  "errors": [
-    {
-      "field": "email",
-      "message": "El email ya está registrado"
-    }
-  ]
+  "success": false,
+  "message": "El email ya está registrado",
+  "errors": [
+    {
+      "field": "email",
+      "message": "El email ya está registrado"
+    }
+  ]
 }
 ```
 
 #### **Error: "Credenciales inválidas"**
 ```json
 {
-  "success": false,
-  "message": "Credenciales inválidas"
+  "success": false,
+  "message": "Credenciales inválidas"
 }
 ```
 **Causas:** Email no existe o contraseña incorrecta
@@ -661,13 +661,13 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 #### **Error: "Debe cambiar su contraseña"**
 ```json
 {
-  "success": true,
-  "message": "Login exitoso. Debe cambiar su contraseña.",
-  "data": {
-    "token": "...",
-    "user": { ... },
-    "mustChangePassword": true
-  }
+  "success": true,
+  "message": "Login exitoso. Debe cambiar su contraseña.",
+  "data": {
+    "token": "...",
+    "user": { ... },
+    "mustChangePassword": true
+  }
 }
 ```
 **Acción:** Usar endpoint de cambio de contraseña
@@ -679,35 +679,35 @@ Authorization: Bearer [TOKEN_DE_PROFESOR]
 #### **Error: "Faltan campos obligatorios"**
 ```json
 {
-  "success": false,
-  "message": "Error de validación",
-  "errors": [
-    {
-      "field": "nivel",
-      "message": "El nivel es obligatorio para estudiantes"
-    },
-    {
-      "field": "especialidades",
-      "message": "Las especialidades son obligatorias para profesores"
-    }
-  ]
+  "success": false,
+  "message": "Error de validación",
+  "errors": [
+    {
+      "field": "nivel",
+      "message": "El nivel es obligatorio para estudiantes"
+    },
+    {
+      "field": "especialidades",
+      "message": "Las especialidades son obligatorias para profesores"
+    }
+  ]
 }
 ```
 
 #### **Error: "DNI ya está registrado"**
 ```json
 {
-  "success": false,
-  "message": "Error de validación",
-  "errors": [
-    {
-      "field": "dni",
-      "message": "DNI ya está registrado"
-    }
-  ]
+  "success": false,
+  "message": "Error de validación",
+  "errors": [
+    {
+      "field": "dni",
+      "message": "DNI ya está registrado"
+    }
+  ]
 }
 ```
-  }
+  }
 }
 ```
 
@@ -733,8 +733,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 #### **2. Credenciales de Admin (migradas):**
 ```json
 {
-  "email": "admin@consultora.com",
-  "password": "Admin123!"
+  "email": "admin@consultora.com",
+  "password": "Admin123!"
 }
 ```
 
@@ -753,8 +753,8 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@consultora.com",
-  "password": "Admin123!"
+  "email": "admin@consultora.com",
+  "password": "Admin123!"
 }
 ```
 **Copiar el TOKEN de la respuesta para siguientes requests**
@@ -766,14 +766,14 @@ Content-Type: application/json
 Authorization: Bearer [TOKEN_ADMIN]
 
 {
-  "email": "test.estudiante@example.com",
-  "firstName": "Test",
-  "lastName": "Estudiante",
-  "role": "estudiante",
-  "dni": "99888777",
-  "nivel": "B1",
-  "estadoAcademico": "inscrito",
-  "phone": "+54911999888"
+  "email": "test.estudiante@example.com",
+  "firstName": "Test",
+  "lastName": "Estudiante",
+  "role": "estudiante",
+  "dni": "99888777",
+  "nivel": "B1",
+  "estadoAcademico": "inscrito",
+  "phone": "+54911999888"
 }
 ```
 
@@ -784,14 +784,14 @@ Content-Type: application/json
 Authorization: Bearer [TOKEN_ADMIN]
 
 {
-  "email": "test.profesor@example.com",
-  "firstName": "Test",
-  "lastName": "Profesor",
-  "role": "profesor",
-  "dni": "77766655",
-  "especialidades": ["ingles", "frances"],
-  "tarifaPorHora": 2800,
-  "phone": "+54911777666"
+  "email": "test.profesor@example.com",
+  "firstName": "Test",
+  "lastName": "Profesor",
+  "role": "profesor",
+  "dni": "77766655",
+  "especialidades": ["ingles", "frances"],
+  "tarifaPorHora": 2800,
+  "phone": "+54911777666"
 }
 ```
 
@@ -801,8 +801,8 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "test.estudiante@example.com",
-  "password": "99888777"
+  "email": "test.estudiante@example.com",
+  "password": "99888777"
 }
 ```
 **Respuesta incluirá `mustChangePassword: true`**
@@ -814,9 +814,9 @@ Content-Type: application/json
 Authorization: Bearer [TOKEN_ESTUDIANTE]
 
 {
-  "currentPassword": "99888777",
-  "newPassword": "NuevaPass123!",
-  "confirmNewPassword": "NuevaPass123!"
+  "currentPassword": "99888777",
+  "newPassword": "NuevaPass123!",
+  "confirmNewPassword": "NuevaPass123!"
 }
 ```
 
@@ -826,8 +826,8 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "test.estudiante@example.com",
-  "password": "NuevaPass123!"
+  "email": "test.estudiante@example.com",
+  "password": "NuevaPass123!"
 }
 ```
 
@@ -850,8 +850,8 @@ Content-Type: application/json
 Authorization: Bearer [TOKEN_ESTUDIANTE]
 
 {
-  "nivel": "B2",
-  "estadoAcademico": "en_curso"
+  "nivel": "B2",
+  "estadoAcademico": "en_curso"
 }
 ```
 
@@ -862,12 +862,12 @@ Content-Type: application/json
 Authorization: Bearer [TOKEN_PROFESOR]
 
 {
-  "especialidades": ["ingles", "frances", "aleman"],
-  "tarifaPorHora": 3200,
-  "disponibilidad": {
-    "lunes": [{"inicio": "09:00", "fin": "12:00"}],
-    "miercoles": [{"inicio": "14:00", "fin": "17:00"}]
-  }
+  "especialidades": ["ingles", "frances", "aleman"],
+  "tarifaPorHora": 3200,
+  "disponibilidad": {
+    "lunes": [{"inicio": "09:00", "fin": "12:00"}],
+    "miercoles": [{"inicio": "14:00", "fin": "17:00"}]
+  }
 }
 ```
 
@@ -878,7 +878,7 @@ Authorization: Bearer [TOKEN_PROFESOR]
 #### **Verificar Modelos Discriminados:**
 Todas las respuestas deben incluir el campo `__t`:
 - `"__t": "estudiante"` para estudiantes
-- `"__t": "profesor"` para profesores  
+- `"__t": "profesor"` para profesores  
 - `"__t": "admin"` para administradores
 
 #### **Verificar Autenticación:**
@@ -908,16 +908,16 @@ Todas las respuestas deben incluir el campo `__t`:
 | PUT | `/update-professional-info` | Info profesional | Profesor |
 
 **IMPORTANTE:** Todos los endpoints funcionan con la nueva arquitectura de modelos discriminados. Los usuarios migrados conservan sus IDs y datos originales.
-        "createdAt": "2025-09-15T12:30:00.000Z"
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "total": 1,
-      "pages": 1
-    }
-  }
+        "createdAt": "2025-09-15T12:30:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 1,
+      "pages": 1
+    }
+  }
 }
 ```
 
@@ -945,39 +945,39 @@ Authorization: Bearer [TOKEN_DE_ADMIN]
 #### **Respuesta esperada:**
 ```json
 {
-  "success": true,
-  "data": {
-    "professors": [
-      {
-        "_id": "...",
-        "email": "profesor@test.com",
-        "firstName": "Carlos",
-        "lastName": "Rodríguez",
-        "role": "profesor",
-        "especialidades": ["ingles", "frances"],
-        "tarifaPorHora": 2500,
-        "disponibilidad": {
-          "lunes": [{"inicio": "09:00", "fin": "12:00"}],
-          "miercoles": [{"inicio": "14:00", "fin": "17:00"}]
-        },
-        "phone": "+54911234568",
-        "isActive": true,
-        "createdAt": "2025-09-15T12:45:00.000Z"
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "total": 1,
-      "pages": 1
-    }
-  }
+  "success": true,
+  "data": {
+    "professors": [
+      {
+        "_id": "...",
+        "email": "profesor@test.com",
+        "firstName": "Carlos",
+        "lastName": "Rodríguez",
+        "role": "profesor",
+        "especialidades": ["ingles", "frances"],
+        "tarifaPorHora": 2500,
+        "disponibilidad": {
+          "lunes": [{"inicio": "09:00", "fin": "12:00"}],
+          "miercoles": [{"inicio": "14:00", "fin": "17:00"}]
+        },
+        "phone": "+54911234568",
+        "isActive": true,
+        "createdAt": "2025-09-15T12:45:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 1,
+      "pages": 1
+    }
+  }
 }
 ```
 
 ---
 
-##  **OTROS ENDPOINTS IMPORTANTES**
+##  **OTROS ENDPOINTS IMPORTANTES**
 
 ### **👤 Ver Perfil Propio**
 **Endpoint:** `GET http://localhost:5000/api/auth/profile`
@@ -994,9 +994,9 @@ Authorization: Bearer [TOKEN]
 **Body:**
 ```json
 {
-  "currentPassword": "Test123456",
-  "newPassword": "NuevoPassword123",
-  "confirmPassword": "NuevoPassword123"
+  "currentPassword": "Test123456",
+  "newPassword": "NuevoPassword123",
+  "confirmPassword": "NuevoPassword123"
 }
 ```
 
@@ -1057,14 +1057,14 @@ Authorization: Bearer [TOKEN]
 ### **Error de Validación:**
 ```json
 {
-  "success": false,
-  "message": "Errores de validación",
-  "errors": [
-    {
-      "field": "nivel",
-      "message": "Nivel debe ser: A1, A2, B1, B2, C1 o C2"
-    }
-  ]
+  "success": false,
+  "message": "Errores de validación",
+  "errors": [
+    {
+      "field": "nivel",
+      "message": "Nivel debe ser: A1, A2, B1, B2, C1 o C2"
+    }
+  ]
 }
 ```
 **Solución:** Verificar que todos los campos obligatorios estén presentes y tengan el formato correcto.
@@ -1072,9 +1072,9 @@ Authorization: Bearer [TOKEN]
 ### **Error de Permisos:**
 ```json
 {
-  "success": false,
-  "message": "Solo los administradores pueden crear profesores",
-  "code": "INSUFFICIENT_PERMISSIONS"
+  "success": false,
+  "message": "Solo los administradores pueden crear profesores",
+  "code": "INSUFFICIENT_PERMISSIONS"
 }
 ```
 **Solución:** Usar el token correcto del rol apropiado.
@@ -1082,9 +1082,9 @@ Authorization: Bearer [TOKEN]
 ### **Error de Autenticación:**
 ```json
 {
-  "success": false,
-  "message": "Token inválido o expirado",
-  "code": "INVALID_TOKEN"
+  "success": false,
+  "message": "Token inválido o expirado",
+  "code": "INVALID_TOKEN"
 }
 ```
 **Solución:** Hacer login nuevamente para obtener un token válido.
@@ -1111,8 +1111,8 @@ Authorization: Bearer [TOKEN]
 ### **CREDENCIALES DE ADMIN (ACTUALIZADAS)**
 ```json
 {
-  "email": "admin@consultora.com",
-  "password": "Admin123!"
+  "email": "admin@consultora.com",
+  "password": "Admin123!"
 }
 ```
 
@@ -1165,11 +1165,11 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "email": "admin@consultora.com",
-  "password": "Admin123!",
-  "firstName": "Super",
-  "lastName": "Admin",
-  "dni": "99999999"
+  "email": "admin@consultora.com",
+  "password": "Admin123!",
+  "firstName": "Super",
+  "lastName": "Admin",
+  "dni": "99999999"
 }
 ```
 **Respuesta:**
@@ -1183,8 +1183,8 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "email": "admin@consultora.com",
-  "password": "Admin123!"
+  "email": "admin@consultora.com",
+  "password": "Admin123!"
 }
 ```
 **Respuesta:**
@@ -1201,13 +1201,13 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "email": "estudiante1@test.com",
-  "firstName": "Juan",
-  "lastName": "Perez",
-  "role": "estudiante",
-  "dni": "12345678",
-  "nivel": "A1",
-  "phone": "123456789"
+  "email": "estudiante1@test.com",
+  "firstName": "Juan",
+  "lastName": "Perez",
+  "role": "estudiante",
+  "dni": "12345678",
+  "nivel": "A1",
+  "phone": "123456789"
 }
 ```
 **Notas:**
@@ -1225,14 +1225,14 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "email": "profesor1@test.com",
-  "firstName": "Maria",
-  "lastName": "Garcia",
-  "role": "profesor",
-  "dni": "87654321",
-  "especialidades": ["ingles", "frances"],
-  "tarifaPorHora": 25.5,
-  "phone": "987654321"
+  "email": "profesor1@test.com",
+  "firstName": "Maria",
+  "lastName": "Garcia",
+  "role": "profesor",
+  "dni": "87654321",
+  "especialidades": ["ingles", "frances"],
+  "tarifaPorHora": 25.5,
+  "phone": "987654321"
 }
 ```
 **Notas:**
@@ -1250,13 +1250,13 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "email": "admin2@consultora.com",
-  "password": "Admin456!",
-  "firstName": "Ana",
-  "lastName": "Lopez",
-  "role": "admin",
-  "dni": "88888888",
-  "phone": "111222333"
+  "email": "admin2@consultora.com",
+  "password": "Admin456!",
+  "firstName": "Ana",
+  "lastName": "Lopez",
+  "role": "admin",
+  "dni": "88888888",
+  "phone": "111222333"
 }
 ```
 **Notas:**
@@ -1270,8 +1270,8 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "email": "estudiante1@test.com",
-  "password": "12345678"
+  "email": "estudiante1@test.com",
+  "password": "12345678"
 }
 ```
 **Respuesta:**
@@ -1288,7 +1288,7 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "newPassword": "NuevaPassword123!"
+  "newPassword": "NuevaPassword123!"
 }
 ```
 **Respuesta:**
@@ -1302,12 +1302,275 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 **Body:**
 ```json
 {
-  "email": "estudiante1@test.com",
-  "password": "NuevaPassword123!"
+  "email": "estudiante1@test.com",
+  "password": "NuevaPassword123!"
 }
 ```
 **Respuesta:**
 - El login será exitoso y no pedirá cambio de contraseña.
+
+---
+
+## GESTIÓN DE USUARIOS (SOLO ADMINISTRADORES)
+
+### DESACTIVAR USUARIO (Soft Delete)
+
+**Endpoint:** `PUT http://localhost:5000/api/auth/deactivate/:id`
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer [TOKEN_DE_ADMIN]
+```
+**Permisos:** Solo administradores
+
+**Descripción:** Desactiva un usuario cambiando su estado a `isActive: false`. El usuario sigue existiendo en la base de datos pero no puede hacer login.
+
+**Campos obligatorios:**
+- `id` - ID del usuario a desactivar (en la URL)
+
+**Usuarios que se pueden desactivar:**
+- Estudiantes
+- Profesores
+- NO se pueden desactivar administradores
+- NO te puedes desactivar a ti mismo
+
+**Ejemplo:**
+```
+PUT http://localhost:5000/api/auth/deactivate/68d17f25092e23b755fbadf1
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "message": "Estudiante desactivado exitosamente",
+  "data": {
+    "user": {
+      "_id": "68d17f25092e23b755fbadf1",
+      "email": "ana.garcia@test.com",
+      "firstName": "Ana",
+      "lastName": "Piedrabuena",
+      "role": "estudiante",
+      "isActive": false
+    }
+  }
+}
+```
+
+### REACTIVAR USUARIO
+
+**Endpoint:** `PUT http://localhost:5000/api/auth/reactivate/:id`
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer [TOKEN_DE_ADMIN]
+```
+**Permisos:** Solo administradores
+
+**Descripción:** Reactiva un usuario desactivado cambiando su estado a `isActive: true`.
+
+**Ejemplo:**
+```
+PUT http://localhost:5000/api/auth/reactivate/68d17f25092e23b755fbadf1
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "message": "Estudiante reactivado exitosamente",
+  "data": {
+    "user": {
+      "_id": "68d17f25092e23b755fbadf1",
+      "email": "ana.garcia@test.com",
+      "firstName": "Ana",
+      "lastName": "Piedrabuena",
+      "role": "estudiante",
+      "isActive": true
+    }
+  }
+}
+```
+
+### ELIMINAR USUARIO PERMANENTEMENTE (Hard Delete)
+
+**Endpoint:** `DELETE http://localhost:5000/api/auth/delete/:id`
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer [TOKEN_DE_ADMIN]
+```
+**Permisos:** Solo administradores
+
+**Descripción:** Elimina un usuario permanentemente de la base de datos. Esta acción NO es reversible.
+
+**IMPORTANTE:** 
+- El usuario se borra completamente
+- No se puede recuperar la información
+- Solo usar cuando estés completamente seguro
+
+**Usuarios que se pueden eliminar:**
+- Estudiantes
+- Profesores  
+- NO se pueden eliminar administradores
+- NO te puedes eliminar a ti mismo
+
+**Ejemplo:**
+```
+DELETE http://localhost:5000/api/auth/delete/68cd60e46ffb8f8d3bb305db
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "message": "Profesor eliminado permanentemente",
+  "data": {
+    "deletedUser": {
+      "_id": "68cd60e46ffb8f8d3bb305db",
+      "email": "maria.garcia@test.com",
+      "firstName": "Maria",
+      "lastName": "Garcia",
+      "role": "profesor"
+    }
+  }
+}
+```
+
+---
+
+## RESUMEN COMPLETO DEL SISTEMA
+
+### FUNCIONALIDADES IMPLEMENTADAS
+
+**AUTENTICACIÓN Y REGISTRO**
+- Registro de estudiantes por admin
+- Registro de profesores por admin  
+- Registro de administradores por admin
+- Login universal para todos los roles
+- Cambio de contraseña obligatorio para estudiantes/profesores
+- Logout con invalidación de sesión
+- Verificación de tokens JWT
+
+**GESTIÓN DE PERFILES**
+- Ver perfil propio
+- Actualizar perfil general (nombre, apellido, teléfono)
+- Actualizar información académica (solo estudiantes)
+- Actualizar información profesional (solo profesores)
+
+**GESTIÓN ADMINISTRATIVA**
+- Listar todos los estudiantes (cualquier usuario autenticado)
+- Listar profesores (solo administradores)
+- Filtrar profesores por especialidad
+- Desactivar usuarios (soft delete)
+- Reactivar usuarios
+- Eliminar usuarios permanentemente (hard delete)
+
+**SEGURIDAD Y VALIDACIONES**
+- Tokens JWT con expiración de 24 horas
+- Middlewares de autenticación y autorización
+- Validaciones específicas por rol
+- Protección contra auto-eliminación
+- Protección de cuentas de administrador
+- Encriptación de contraseñas con bcrypt
+- Validaciones de formato de email, DNI, teléfono
+
+**MODELOS DE DATOS**
+- BaseUser: Modelo base con campos comunes
+- Estudiante: Hereda de BaseUser + nivel, estadoAcademico
+- Profesor: Hereda de BaseUser + especialidades, tarifaPorHora, disponibilidad
+- Admin: Hereda de BaseUser + permisos
+- Discriminador de Mongoose para separar tipos de usuario
+
+### ENDPOINTS DISPONIBLES
+
+**BASE URL:** `http://localhost:5000/api/auth`
+
+**REGISTRO (Solo Admin)**
+- `POST /register/estudiante-admin` - Crear estudiante
+- `POST /register/profesor` - Crear profesor
+- `POST /register/admin` - Crear administrador
+- `POST /create-first-admin` - Crear primer admin del sistema
+
+**AUTENTICACIÓN**
+- `POST /login` - Login universal
+- `POST /logout` - Cerrar sesión
+- `GET /verify-token` - Verificar token válido
+
+**GESTIÓN DE CONTRASEÑAS**
+- `PUT /change-password` - Cambiar contraseña
+- `PUT /change-password-forced` - Cambio forzado de contraseña
+
+**PERFILES**
+- `GET /profile` - Ver perfil propio
+- `PUT /profile` - Actualizar perfil general
+- `PUT /update-academic-info` - Actualizar info académica (estudiantes)
+- `PUT /update-teaching-info` - Actualizar info profesional (profesores)
+
+**LISTADOS**
+- `GET /students` - Listar estudiantes
+- `GET /professors` - Listar profesores (solo admin)
+- `GET /professors?especialidad=ingles` - Filtrar profesores
+
+**GESTIÓN DE USUARIOS (Solo Admin)**
+- `PUT /deactivate/:id` - Desactivar usuario
+- `PUT /reactivate/:id` - Reactivar usuario
+- `DELETE /delete/:id` - Eliminar usuario permanentemente
+
+**UTILIDADES**
+- `GET /test` - Test de funcionamiento
+- `GET /db-test` - Test de base de datos
+
+### ROLES Y PERMISOS
+
+**ESTUDIANTE**
+- Puede: Ver su perfil, actualizar info personal y académica, ver lista de estudiantes
+- No puede: Registrar usuarios, ver/gestionar profesores, eliminar usuarios
+
+**PROFESOR**
+- Puede: Ver su perfil, actualizar info personal y profesional, ver lista de estudiantes
+- No puede: Registrar usuarios, ver/gestionar otros profesores, eliminar usuarios
+
+**ADMINISTRADOR**
+- Puede: Todo lo anterior + registrar usuarios, ver/gestionar profesores, eliminar/desactivar usuarios
+- No puede: Eliminar otros administradores, eliminarse a sí mismo
+
+### FLUJO DE TRABAJO TÍPICO
+
+**1. Configuración inicial:**
+- Crear primer administrador
+- Admin crea estudiantes y profesores
+- Usuarios cambian contraseña en primer login
+
+**2. Operaciones diarias:**
+- Login con credenciales
+- Actualizar perfiles según necesidades
+- Admin gestiona usuarios activos
+- Filtrar y buscar usuarios según criterios
+
+**3. Mantenimiento:**
+- Desactivar usuarios temporalmente
+- Eliminar usuarios que ya no pertenecen al sistema
+- Reactivar usuarios según sea necesario
+
+### VALIDACIONES IMPLEMENTADAS
+
+**Email:** Formato válido, único en el sistema
+**Contraseñas:** Mínimo 6 caracteres, 1 mayúscula, 1 minúscula, 1 número
+**DNI:** 7-8 dígitos, único en el sistema
+**Nombres:** Solo letras y espacios, 2-50 caracteres
+**Nivel académico:** A1, A2, B1, B2, C1, C2
+**Especialidades:** ingles, frances, aleman, italiano, portugues, espanol
+**Teléfono:** Formato flexible, 8-15 dígitos
+
+### TECNOLOGÍAS UTILIZADAS
+
+- **Backend:** Node.js con Express
+- **Base de datos:** MongoDB con Mongoose
+- **Autenticación:** JWT (JSON Web Tokens)
+- **Validaciones:** express-validator
+- **Seguridad:** bcryptjs, helmet, cors
+- **Logging:** morgan
 
 ---
 
@@ -1318,3 +1581,7 @@ Todos los endpoints están probados y funcionando correctamente. La documentaci�
 - El campo `dni` debe ser único y numérico (7-8 dígitos).
 - Si tienes errores de validación, revisa los mensajes detallados en la respuesta.
 - Puedes probar todos los flujos en Thunder Client siguiendo los ejemplos de arriba.
+- Las eliminaciones permanentes NO son reversibles, usar con precaución.
+- Siempre usar soft delete (desactivar) a menos que sea estrictamente necesario eliminar permanentemente.
+- Los tokens JWT expiran en 24 horas, después se debe hacer login nuevamente.
+
