@@ -1,9 +1,25 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { routes } from '../../utils/routes'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 // Footer that appears at the bottom of every page
 const Footer = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // Handle navigation - scroll on home page, route to home then scroll on other pages
+  const handleSectionClick = (sectionId) => {
+    if (location.pathname === '/') {
+      // Already on home page, just scroll to section
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      // Navigate to home page first, then scroll to section
+      navigate('/')
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
+  }
+
   return (
     <footer className="footer">
       <div className="container">
@@ -14,14 +30,30 @@ const Footer = () => {
             <p>Consultora especializada en enseñanza de idiomas con metodologías innovadoras.</p>
           </div>
           
-          {/* Quick navigation links */}
+          {/* Quick navigation links with scroll functionality */}
           <div className="footer-section">
             <h4>Enlaces</h4>
             <ul>
-              <li><Link to={routes.ABOUT}>Nosotros</Link></li>
-              <li><Link to={routes.SERVICES}>Servicios</Link></li>
-              <li><Link to={routes.CLIENTS}>Clientes</Link></li>
-              <li><Link to={routes.CONTACT}>Contacto</Link></li>
+              <li>
+                <a href="#nosotros" onClick={(e) => { e.preventDefault(); handleSectionClick('nosotros') }}>
+                  Nosotros
+                </a>
+              </li>
+              <li>
+                <a href="#servicios" onClick={(e) => { e.preventDefault(); handleSectionClick('servicios') }}>
+                  Servicios
+                </a>
+              </li>
+              <li>
+                <a href="#clientes" onClick={(e) => { e.preventDefault(); handleSectionClick('clientes') }}>
+                  Clientes
+                </a>
+              </li>
+              <li>
+                <a href="#contacto" onClick={(e) => { e.preventDefault(); handleSectionClick('contacto') }}>
+                  Contacto
+                </a>
+              </li>
             </ul>
           </div>
           
