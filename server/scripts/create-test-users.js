@@ -11,13 +11,13 @@ async function getAdminToken() {
     });
     
     if (response.data.success) {
-      console.log('✅ Admin login exitoso');
+      console.log(' Admin login exitoso');
       return response.data.data.token;
     } else {
       throw new Error('Login falló');
     }
   } catch (error) {
-    console.error('❌ Error en login admin:', error.response?.data || error.message);
+    console.error(' Error en login admin:', error.response?.data || error.message);
     throw error;
   }
 }
@@ -33,11 +33,11 @@ async function createStudent(token, studentData) {
     });
     
     if (response.data.success) {
-      console.log(`✅ Estudiante creado: ${studentData.email} (Password temporal: ${studentData.dni})`);
+      console.log(` Estudiante creado: ${studentData.email} (Password temporal: ${studentData.dni})`);
       return response.data;
     }
   } catch (error) {
-    console.error(`❌ Error creando estudiante ${studentData.email}:`, error.response?.data || error.message);
+    console.error(` Error creando estudiante ${studentData.email}:`, error.response?.data || error.message);
   }
 }
 
@@ -52,11 +52,11 @@ async function createTeacher(token, teacherData) {
     });
     
     if (response.data.success) {
-      console.log(`✅ Profesor creado: ${teacherData.email} (Password temporal: ${teacherData.dni})`);
+      console.log(` Profesor creado: ${teacherData.email} (Password temporal: ${teacherData.dni})`);
       return response.data;
     }
   } catch (error) {
-    console.error(`❌ Error creando profesor ${teacherData.email}:`, error.response?.data || error.message);
+    console.error(` Error creando profesor ${teacherData.email}:`, error.response?.data || error.message);
   }
 }
 
@@ -114,7 +114,7 @@ const testTeachers = [
 
 // Función principal
 async function createTestUsers() {
-  console.log('🚀 Iniciando creación de usuarios de prueba...\n');
+  console.log(' Iniciando creación de usuarios de prueba...\n');
   
   try {
     // 1. Obtener token de admin
@@ -129,15 +129,15 @@ async function createTestUsers() {
     console.log('');
     
     // 3. Crear profesores
-    console.log('👨‍🏫 Creando profesores...');
+    console.log('Creando profesores...');
     for (const teacher of testTeachers) {
       await createTeacher(adminToken, teacher);
     }
     console.log('');
     
-    console.log('✅ ¡Usuarios de prueba creados exitosamente!');
-    console.log('\n📋 CREDENCIALES PARA PROBAR:');
-    console.log('\n🔐 ADMIN:');
+    console.log(' ¡Usuarios de prueba creados exitosamente!');
+    console.log('\n CREDENCIALES PARA PROBAR:');
+    console.log('\n ADMIN:');
     console.log('Email: admin@consultora.com');
     console.log('Password: Admin123!');
     
@@ -146,15 +146,15 @@ async function createTestUsers() {
       console.log(`Email: ${student.email} | Password temporal: ${student.dni}`);
     });
     
-    console.log('\n👨‍🏫 PROFESORES (primer login con DNI):');
+    console.log('\n PROFESORES (primer login con DNI):');
     testTeachers.forEach(teacher => {
       console.log(`Email: ${teacher.email} | Password temporal: ${teacher.dni}`);
     });
     
-    console.log('\n💡 IMPORTANTE: Los estudiantes y profesores deben cambiar su contraseña en el primer login.');
+    console.log('\n IMPORTANTE: Los estudiantes y profesores deben cambiar su contraseña en el primer login.');
     
   } catch (error) {
-    console.error('❌ Error general:', error.message);
+    console.error(' Error general:', error.message);
   }
 }
 

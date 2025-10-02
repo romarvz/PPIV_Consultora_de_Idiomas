@@ -4,6 +4,21 @@ import ForcePasswordChange from '../../components/common/ForcePasswordChange'
 import RegisterStudent from '../../components/RegisterStudent'
 import RegisterTeacher from '../../components/RegisterTeacher'
 import api from '../../services/api'
+// React Icons - Updated for better UI
+import { 
+  FaUsers, 
+  FaGraduationCap, 
+  FaBookOpen, 
+  FaDollarSign,
+  FaUserGraduate,
+  FaChalkboardTeacher,
+  FaCalendarAlt,
+  FaCreditCard,
+  FaChartLine,
+  FaCog,
+  FaSignOutAlt,
+  FaTasks
+} from 'react-icons/fa'
 
 const AdminDashboard = () => {
   const { user, logout, mustChangePassword } = useAuth()
@@ -82,12 +97,12 @@ const AdminDashboard = () => {
           newStudents,
           totalTeachers: teachers.length,
           activeStudents,
-          scheduledClasses: 0, // TODO: Implement when classes model is ready
-          upcomingClasses: 0, // TODO: Implement when classes model is ready
-          pendingPayments: { count: 0, amount: 0 }, // TODO: Implement when payments model is ready
-          monthlyRevenue: 0, // TODO: Implement when payments model is ready
-          completedClasses: 0, // TODO: Implement when classes model is ready
-          cancelledClasses: 0 // TODO: Implement when classes model is ready
+          scheduledClasses: 0, 
+          upcomingClasses: 0, 
+          pendingPayments: { count: 0, amount: 0 }, 
+          monthlyRevenue: 0, 
+          completedClasses: 0, 
+          cancelledClasses: 0 
         })
       }
     } catch (error) {
@@ -187,7 +202,7 @@ const AdminDashboard = () => {
               Panel de Administración
             </h2>
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-              ¡Bienvenido/a {user?.firstName}! Gestiona tu consultoría desde aquí.
+              ¡Bienvenido/a {user?.firstName || user?.name || 'Administrador'}! Gestiona tu consultoría desde aquí.
             </p>
           </div>
           <button 
@@ -196,9 +211,13 @@ const AdminDashboard = () => {
             style={{
               background: '#dc3545',
               padding: '0.75rem 1.5rem',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
+            <FaSignOutAlt />
             Cerrar Sesión
           </button>
         </div>
@@ -211,7 +230,7 @@ const AdminDashboard = () => {
             fontSize: '1.5rem',
             fontWeight: '600'
           }}>
-            📊 Overview del Sistema
+             Overview del Sistema
           </h3>
           
           {loading ? (
@@ -220,7 +239,7 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className="services-grid" style={{ 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '1.5rem'
             }}>
               <div className="service-card" style={{ 
@@ -228,7 +247,9 @@ const AdminDashboard = () => {
                 color: 'white',
                 border: 'none'
               }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>👥</div>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                  <FaUsers />
+                </div>
                 <h3 style={{ color: 'white', fontSize: '2rem', margin: '0.5rem 0' }}>
                   {stats.totalStudents}
                 </h3>
@@ -239,11 +260,13 @@ const AdminDashboard = () => {
               </div>
 
               <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, var(--accent), #4A9FD9)',
+                background: 'linear-gradient(135deg, #1E3A8A, #4A9FD9)',
                 color: 'white',
                 border: 'none'
               }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🎓</div>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                  <FaChalkboardTeacher />
+                </div>
                 <h3 style={{ color: 'white', fontSize: '2rem', margin: '0.5rem 0' }}>
                   {stats.totalTeachers}
                 </h3>
@@ -252,11 +275,13 @@ const AdminDashboard = () => {
               </div>
 
               <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                background: 'linear-gradient(135deg, #30BA8F, #20c997)',
                 color: 'white',
                 border: 'none'
               }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📚</div>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                  <FaBookOpen />
+                </div>
                 <h3 style={{ color: 'white', fontSize: '2rem', margin: '0.5rem 0' }}>
                   {stats.scheduledClasses}
                 </h3>
@@ -265,11 +290,13 @@ const AdminDashboard = () => {
               </div>
 
               <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #ffc107, #fd7e14)',
+                background: 'linear-gradient(135deg, #F5B800, #fd7e14)',
                 color: 'white',
                 border: 'none'
               }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>💰</div>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                  <FaDollarSign />
+                </div>
                 <h3 style={{ color: 'white', fontSize: '1.5rem', margin: '0.5rem 0' }}>
                   ${stats.monthlyRevenue.toLocaleString()}
                 </h3>
@@ -288,17 +315,22 @@ const AdminDashboard = () => {
             color: 'var(--primary)', 
             marginBottom: '1.5rem',
             fontSize: '1.5rem',
-            fontWeight: '600'
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}>
-            ⚡ Acciones Rápidas
+            <FaTasks /> Acciones Rápidas
           </h3>
           
           <div className="services-grid" style={{ 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '1.5rem'
           }}>
             <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👨‍🎓</div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaUserGraduate />
+              </div>
               <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
                 Gestión de Estudiantes
               </h4>
@@ -318,7 +350,9 @@ const AdminDashboard = () => {
             </div>
             
             <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👨‍🏫</div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaChalkboardTeacher />
+              </div>
               <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
                 Gestión de Profesores
               </h4>
@@ -338,7 +372,9 @@ const AdminDashboard = () => {
             </div>
             
             <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📅</div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaCalendarAlt />
+              </div>
               <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
                 Gestión de Clases
               </h4>
@@ -351,7 +387,9 @@ const AdminDashboard = () => {
             </div>
             
             <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💳</div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaCreditCard />
+              </div>
               <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
                 Pagos y Finanzas
               </h4>
@@ -364,7 +402,9 @@ const AdminDashboard = () => {
             </div>
             
             <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaChartLine />
+              </div>
               <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
                 Reportes
               </h4>
@@ -377,7 +417,9 @@ const AdminDashboard = () => {
             </div>
             
             <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚙️</div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaCog />
+              </div>
               <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
                 Configuración
               </h4>
