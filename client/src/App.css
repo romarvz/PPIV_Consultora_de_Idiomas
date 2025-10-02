@@ -478,45 +478,72 @@ body {
   resize: vertical;
 }
 
+/* Footer Styles */
 .footer {
   background: var(--primary);
   color: white;
-  text-align: center;
-  padding: 2rem 0;
+  padding: 3rem 0 1rem;
+  margin-top: 2rem;
 }
 
-.footer a {
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.footer-section h4 {
+  color: var(--accent);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.footer-section p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
-.footer a:hover {
-  color: white;
+.footer-section ul li a:hover {
+  color: var(--accent);
 }
 
-.social-media {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.social-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Footer paragraph links (like LinkedIn) */
+.footer-section p a {
+  color: #87CEEB;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
-.social-icon:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+.footer-section p a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+  text-align: center;
+}
+
+.footer-bottom p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
 }
 
 /* WhatsApp Button */
@@ -529,11 +556,12 @@ body {
   width: 60px;
   height: 60px;
   border-radius: 50%;
+  border: none;
   font-size: 1.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
+  cursor: pointer;
   box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
@@ -634,5 +662,10 @@ body {
   .services-grid,
   .clients-grid {
     grid-template-columns: 1fr;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
   }
 }
