@@ -74,8 +74,8 @@ Sistema completo de gestión académica y administrativa para consultoría de id
 
 #### **Credenciales de Admin**
 ```
-Email: admin@consultora.com
-Password: Admin123!
+Email: [Configurar en .env]
+Password: [Configurar en .env]
 ```
 
 ## Configuración y Uso
@@ -194,7 +194,7 @@ npm run preview   # Preview del build
 # Login como admin
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@consultora.com","password":"Admin123!"}'
+  -d '{"email":"admin@example.com","password":"YourPassword"}'
 
 # Respuesta incluye token para usar en requests autenticados
 ```
@@ -292,7 +292,7 @@ curl http://localhost:5000/api/auth/test
 # Login como admin
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@consultora.com","password":"Admin123!"}'
+  -d '{"email":"admin@example.com","password":"YourPassword"}'
 ```
 
 ## Roadmap de Desarrollo
@@ -580,7 +580,7 @@ curl http://localhost:5000/api/auth/db-test
 # Login de admin
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@consultora.com","password":"Admin123!"}'
+  -d '{"email":"admin@example.com","password":"YourPassword"}'
 ```
 
 ## Variables de Entorno Requeridas
