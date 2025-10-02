@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth, useLoginForm } from '../hooks/useAuth.jsx'
 
 // Login page for user authentication
 const Login = () => {
-  // Form data state to track email and password inputs
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
+  const navigate = useNavigate()
+  const { user, error, loading, isAuthenticated, getRedirectPath } = useAuth()
+  const { formData, isSubmitting, handleChange, handleSubmit } = useLoginForm()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(getRedirectPath(), { replace: true })
+    }
+  }, [isAuthenticated, navigate, getRedirectPath])
 
   // Make section visible when component mounts
   useEffect(() => {
@@ -16,30 +23,67 @@ const Login = () => {
     }
   }, [])
 
-  // Update form data when user types in input fields
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
-
-  // Handle form submission when user clicks login button
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    // TODO: Connect this to the backend authentication system
-    console.log('Login attempt:', formData)
+  // Handle successful login
+  const onSubmit = async (e) => {
+    try {
+      await handleSubmit(e)
+      // If login is successful, useEffect will handle redirect
+    } catch (error) {
+      // Error is already handled in the auth context
+      console.error('Login error:', error)
+    }
   }
 
   return (
     <section className="section visible">
       <div className="container">
-        <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '500px', margin: '0 auto' }}>
           <h2 className="section-title">Iniciar Sesión</h2>
           
+          {/* Information for first-time users */}
+          <div style={{ 
+            background: 'var(--card-bg, #e7f3ff)', 
+            border: '1px solid var(--input-border, #b3d9ff)',
+            borderRadius: '5px',
+            padding: '15px',
+            marginBottom: '20px',
+            fontSize: '14px',
+            color: 'var(--text-primary)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}>
+            <strong> Información importante:</strong>
+            <ul style={{ marginTop: '10px', paddingLeft: '20px' }}>
+              <li><strong>Estudiantes y Profesores:</strong> En tu primer login, usa tu DNI como contraseña</li>
+              <li><strong>Administradores:</strong> Usa la contraseña que te fue asignada</li>
+              <li>Después del primer login, deberás cambiar tu contraseña</li>
+            </ul>
+          </div>
+          
+          {/* Show error message if login fails */}
+          {error && (
+            <div style={{ 
+              color: 'red', 
+              textAlign: 'center', 
+              marginBottom: '20px',
+              padding: '10px',
+              background: '#ffe6e6',
+              borderRadius: '5px',
+              border: '1px solid #ffcccc'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Show loading state */}
+          {loading && (
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              Verificando credenciales...
+            </div>
+          )}
+
           {/* Login form */}
           <div className="contact-form">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={onSubmit}>
               {/* Email input field */}
               <div className="form-group">
                 <label htmlFor="email">Correo Electrónico</label>
@@ -49,7 +93,9 @@ const Login = () => {
                   name="email" 
                   value={formData.email}
                   onChange={handleChange}
+                  disabled={isSubmitting}
                   required 
+                  placeholder="ejemplo@email.com"
                 />
               </div>
               
@@ -62,12 +108,24 @@ const Login = () => {
                   name="password" 
                   value={formData.password}
                   onChange={handleChange}
+                  disabled={isSubmitting}
                   required 
+                  placeholder="Tu contraseña"
                 />
               </div>
               
               {/* Submit button */}
-              <button type="submit" className="cta-btn">Ingresar</button>
+              <button 
+                type="submit" 
+                className="cta-btn"
+                disabled={isSubmitting}
+                style={{
+                  opacity: isSubmitting ? 0.7 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isSubmitting ? 'Ingresando...' : 'Ingresar'}
+              </button>
             </form>
           </div>
         </div>
