@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
-import RegisterStudent from '../../components/RegisterStudent'
+
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import api from '../../services/api'
@@ -24,7 +24,7 @@ import {
 const AdminDashboard = () => {
   const { user, logout, mustChangePassword } = useAuth()
   const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
-  const [showRegisterStudent, setShowRegisterStudent] = useState(false)
+
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [stats, setStats] = useState({
@@ -58,11 +58,7 @@ const AdminDashboard = () => {
     setShowPasswordChange(false)
   }
 
-  const handleStudentRegistered = () => {
-    setShowRegisterStudent(false)
-    // Refrescar estadísticas después del registro
-    fetchStats()
-  }
+
 
   const handleTeacherRegistered = () => {
     setShowRegisterTeacher(false)
@@ -119,38 +115,7 @@ const AdminDashboard = () => {
     return <ForcePasswordChange onPasswordChanged={handlePasswordChanged} />
   }
 
-  // Show register student modal
-  if (showRegisterStudent) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.7)', // Fondo semitransparente normal
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 99999,
-        padding: '20px'
-      }}>
-        <div style={{
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          width: '100%',
-          maxWidth: '600px',
-          position: 'relative',
-          zIndex: 10000 // Un z-index aún más alto que el overlay
-        }}>
-          <RegisterStudent
-            onSuccess={handleStudentRegistered}
-            onCancel={() => setShowRegisterStudent(false)}
-          />
-        </div>
-      </div>
-    )
-  }
+
 
   // Show register teacher modal
   if (showRegisterTeacher) {
@@ -377,39 +342,22 @@ const AdminDashboard = () => {
                 Gestión de Estudiantes
               </h4>
               <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Registrar nuevos estudiantes, actualizar niveles, gestionar estados académicos
+                Ver, editar y gestionar información de estudiantes, estados académicos y progreso
               </p>
-              <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                <button 
-                  className="cta-btn" 
-                  style={{ width: '100%' }}
-                  onClick={() => {
-                    console.log('Click en Registrar Estudiante')
-                    setShowRegisterStudent(true)
-                  }}
-                >
-                  Registrar Estudiante
-                </button>
-                <button 
-                  className="cta-btn-secondary" 
-                  style={{ 
-                    width: '100%',
-                    background: 'transparent',
-                    border: '2px solid var(--primary)',
-                    color: 'var(--primary)',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onClick={() => {
-                    console.log('Click en Gestionar Estudiantes')
-                    setShowStudentsManagement(true)
-                  }}
-                >
-                  Gestionar Estudiantes
-                </button>
-              </div>
+              <button 
+                className="cta-btn" 
+                style={{ 
+                  width: '100%',
+                  transform: 'none !important',
+                  transition: 'none !important'
+                }}
+                onClick={() => {
+                  console.log('Click en Gestionar Estudiantes')
+                  setShowStudentsManagement(true)
+                }}
+              >
+                Gestión de Estudiantes
+              </button>
             </div>
             
             <div className="service-card">
@@ -424,13 +372,17 @@ const AdminDashboard = () => {
               </p>
               <button 
                 className="cta-btn" 
-                style={{ width: '100%' }}
+                style={{ 
+                  width: '100%',
+                  transform: 'none !important',
+                  transition: 'none !important'
+                }}
                 onClick={() => {
                   console.log('Click en Registrar Profesor')
                   setShowRegisterTeacher(true)
                 }}
               >
-                Registrar Profesor
+                Gestión de Profesores
               </button>
             </div>
             
