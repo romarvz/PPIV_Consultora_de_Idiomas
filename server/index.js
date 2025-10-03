@@ -54,6 +54,10 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/authNew');
 app.use('/api/auth', authRoutes);
 
+// Rutas CRUD para estudiantes y profesores
+const crudRoutes = require('./routes/crud');
+app.use('/api', crudRoutes);
+
 //middleware para cuando no encontramos ruta (solo GET y POST seguros)
 app.get('*', (req, res) => {
   res.status(404).json({

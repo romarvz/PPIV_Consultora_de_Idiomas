@@ -47,10 +47,10 @@ router.get('/test', (req, res) => {
 // ENDPOINT TEMPORAL PARA CREAR PRIMER ADMIN
 router.post('/create-first-admin', async (req, res) => {
   try {
-    const User = require('../models/User');
+    const { BaseUser } = require('../models');
     
     // Verificar si ya existe un admin
-    const existingAdmin = await User.findOne({ role: 'admin' });
+    const existingAdmin = await BaseUser.findOne({ role: 'admin' });
     if (existingAdmin) {
       return res.status(400).json({
         success: false,
@@ -67,7 +67,7 @@ router.post('/create-first-admin', async (req, res) => {
       role: 'admin'
     };
 
-    const admin = new User(adminData);
+    const admin = new BaseUser(adminData);
     await admin.save();
 
     res.status(201).json({

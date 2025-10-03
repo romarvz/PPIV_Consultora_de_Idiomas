@@ -49,6 +49,11 @@ const baseUserSchema = new mongoose.Schema({
       return this.role === 'estudiante' || this.role === 'profesor';
     }
   },
+  condicion: {
+    type: String,
+    enum: ['activo', 'inactivo', 'graduado'],
+    default: 'activo'
+  },
   isActive: {
     type: Boolean,
     default: true

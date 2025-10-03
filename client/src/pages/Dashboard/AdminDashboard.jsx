@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
 import RegisterStudent from '../../components/RegisterStudent'
 import RegisterTeacher from '../../components/RegisterTeacher'
+import StudentsManagement from '../../components/StudentsManagement'
 import api from '../../services/api'
 // React Icons - Updated for better UI
 import { 
@@ -25,6 +26,7 @@ const AdminDashboard = () => {
   const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
   const [showRegisterStudent, setShowRegisterStudent] = useState(false)
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
+  const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [stats, setStats] = useState({
     totalStudents: 0,
     newStudents: 0,
@@ -183,6 +185,46 @@ const AdminDashboard = () => {
     )
   }
 
+  // Show students management
+  if (showStudentsManagement) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'white',
+        zIndex: 9999,
+        overflow: 'auto'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          zIndex: 10000
+        }}>
+          <button
+            onClick={() => setShowStudentsManagement(false)}
+            style={{
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: '500'
+            }}
+          >
+            ← Volver al Dashboard
+          </button>
+        </div>
+        <StudentsManagement />
+      </div>
+    )
+  }
+
   return (
     <section className="section visible">
       <div className="container">
@@ -337,16 +379,37 @@ const AdminDashboard = () => {
               <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
                 Registrar nuevos estudiantes, actualizar niveles, gestionar estados académicos
               </p>
-              <button 
-                className="cta-btn" 
-                style={{ width: '100%' }}
-                onClick={() => {
-                  console.log('Click en Registrar Estudiante')
-                  setShowRegisterStudent(true)
-                }}
-              >
-                Registrar Estudiante
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                <button 
+                  className="cta-btn" 
+                  style={{ width: '100%' }}
+                  onClick={() => {
+                    console.log('Click en Registrar Estudiante')
+                    setShowRegisterStudent(true)
+                  }}
+                >
+                  Registrar Estudiante
+                </button>
+                <button 
+                  className="cta-btn-secondary" 
+                  style={{ 
+                    width: '100%',
+                    background: 'transparent',
+                    border: '2px solid var(--primary)',
+                    color: 'var(--primary)',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onClick={() => {
+                    console.log('Click en Gestionar Estudiantes')
+                    setShowStudentsManagement(true)
+                  }}
+                >
+                  Gestionar Estudiantes
+                </button>
+              </div>
             </div>
             
             <div className="service-card">

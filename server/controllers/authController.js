@@ -297,8 +297,8 @@ const changePassword = async (req, res) => {
     const userId = req.user.userId;
 
     // Buscar usuario con password
-    const User = require('../models/User');
-    const user = await User.findById(userId).select('+password');
+    const { BaseUser } = require('../models');
+    const user = await BaseUser.findById(userId).select('+password');
     
     if (!user) {
       return res.status(404).json({

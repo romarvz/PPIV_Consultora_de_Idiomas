@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { BaseUser } = require('../models');
 
 // Middleware para verificar token JWT
 const authenticateToken = async (req, res, next) => {
@@ -20,7 +20,7 @@ const authenticateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Verificar que el usuario existe y está activo
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await BaseUser.findById(decoded.userId).select('-password');
     if (!user || !user.isActive) {
       return res.status(401).json({
         success: false,

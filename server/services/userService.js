@@ -1,16 +1,17 @@
-const User = require('../models/User');
+const { BaseUser, getUserModel } = require('../models');
 const jwt = require('jsonwebtoken');
 
 // Crear usuario
 async function createUser(data) {
-  const user = new User(data);
+  const UserModel = getUserModel(data.role);
+  const user = new UserModel(data);
   await user.save();
   return user;
 }
 
 // Buscar usuario por email
 async function findUserByEmail(email) {
-  return await User.findOne({ email });
+  return await BaseUser.findOne({ email });
 }
 
 // Validar contraseña
@@ -25,19 +26,19 @@ function generateToken(userId) {
 
 // Buscar usuario por ID (sin password)
 async function getUserProfile(userId) {
-  return await User.findById(userId).select('-password');
+  return await BaseUser.findById(userId).select('-password');
 }
 
 // Buscar usuario por ID (incluye password para validaciones)
 async function findUserById(userId) {
-  return await User.findById(userId);
+  return await BaseUser.findById(userId);
 }
 
 // Actualizar usuario
 async function updateUser(userId, updateData) {
   // Si se está actualizando la contraseña, usar findById y save para activar middleware
   if (updateData.password) {
-    const user = await User.findById(userId);
+    const user = await BaseUser.findById(userId);
     if (!user) {
       throw new Error('Usuario no encontrado');
     }
@@ -48,16 +49,16 @@ async function updateUser(userId, updateData) {
     });
     
     await user.save();
-    return await User.findById(userId).select('-password');
+    return await BaseUser.findById(userId).select('-password');
   }
   
   // Para otras actualizaciones, usar findByIdAndUpdate
-  return await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
+  return await BaseUser.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
 }
 
 // Buscar usuarios con filtros
 async function findUsersWithFilters(filters, skip = 0, limit = 10) {
-  return await User.find(filters)
+  return await BaseUser.find(filters)
     .select('-password')
     .skip(skip)
     .limit(limit)
@@ -66,7 +67,52 @@ async function findUsersWithFilters(filters, skip = 0, limit = 10) {
 
 // Contar usuarios con filtros
 async function countUsersWithFilters(filters) {
-  return await User.countDocuments(filters);
+  return await BaseUser.countDocuments(filters);
+}
+
+// Buscar usuarios con paginación y filtros avanzados
+async function findUsers(filters, options = {}) {
+  const {
+    page = 1,
+    limit = 10,
+    sort = { createdAt: -1 },
+    select = '-password'
+  } = options;
+
+  const skip = (page - 1) * limit;
+  
+  const [docs, totalDocs] = await Promise.all([
+    BaseUser.find(filters)
+      .select(select)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit),
+    BaseUser.countDocuments(filters)
+  ]);
+
+  const totalPages = Math.ceil(totalDocs / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+
+  return {
+    docs,
+    totalDocs,
+    limit,
+    page,
+    totalPages,
+    hasNextPage,
+    hasPrevPage
+  };
+}
+
+// Contar usuarios con filtros específicos
+async function countUsers(filters) {
+  return await BaseUser.countDocuments(filters);
+}
+
+// Estadísticas agregadas
+async function getAggregateStats(pipeline) {
+  return await BaseUser.aggregate(pipeline);
 }
 
 module.exports = {
@@ -78,5 +124,8 @@ module.exports = {
   findUserById,
   updateUser,
   findUsersWithFilters,
-  countUsersWithFilters
+  countUsersWithFilters,
+  findUsers,
+  countUsers,
+  getAggregateStats
 };
