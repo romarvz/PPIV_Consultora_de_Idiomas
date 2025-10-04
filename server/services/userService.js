@@ -36,24 +36,29 @@ async function findUserById(userId) {
 
 // Actualizar usuario
 async function updateUser(userId, updateData) {
-  // Si se está actualizando la contraseña, usar findById y save para activar middleware
-  if (updateData.password) {
-    const user = await BaseUser.findById(userId);
-    if (!user) {
-      throw new Error('Usuario no encontrado');
-    }
-    
-    // Actualizar campos
-    Object.keys(updateData).forEach(key => {
-      user[key] = updateData[key];
-    });
-    
-    await user.save();
-    return await BaseUser.findById(userId).select('-password');
+  console.log('userService.updateUser - userId:', userId);
+  console.log('userService.updateUser - updateData:', JSON.stringify(updateData, null, 2));
+  
+  // Usar siempre findById + save para asegurar que los arrays se actualicen correctamente
+  const user = await BaseUser.findById(userId);
+  if (!user) {
+    throw new Error('Usuario no encontrado');
   }
   
-  // Para otras actualizaciones, usar findByIdAndUpdate
-  return await BaseUser.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
+  console.log('userService.updateUser - user before update:', JSON.stringify(user.toJSON(), null, 2));
+  
+  // Actualizar campos
+  Object.keys(updateData).forEach(key => {
+    user[key] = updateData[key];
+  });
+  
+  console.log('userService.updateUser - user after field updates:', JSON.stringify(user.toJSON(), null, 2));
+  
+  await user.save();
+  
+  const result = await BaseUser.findById(userId).select('-password');
+  console.log('userService.updateUser - final result:', JSON.stringify(result.toJSON(), null, 2));
+  return result;
 }
 
 // Buscar usuarios con filtros

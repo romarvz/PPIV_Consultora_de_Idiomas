@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
-import ForcePasswordChange from '../../components/common/ForcePasswordChange'
+import ForcChange from '../../components/common/ForcePasswordChange'
 
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
+import TeachersManagement from '../../components/TeachersManagement'
+import AdminHeader from '../../components/common/AdminHeader'
 import api from '../../services/api'
 // React Icons - Updated for better UI
 import { 
@@ -27,11 +29,15 @@ const AdminDashboard = () => {
 
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
+  const [showTeachersManagement, setShowTeachersManagement] = useState(false)
   const [stats, setStats] = useState({
     totalStudents: 0,
     newStudents: 0,
-    totalTeachers: 0,
     activeStudents: 0,
+    totalTeachers: 0,
+    activeTeachers: 0,
+    uniqueSpecialties: 0,
+    teacherSpecialties: [],
     scheduledClasses: 0,
     upcomingClasses: 0,
     pendingPayments: { count: 0, amount: 0 },
@@ -75,8 +81,10 @@ const AdminDashboard = () => {
       const teachersResponse = await api.get('/auth/professors')
       
       if (studentsResponse.data.success && teachersResponse.data.success) {
-        const students = Array.isArray(studentsResponse.data.data) ? studentsResponse.data.data : []
-        const teachers = Array.isArray(teachersResponse.data.data) ? teachersResponse.data.data : []
+        const students = Array.isArray(studentsResponse.data.data?.students) ? studentsResponse.data.data.students : []
+        const teachers = Array.isArray(teachersResponse.data.data?.professors) ? teachersResponse.data.data.professors : []
+        
+
         
         // Calculate new students (last 30 days)
         const thirtyDaysAgo = new Date()
@@ -90,11 +98,38 @@ const AdminDashboard = () => {
           s.estadoAcademico === 'en_curso' || s.estadoAcademico === 'inscrito'
         ).length
 
+        // Calculate active teachers
+        const activeTeachers = teachers.filter(t => 
+          t.condicion === 'activo' || t.isActive === true
+        ).length
+
+        // Get unique specialties from teachers
+        const allSpecialties = teachers.reduce((acc, teacher) => {
+          if (teacher.especialidades && Array.isArray(teacher.especialidades)) {
+            return [...acc, ...teacher.especialidades]
+          }
+          return acc
+        }, [])
+        const uniqueSpecialties = [...new Set(allSpecialties)]
+
+        console.log('Calculated stats:', {
+          totalStudents: students.length,
+          newStudents,
+          activeStudents,
+          totalTeachers: teachers.length,
+          activeTeachers,
+          uniqueSpecialties: uniqueSpecialties.length,
+          teacherSpecialties: uniqueSpecialties
+        })
+
         setStats({
           totalStudents: students.length,
           newStudents,
-          totalTeachers: teachers.length,
           activeStudents,
+          totalTeachers: teachers.length,
+          activeTeachers,
+          uniqueSpecialties: uniqueSpecialties.length,
+          teacherSpecialties: uniqueSpecialties,
           scheduledClasses: 0, 
           upcomingClasses: 0, 
           pendingPayments: { count: 0, amount: 0 }, 
@@ -105,6 +140,9 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
+      if (error.response?.status === 401) {
+        // Optionally redirect to login or refresh token
+      }
     } finally {
       setLoading(false)
     }
@@ -190,44 +228,51 @@ const AdminDashboard = () => {
     )
   }
 
+  // Show teachers management
+  if (showTeachersManagement) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'white',
+        zIndex: 9999,
+        overflow: 'auto'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          zIndex: 10000
+        }}>
+          <button
+            onClick={() => setShowTeachersManagement(false)}
+            style={{
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: '500'
+            }}
+          >
+            ← Volver al Dashboard
+          </button>
+        </div>
+        <TeachersManagement />
+      </div>
+    )
+  }
+
   return (
     <section className="section visible">
       <div className="container">
         {/* Header */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '2rem',
-          background: 'var(--card-bg)',
-          padding: '1.5rem',
-          borderRadius: '10px',
-          boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
-        }}>
-          <div>
-            <h2 className="section-title" style={{ marginBottom: '0.5rem', textAlign: 'left' }}>
-              Panel de Administración
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-              ¡Bienvenido/a {user?.firstName || user?.name || 'Administrador'}! Gestiona tu consultoría desde aquí.
-            </p>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="login-btn"
-            style={{
-              background: '#dc3545',
-              padding: '0.75rem 1.5rem',
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            <FaSignOutAlt />
-            Cerrar Sesión
-          </button>
-        </div>
+        <AdminHeader user={user} onLogout={handleLogout} />
 
         {/* KPI Cards */}
         <div style={{ marginBottom: '3rem' }}>
@@ -257,43 +302,70 @@ const AdminDashboard = () => {
                 <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
                   <FaUsers />
                 </div>
-                <h3 style={{ color: 'white', fontSize: '2rem', margin: '0.5rem 0' }}>
+                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
                   {stats.totalStudents}
                 </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9 }}>Total Estudiantes</p>
-                <small style={{ opacity: 0.8 }}>
-                  {stats.activeStudents} activos • {stats.newStudents} nuevos (30d)
-                </small>
+                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
+                  Total Estudiantes
+                </p>
+                <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  <div>{stats.activeStudents} activos • {stats.newStudents} nuevos (30d)</div>
+                </div>
               </div>
 
               <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #1E3A8A, #4A9FD9)',
+                background: 'linear-gradient(135deg, #e67e22, #d68910)',
                 color: 'white',
                 border: 'none'
               }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
                   <FaChalkboardTeacher />
                 </div>
-                <h3 style={{ color: 'white', fontSize: '2rem', margin: '0.5rem 0' }}>
+                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
                   {stats.totalTeachers}
                 </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9 }}>Total Profesores</p>
-                <small style={{ opacity: 0.8 }}>Especialidades variadas</small>
+                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
+                  Total Profesores
+                </p>
+                <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  <div>{stats.activeTeachers} activos • {stats.uniqueSpecialties} especialidades</div>
+                </div>
               </div>
 
               <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #30BA8F, #20c997)',
+                background: 'linear-gradient(135deg, #8e44ad, #9b59b6)',
                 color: 'white',
                 border: 'none'
               }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
                   <FaBookOpen />
                 </div>
-                <h3 style={{ color: 'white', fontSize: '2rem', margin: '0.5rem 0' }}>
-                  {stats.scheduledClasses}
+                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
+                  {stats.uniqueSpecialties}
                 </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9 }}>Clases Programadas</p>
-                <small style={{ opacity: 0.8 }}>Próximas 24h: {stats.upcomingClasses}</small>
+                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
+                  Especialidades
+                </p>
+                <div style={{ opacity: 0.85, fontSize: '0.85rem', lineHeight: '1.4' }}>
+                  {stats.teacherSpecialties.length > 0 ? (
+                    <div>
+                      {stats.teacherSpecialties.slice(0, 3).map(spec => {
+                        const specNames = {
+                          'ingles': 'Inglés',
+                          'frances': 'Francés', 
+                          'aleman': 'Alemán',
+                          'italiano': 'Italiano',
+                          'portugues': 'Portugués',
+                          'espanol': 'Español'
+                        };
+                        return specNames[spec] || spec;
+                      }).join(', ')}
+                      {stats.teacherSpecialties.length > 3 && ` +${stats.teacherSpecialties.length - 3} más`}
+                    </div>
+                  ) : (
+                    'Especialidades variadas'
+                  )}
+                </div>
               </div>
 
               <div className="service-card" style={{ 
@@ -378,8 +450,8 @@ const AdminDashboard = () => {
                   transition: 'none !important'
                 }}
                 onClick={() => {
-                  console.log('Click en Registrar Profesor')
-                  setShowRegisterTeacher(true)
+                  console.log('Click en Gestión de Profesores')
+                  setShowTeachersManagement(true)
                 }}
               >
                 Gestión de Profesores

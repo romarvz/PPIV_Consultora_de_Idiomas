@@ -669,3 +669,80 @@ body {
     text-align: center;
   }
 }
+
+/* Dark Mode Styles */
+.dark-mode {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --card-bg: #1e1e1e;
+  --input-bg: #2d2d2d;
+  --input-border: #404040;
+  --border-color: #404040;
+  --primary: #4a9eff;
+  --success: #4caf50;
+  --error: #f44336;
+  --warning: #ff9800;
+}
+
+/* Transitions for smooth dark mode toggle */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Override specific elements for dark mode */
+.dark-mode body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark-mode .container {
+  background-color: var(--bg-primary);
+}
+
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+.dark-mode .section {
+  background-color: var(--bg-primary);
+}
+
+/* Dark mode card styles */
+.dark-mode .card,
+.dark-mode div[style*="background: white"],
+.dark-mode div[style*="background: #fff"] {
+  background: var(--card-bg) !important;
+  color: var(--text-primary);
+}
+
+/* Dark mode table styles */
+.dark-mode table {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.dark-mode th {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode td {
+  border-color: var(--border-color) !important;
+}
+
+/* Dark mode button adjustments */
+.dark-mode button:not([style*="background: linear-gradient"]):not([class*="cta-btn"]) {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
+}
+
+.dark-mode button:hover:not([style*="background: linear-gradient"]):not([class*="cta-btn"]) {
+  background-color: var(--border-color);
+}

@@ -319,12 +319,27 @@ const getTeachers = async (req, res) => {
       ];
     }
 
-    // Filtro por estado de cuenta
+    // Filtro por estado/condición - considerar tanto isActive como condicion
     if (status) {
-      if (status === 'active') {
-        filters.isActive = true;
-      } else if (status === 'inactive') {
-        filters.isActive = false;
+      console.log('getTeachers - Filtering by status:', status);
+      if (status === 'activo') {
+        // Un profesor está activo si isActive=true OR condicion='activo'
+        filters.$and = filters.$and || [];
+        filters.$and.push({
+          $or: [
+            { isActive: true },
+            { condicion: 'activo' }
+          ]
+        });
+      } else if (status === 'inactivo') {
+        // Un profesor está inactivo si isActive=false AND condicion='inactivo' (o undefined)
+        filters.$and = filters.$and || [];
+        filters.$and.push({
+          $and: [
+            { isActive: false },
+            { $or: [{ condicion: 'inactivo' }, { condicion: { $exists: false } }] }
+          ]
+        });
       }
     }
 
@@ -347,13 +362,28 @@ const getTeachers = async (req, res) => {
       select: '-password'
     };
 
+    console.log('getTeachers - Final filters:', JSON.stringify(filters, null, 2));
+
     const result = await userService.findUsers(filters, options);
+
+    console.log('getTeachers - Results summary:', {
+      total: result.totalDocs,
+      returned: result.docs.length,
+      sampleData: result.docs.slice(0, 2).map(doc => ({
+        id: doc._id,
+        name: `${doc.firstName} ${doc.lastName}`,
+        condicion: doc.condicion,
+        isActive: doc.isActive
+      }))
+    });
 
     res.json({
       success: true,
       message: 'Profesores obtenidos exitosamente',
       data: {
         teachers: result.docs,
+        total: result.totalDocs, // Agregar total en el nivel data
+        totalPages: result.totalPages, // Agregar totalPages en el nivel data
         pagination: {
           page: result.page,
           limit: result.limit,
@@ -419,6 +449,9 @@ const updateTeacher = async (req, res) => {
     if (validationError) return validationError;
 
     const { id } = req.params;
+    console.log('updateTeacher - ID:', id);
+    console.log('updateTeacher - Request body:', JSON.stringify(req.body, null, 2));
+    
     const { 
       firstName, 
       lastName, 
@@ -429,8 +462,11 @@ const updateTeacher = async (req, res) => {
       disponibilidad,
       experiencia,
       isActive,
-      disponible
+      disponible,
+      condicion
     } = req.body;
+    
+    console.log('updateTeacher - Extracted especialidades:', especialidades);
 
     const teacher = await userService.findUserById(id);
     
@@ -453,8 +489,13 @@ const updateTeacher = async (req, res) => {
     if (experiencia) updateData.experiencia = experiencia;
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
     if (typeof disponible === 'boolean') updateData.disponible = disponible;
+    if (condicion) updateData.condicion = condicion;
+
+    console.log('updateTeacher - Final updateData:', JSON.stringify(updateData, null, 2));
 
     const updatedTeacher = await userService.updateUser(id, updateData);
+    
+    console.log('updateTeacher - Updated teacher from service:', JSON.stringify(updatedTeacher.toJSON(), null, 2));
 
     res.json({
       success: true,
@@ -611,9 +652,17 @@ const getStudentsStats = async (req, res) => {
 // @access  Private (Admin)
 const getTeachersStats = async (req, res) => {
   try {
+    console.log('getTeachersStats - Starting...');
+    
     const totalTeachers = await userService.countUsers({ role: 'profesor' });
+    console.log('getTeachersStats - Total teachers:', totalTeachers);
+    
+    // Usar isActive como campo principal ya que es el que tienen todos
     const activeTeachers = await userService.countUsers({ role: 'profesor', isActive: true });
-    const availableTeachers = await userService.countUsers({ role: 'profesor', isActive: true, disponible: true });
+    console.log('getTeachersStats - Active teachers (isActive):', activeTeachers);
+    
+    const inactiveTeachers = await userService.countUsers({ role: 'profesor', isActive: false });
+    console.log('getTeachersStats - Inactive teachers (isActive):', inactiveTeachers);
     
     // Estadísticas por especialidad
     const specialtyStats = await userService.getAggregateStats([
@@ -630,7 +679,7 @@ const getTeachersStats = async (req, res) => {
         overview: {
           total: totalTeachers,
           active: activeTeachers,
-          available: availableTeachers
+          inactive: inactiveTeachers
         },
         bySpecialty: specialtyStats
       }

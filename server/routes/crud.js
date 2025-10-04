@@ -106,7 +106,7 @@ const validateTeacherUpdate = [
     
   body('especialidades.*')
     .optional()
-    .isIn(['Conversación', 'Gramática', 'Business', 'Kids', 'Exámenes', 'Writing'])
+    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
     .withMessage('Especialidad no válida'),
     
   body('tarifaPorHora')
@@ -118,6 +118,11 @@ const validateTeacherUpdate = [
     .optional()
     .isBoolean()
     .withMessage('disponible debe ser un valor booleano'),
+    
+  body('condicion')
+    .optional()
+    .isIn(['activo', 'inactivo'])
+    .withMessage('Condición debe ser activo o inactivo'),
     
   body('isActive')
     .optional()

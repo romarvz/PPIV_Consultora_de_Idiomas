@@ -34,7 +34,7 @@ function App() {
       {/* Router wrapper enables navigation between pages */}
       <Router>
         <Routes>
-          {/* Layout wraps all pages with header/footer */}
+          {/* Layout wraps public pages with header/footer */}
           <Route path="/" element={<Layout />}>
             {/* Home page loads when someone visits the root URL */}
             <Route index element={<Home />} />
@@ -48,41 +48,41 @@ function App() {
             
             {/* Authentication page */}
             <Route path={routes.LOGIN} element={<Login />} />
-            
-            {/* Protected dashboard pages with role-based access */}
-            <Route 
-              path={routes.DASHBOARD.ADMIN} 
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path={routes.DASHBOARD.STUDENT} 
-              element={
-                <ProtectedRoute allowedRoles={['estudiante']}>
-                  <StudentDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path={routes.DASHBOARD.TEACHER} 
-              element={
-                <ProtectedRoute allowedRoles={['profesor']}>
-                  <TeacherDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path={routes.DASHBOARD.COMPANY} 
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'empresa']}>
-                  <CompanyDashboard />
-                </ProtectedRoute>
-              } 
-            />
           </Route>
+          
+          {/* Protected dashboard pages WITHOUT layout (no header/footer) */}
+          <Route 
+            path={routes.DASHBOARD.ADMIN} 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path={routes.DASHBOARD.STUDENT} 
+            element={
+              <ProtectedRoute allowedRoles={['estudiante']}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path={routes.DASHBOARD.TEACHER} 
+            element={
+              <ProtectedRoute allowedRoles={['profesor']}>
+                <TeacherDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path={routes.DASHBOARD.COMPANY} 
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'empresa']}>
+                <CompanyDashboard />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>
