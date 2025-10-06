@@ -1,4 +1,23 @@
 const { body } = require('express-validator');
+const Language = require('../models/Language');
+
+// Helper function for validating language ObjectIds
+const validateLanguageObjectId = async (value) => {
+  try {
+    const language = await Language.findById(value);
+    
+    if (!language) {
+      throw new Error('Idioma no encontrado');
+    }
+    if (!language.isActive) {
+      throw new Error('Idioma no está activo');
+    }
+    
+    return true;
+  } catch (error) {
+    throw new Error(`Especialidad inválida: ${error.message}`);
+  }
+};
 
 // ==================== VALIDACIONES BASE ====================
 
@@ -81,8 +100,9 @@ const profesorSpecificValidation = [
     .withMessage('Debe seleccionar al menos una especialidad'),
     
   body('especialidades.*')
-    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
-    .withMessage('Especialidad inválida'),
+    .isMongoId()
+    .withMessage('ID de idioma inválido')
+    .custom(validateLanguageObjectId),
     
   body('tarifaPorHora')
     .isFloat({ min: 0 })
@@ -245,8 +265,9 @@ const validateUpdateTeachingInfo = [
     
   body('especialidades.*')
     .optional()
-    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
-    .withMessage('Especialidad inválida'),
+    .isMongoId()
+    .withMessage('ID de idioma inválido')
+    .custom(validateLanguageObjectId),
     
   body('tarifaPorHora')
     .optional()

@@ -4,8 +4,8 @@ const BaseUser = require('./BaseUser');
 // Schema específico para profesores
 const profesorSchema = new mongoose.Schema({
   especialidades: [{
-    type: String,
-    enum: ['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Language',
     required: true
   }],
   tarifaPorHora: {
@@ -48,6 +48,19 @@ profesorSchema.pre('validate', function(next) {
   }
   next();
 });
+
+// Método para obtener profesores con especialidades pobladas
+profesorSchema.statics.findWithLanguages = function(filter = {}) {
+  return this.find(filter).populate('especialidades', 'code name nativeName isActive');
+};
+
+// Método de instancia para obtener nombres de especialidades
+profesorSchema.methods.getLanguageNames = function() {
+  if (this.especialidades && this.especialidades.length > 0) {
+    return this.especialidades.map(lang => lang.name || lang.toString()).join(', ');
+  }
+  return 'Sin especialidades';
+};
 
 // Crear el modelo Profesor usando discriminator
 const Profesor = BaseUser.discriminator('profesor', profesorSchema);

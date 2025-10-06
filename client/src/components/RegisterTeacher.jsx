@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import apiService from '../services/api.js'
 
 const RegisterTeacher = ({ onSuccess, onCancel }) => {
@@ -25,15 +25,29 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
+  const [languages, setLanguages] = useState([])
+  const [loadingLanguages, setLoadingLanguages] = useState(true)
   
-  const especialidadesDisponibles = [
-    { value: 'ingles', label: 'Inglés' },
-    { value: 'frances', label: 'Francés' },
-    { value: 'aleman', label: 'Alemán' },
-    { value: 'italiano', label: 'Italiano' },
-    { value: 'portugues', label: 'Portugués' },
-    { value: 'espanol', label: 'Español' }
-  ]
+  // Cargar idiomas disponibles desde la API
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const response = await apiService.get('/languages')
+        if (response.data.success && response.data.data.languages) {
+          // Solo usar idiomas activos
+          const activeLanguages = response.data.data.languages.filter(lang => lang.isActive)
+          setLanguages(activeLanguages)
+        }
+      } catch (error) {
+        console.error('Error cargando idiomas:', error)
+        setError('Error cargando idiomas disponibles')
+      } finally {
+        setLoadingLanguages(false)
+      }
+    }
+    
+    fetchLanguages()
+  }, [])
 
   const diasSemana = [
     { key: 'lunes', label: 'Lunes' },
@@ -129,6 +143,9 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
         )
       }
 
+      console.log('🔍 DEBUG Frontend - Especialidades before sending:', formData.especialidades)
+      console.log('🔍 DEBUG Frontend - TeacherData:', JSON.stringify(teacherData, null, 2))
+
       const response = await apiService.post('/auth/register/profesor', teacherData)
       
       if (response.data.success) {
@@ -136,13 +153,19 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
         const userData = response.data.data.user
         const tempPassword = formData.dni // La contraseña temporal es el DNI
         
+        // Obtener nombres de especialidades
+        const especialidadesNombres = formData.especialidades.map(id => {
+          const lang = languages.find(l => l._id === id)
+          return lang ? lang.name : id
+        }).join(', ')
+        
         // Crear mensaje de éxito
         const message = ` ¡PROFESOR REGISTRADO CORRECTAMENTE! 
 
  Email: ${formData.email}
  Nombre: ${formData.firstName} ${formData.lastName}
  DNI: ${formData.dni}
- Especialidades: ${formData.especialidades.join(', ')}
+ Especialidades: ${especialidadesNombres}
  Tarifa: $${formData.tarifaPorHora}/hora
 🔑 Contraseña temporal: ${tempPassword}
 
@@ -368,19 +391,25 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
             
             <div className="form-group" style={{ marginBottom: '15px' }}>
               <label>Especialidades *</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
-                {especialidadesDisponibles.map(esp => (
-                  <label key={esp.value} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.especialidades.includes(esp.value)}
-                      onChange={() => handleEspecialidadChange(esp.value)}
-                      disabled={isSubmitting}
-                    />
-                    <span style={{ fontSize: '14px' }}>{esp.label}</span>
-                  </label>
-                ))}
-              </div>
+              {loadingLanguages ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  Cargando idiomas disponibles...
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
+                  {languages.map(lang => (
+                    <label key={lang._id} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.especialidades.includes(lang._id)}
+                        onChange={() => handleEspecialidadChange(lang._id)}
+                        disabled={isSubmitting}
+                      />
+                      <span style={{ fontSize: '14px' }}>{lang.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="form-group" style={{ marginBottom: '15px' }}>

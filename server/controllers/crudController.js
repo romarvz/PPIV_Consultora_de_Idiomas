@@ -321,7 +321,6 @@ const getTeachers = async (req, res) => {
 
     // Filtro por estado/condición - considerar tanto isActive como condicion
     if (status) {
-      console.log('getTeachers - Filtering by status:', status);
       if (status === 'activo') {
         // Un profesor está activo si isActive=true OR condicion='activo'
         filters.$and = filters.$and || [];
@@ -362,20 +361,7 @@ const getTeachers = async (req, res) => {
       select: '-password'
     };
 
-    console.log('getTeachers - Final filters:', JSON.stringify(filters, null, 2));
-
     const result = await userService.findUsers(filters, options);
-
-    console.log('getTeachers - Results summary:', {
-      total: result.totalDocs,
-      returned: result.docs.length,
-      sampleData: result.docs.slice(0, 2).map(doc => ({
-        id: doc._id,
-        name: `${doc.firstName} ${doc.lastName}`,
-        condicion: doc.condicion,
-        isActive: doc.isActive
-      }))
-    });
 
     res.json({
       success: true,
@@ -449,8 +435,6 @@ const updateTeacher = async (req, res) => {
     if (validationError) return validationError;
 
     const { id } = req.params;
-    console.log('updateTeacher - ID:', id);
-    console.log('updateTeacher - Request body:', JSON.stringify(req.body, null, 2));
     
     const { 
       firstName, 
@@ -465,8 +449,6 @@ const updateTeacher = async (req, res) => {
       disponible,
       condicion
     } = req.body;
-    
-    console.log('updateTeacher - Extracted especialidades:', especialidades);
 
     const teacher = await userService.findUserById(id);
     
@@ -491,11 +473,7 @@ const updateTeacher = async (req, res) => {
     if (typeof disponible === 'boolean') updateData.disponible = disponible;
     if (condicion) updateData.condicion = condicion;
 
-    console.log('updateTeacher - Final updateData:', JSON.stringify(updateData, null, 2));
-
     const updatedTeacher = await userService.updateUser(id, updateData);
-    
-    console.log('updateTeacher - Updated teacher from service:', JSON.stringify(updatedTeacher.toJSON(), null, 2));
 
     res.json({
       success: true,
@@ -652,24 +630,42 @@ const getStudentsStats = async (req, res) => {
 // @access  Private (Admin)
 const getTeachersStats = async (req, res) => {
   try {
-    console.log('getTeachersStats - Starting...');
-    
     const totalTeachers = await userService.countUsers({ role: 'profesor' });
-    console.log('getTeachersStats - Total teachers:', totalTeachers);
     
     // Usar isActive como campo principal ya que es el que tienen todos
     const activeTeachers = await userService.countUsers({ role: 'profesor', isActive: true });
-    console.log('getTeachersStats - Active teachers (isActive):', activeTeachers);
     
     const inactiveTeachers = await userService.countUsers({ role: 'profesor', isActive: false });
-    console.log('getTeachersStats - Inactive teachers (isActive):', inactiveTeachers);
     
-    // Estadísticas por especialidad
+    // Estadísticas por especialidad con nombres de idiomas
     const specialtyStats = await userService.getAggregateStats([
       { $match: { role: 'profesor', isActive: true } },
       { $unwind: '$especialidades' },
-      { $group: { _id: '$especialidades', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+      { $lookup: {
+          from: 'languages',
+          localField: 'especialidades',
+          foreignField: '_id',
+          as: 'languageInfo'
+        }
+      },
+      { $unwind: '$languageInfo' },
+      { $group: { 
+          _id: {
+            id: '$especialidades',
+            name: '$languageInfo.name',
+            code: '$languageInfo.code'
+          }, 
+          count: { $sum: 1 } 
+        }
+      },
+      { $sort: { count: -1 } },
+      { $project: {
+          _id: '$_id.name',
+          name: '$_id.name',
+          code: '$_id.code',
+          count: 1
+        }
+      }
     ]);
 
     res.json({

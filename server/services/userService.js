@@ -26,48 +26,58 @@ function generateToken(userId) {
 
 // Buscar usuario por ID (sin password)
 async function getUserProfile(userId) {
-  return await BaseUser.findById(userId).select('-password');
+  const query = BaseUser.findById(userId).select('-password');
+  const user = await query.exec();
+  
+  if (user && user.role === 'profesor') {
+    await user.populate('especialidades', 'code name nativeName isActive');
+  }
+  
+  return user;
 }
 
 // Buscar usuario por ID (incluye password para validaciones)
 async function findUserById(userId) {
-  return await BaseUser.findById(userId);
+  const user = await BaseUser.findById(userId);
+  if (user && user.role === 'profesor') {
+    await user.populate('especialidades', 'code name nativeName isActive');
+  }
+  return user;
 }
 
 // Actualizar usuario
 async function updateUser(userId, updateData) {
-  console.log('userService.updateUser - userId:', userId);
-  console.log('userService.updateUser - updateData:', JSON.stringify(updateData, null, 2));
-  
   // Usar siempre findById + save para asegurar que los arrays se actualicen correctamente
   const user = await BaseUser.findById(userId);
   if (!user) {
     throw new Error('Usuario no encontrado');
   }
   
-  console.log('userService.updateUser - user before update:', JSON.stringify(user.toJSON(), null, 2));
-  
   // Actualizar campos
   Object.keys(updateData).forEach(key => {
     user[key] = updateData[key];
   });
   
-  console.log('userService.updateUser - user after field updates:', JSON.stringify(user.toJSON(), null, 2));
-  
   await user.save();
   
   const result = await BaseUser.findById(userId).select('-password');
-  console.log('userService.updateUser - final result:', JSON.stringify(result.toJSON(), null, 2));
   return result;
 }
 
 // Buscar usuarios con filtros
 async function findUsersWithFilters(filters, skip = 0, limit = 10) {
-  return await BaseUser.find(filters)
+  const query = BaseUser.find(filters)
     .select('-password')
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
+  
+  // Si es consulta de profesores, popular las especialidades
+  if (filters.role === 'profesor') {
+    query.populate('especialidades', 'code name nativeName isActive');
+  }
+  
+  return await query.exec();
 }
 
 // Contar usuarios con filtros
@@ -86,12 +96,19 @@ async function findUsers(filters, options = {}) {
 
   const skip = (page - 1) * limit;
   
+  const query = BaseUser.find(filters)
+    .select(select)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit);
+
+  // Si es consulta de profesores, popular las especialidades
+  if (filters.role === 'profesor') {
+    query.populate('especialidades', 'code name nativeName isActive');
+  }
+
   const [docs, totalDocs] = await Promise.all([
-    BaseUser.find(filters)
-      .select(select)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit),
+    query.exec(),
     BaseUser.countDocuments(filters)
   ]);
 

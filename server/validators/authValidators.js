@@ -1,4 +1,23 @@
 const { body } = require('express-validator');
+const Language = require('../models/Language');
+
+// Helper function for validating language ObjectIds
+const validateLanguageObjectId = async (value) => {
+  try {
+    const language = await Language.findById(value);
+    
+    if (!language) {
+      throw new Error('Idioma no encontrado');
+    }
+    if (!language.isActive) {
+      throw new Error('Idioma no está activo');
+    }
+    
+    return true;
+  } catch (error) {
+    throw new Error(`Especialidad inválida: ${error.message}`);
+  }
+};
 
 // Validaciones para registro
 const validateRegister = [
@@ -82,8 +101,9 @@ const validateRegister = [
     
   body('especialidades.*')
     .if(body('role').equals('profesor'))
-    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
-    .withMessage('Especialidad inválida'),
+    .isMongoId()
+    .withMessage('ID de idioma inválido')
+    .custom(validateLanguageObjectId),
     
   body('tarifaPorHora')
     .if(body('role').equals('profesor'))
@@ -235,8 +255,9 @@ const validateUpdateTeachingInfo = [
     
   body('especialidades.*')
     .optional()
-    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
-    .withMessage('Especialidad inválida'),
+    .isMongoId()
+    .withMessage('ID de idioma inválido')
+    .custom(validateLanguageObjectId),
     
   body('tarifaPorHora')
     .optional()
@@ -329,6 +350,12 @@ const validateRegisterFromAdmin = [
     .if(body('role').equals('profesor'))
     .isArray({ min: 1 })
     .withMessage('Especialidades debe ser un array con al menos un elemento'),
+    
+  body('especialidades.*')
+    .if(body('role').equals('profesor'))
+    .isMongoId()
+    .withMessage('ID de idioma inválido')
+    .custom(validateLanguageObjectId),
     
   body('tarifaPorHora')
     .if(body('role').equals('profesor'))

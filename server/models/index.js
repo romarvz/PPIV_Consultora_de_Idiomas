@@ -1,14 +1,16 @@
-// Archivo de índice para importar todos los modelos de usuario
+// Archivo de índice para importar todos los modelos
 const BaseUser = require('./BaseUser');
 const Estudiante = require('./Estudiante');
 const Profesor = require('./Profesor');
 const Admin = require('./Admin');
+const Language = require('./Language');
 
 module.exports = {
   BaseUser,
   Estudiante,
   Profesor,
   Admin,
+  Language,
   // Función helper para obtener el modelo correcto según el rol
   getUserModel: (role) => {
     switch(role) {

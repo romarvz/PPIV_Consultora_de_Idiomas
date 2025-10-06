@@ -58,6 +58,10 @@ app.use('/api/auth', authRoutes);
 const crudRoutes = require('./routes/crud');
 app.use('/api', crudRoutes);
 
+// Rutas para gestión de idiomas
+const languageRoutes = require('./routes/languages');
+app.use('/api/languages', languageRoutes);
+
 //middleware para cuando no encontramos ruta (solo GET y POST seguros)
 app.get('*', (req, res) => {
   res.status(404).json({

@@ -82,6 +82,10 @@ const TeachersManagement = () => {
   // Estado para estadísticas - SOLO SE CARGA UNA VEZ
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
 
+  // Estado para idiomas dinámicos
+  const [languages, setLanguages] = useState([]);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
+
   const itemsPerPage = 10;
 
   // Función para cargar estadísticas - SOLO UNA VEZ
@@ -109,6 +113,24 @@ const TeachersManagement = () => {
       isMounted = false;
     };
   }, []); // Sin dependencias - solo una vez
+
+  // Función para cargar idiomas - SOLO UNA VEZ
+  useEffect(() => {
+    const loadLanguages = async () => {
+      try {
+        const response = await api.get('/languages');
+        if (response.data.success) {
+          setLanguages(response.data.data.languages.filter(lang => lang.isActive));
+        }
+      } catch (error) {
+        console.error('Error loading languages:', error);
+      } finally {
+        setLanguagesLoading(false);
+      }
+    };
+
+    loadLanguages();
+  }, []);
 
   // Función para cargar profesores - SE EJECUTA CUANDO CAMBIAN LOS FILTROS
   useEffect(() => {
@@ -245,18 +267,8 @@ const TeachersManagement = () => {
           horaInicio: schedule.startTime || schedule.horaInicio,
           horaFin: schedule.endTime || schedule.horaFin
         })) || [],
-        // Transform especialidades to lowercase Spanish names
-        especialidades: teacherData.especialidades?.map(specialty => {
-          const specialtyMap = {
-            'Inglés': 'ingles',
-            'Francés': 'frances', 
-            'Alemán': 'aleman',
-            'Italiano': 'italiano',
-            'Portugués': 'portugues',
-            'Español': 'espanol'
-          };
-          return specialtyMap[specialty] || specialty.toLowerCase();
-        }) || []
+        // Keep especialidades as ObjectIds - no transformation needed
+        especialidades: teacherData.especialidades || []
       };
       
       console.log('Transformed request payload:', JSON.stringify(transformedData, null, 2));
@@ -522,7 +534,7 @@ const TeachersManagement = () => {
                             fontSize: '0.75rem',
                             fontWeight: '500'
                           }}>
-                            <FaBook style={{ fontSize: '0.7rem' }} /> {esp}
+                            <FaBook style={{ fontSize: '0.7rem' }} /> {esp.name || esp}
                           </span>
                         ))
                       ) : (
@@ -580,6 +592,7 @@ const TeachersManagement = () => {
           onCancel={closeModal}
           successMessage={successMessage}
           setSuccessMessage={setSuccessMessage}
+          languages={languages}
         />
       )}
 
@@ -619,13 +632,14 @@ const TeachersManagement = () => {
 };
 
 // Componente Modal de Edición de Profesor
-const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSuccessMessage }) => {
+const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSuccessMessage, languages }) => {
   const [formData, setFormData] = useState({
     firstName: teacher.firstName || '',
     lastName: teacher.lastName || '',
     email: teacher.email || '',
     phone: teacher.phone || '',
-    especialidades: teacher.especialidades || [],
+    especialidades: teacher.especialidades ? 
+      teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
     horarios: teacher.horarios || [],
     condicion: teacher.condicion || 'activo'
   });
@@ -639,7 +653,8 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
       lastName: teacher.lastName || '',
       email: teacher.email || '',
       phone: teacher.phone || '',
-      especialidades: teacher.especialidades || [],
+      especialidades: teacher.especialidades ? 
+        teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
       horarios: teacher.horarios || [],
       condicion: teacher.condicion || 'activo'
     });
@@ -691,18 +706,18 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ];
 
-  const specialtyOptions = [
-    'Inglés', 'Francés', 'Alemán', 'Italiano', 'Portugués', 'Español'
-  ];
+  // Use dynamic languages instead of hardcoded options
+  const specialtyOptions = languages;
 
-  const handleSpecialtyChange = (specialty) => {
-    console.log('Specialty change clicked:', specialty);
+  const handleSpecialtyChange = (language) => {
+    console.log('Specialty change clicked:', language.name);
     console.log('Current especialidades:', formData.especialidades);
     
     setFormData(prev => {
-      const newEspecialidades = prev.especialidades.includes(specialty)
-        ? prev.especialidades.filter(s => s !== specialty)
-        : [...prev.especialidades, specialty];
+      const languageId = language._id;
+      const newEspecialidades = prev.especialidades.includes(languageId)
+        ? prev.especialidades.filter(id => id !== languageId)
+        : [...prev.especialidades, languageId];
       
       console.log('New especialidades:', newEspecialidades);
       
@@ -911,24 +926,24 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
               Especialidades
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem' }}>
-              {specialtyOptions.map(specialty => (
-                <label key={specialty} style={{
+              {specialtyOptions.map(language => (
+                <label key={language._id} style={{
                   display: 'flex',
                   alignItems: 'center',
                   padding: '0.5rem',
-                  border: `1px solid ${formData.especialidades.includes(specialty) ? '#3498db' : '#ddd'}`,
+                  border: `1px solid ${formData.especialidades.includes(language._id) ? '#3498db' : '#ddd'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  backgroundColor: formData.especialidades.includes(specialty) ? '#e3f2fd' : 'white',
+                  backgroundColor: formData.especialidades.includes(language._id) ? '#e3f2fd' : 'white',
                   fontSize: '0.85rem'
                 }}>
                   <input
                     type="checkbox"
-                    checked={formData.especialidades.includes(specialty)}
-                    onChange={() => handleSpecialtyChange(specialty)}
+                    checked={formData.especialidades.includes(language._id)}
+                    onChange={() => handleSpecialtyChange(language)}
                     style={{ marginRight: '0.5rem' }}
                   />
-                  {specialty}
+                  {language.name}
                 </label>
               ))}
             </div>
@@ -940,21 +955,23 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   Especialidades seleccionadas:
                 </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {formData.especialidades.map((specialty, index) => (
-                    <div key={index} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: '#e3f2fd',
-                      color: '#1565c0',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.85rem',
-                      fontWeight: '500'
-                    }}>
-                      <span>{specialty}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleSpecialtyChange(specialty)}
+                  {formData.especialidades.map((specialtyId, index) => {
+                    const language = languages.find(lang => lang._id === specialtyId);
+                    return (
+                      <div key={index} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        background: '#e3f2fd',
+                        color: '#1565c0',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '20px',
+                        fontSize: '0.85rem',
+                        fontWeight: '500'
+                      }}>
+                        <span>{language ? language.name : specialtyId}</span>
+                        <button
+                          type="button"
+                          onClick={() => language && handleSpecialtyChange(language)}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -971,12 +988,13 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                           borderRadius: '50%',
                           lineHeight: '1'
                         }}
-                        title={`Eliminar ${specialty}`}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                          title={`Eliminar ${language ? language.name : 'especialidad'}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

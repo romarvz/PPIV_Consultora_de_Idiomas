@@ -76,15 +76,17 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true)
-      // Obtener estudiantes y profesores por separado
-      const studentsResponse = await api.get('/auth/students')
-      const teachersResponse = await api.get('/auth/professors')
+      // Obtener estudiantes, profesores y estadísticas de profesores
+      const [studentsResponse, teachersResponse, teacherStatsResponse] = await Promise.all([
+        api.get('/auth/students?limit=1000'),
+        api.get('/auth/professors?limit=1000'),
+        api.get('/teachers/stats')
+      ])
       
-      if (studentsResponse.data.success && teachersResponse.data.success) {
+      if (studentsResponse.data.success && teachersResponse.data.success && teacherStatsResponse.data.success) {
         const students = Array.isArray(studentsResponse.data.data?.students) ? studentsResponse.data.data.students : []
         const teachers = Array.isArray(teachersResponse.data.data?.professors) ? teachersResponse.data.data.professors : []
-        
-
+        const teacherStats = teacherStatsResponse.data.data
         
         // Calculate new students (last 30 days)
         const thirtyDaysAgo = new Date()
@@ -98,38 +100,44 @@ const AdminDashboard = () => {
           s.estadoAcademico === 'en_curso' || s.estadoAcademico === 'inscrito'
         ).length
 
-        // Calculate active teachers
-        const activeTeachers = teachers.filter(t => 
-          t.condicion === 'activo' || t.isActive === true
-        ).length
-
-        // Get unique specialties from teachers
-        const allSpecialties = teachers.reduce((acc, teacher) => {
-          if (teacher.especialidades && Array.isArray(teacher.especialidades)) {
-            return [...acc, ...teacher.especialidades]
-          }
-          return acc
-        }, [])
-        const uniqueSpecialties = [...new Set(allSpecialties)]
+        // Use teacher stats from API for specialties
+        const specialtyStats = teacherStats.bySpecialty || []
+        const teacherSpecialties = specialtyStats.map(spec => spec._id)
+        const uniqueSpecialties = specialtyStats.length
 
         console.log('Calculated stats:', {
           totalStudents: students.length,
           newStudents,
           activeStudents,
           totalTeachers: teachers.length,
-          activeTeachers,
-          uniqueSpecialties: uniqueSpecialties.length,
-          teacherSpecialties: uniqueSpecialties
+          activeTeachers: teacherStats.overview.active,
+          uniqueSpecialties,
+          teacherSpecialties,
+          specialtyStats
         })
+
+        // Debug: Let's see what student states we have
+        const studentStates = students.reduce((acc, student) => {
+          const state = student.estadoAcademico || 'sin_estado'
+          acc[state] = (acc[state] || 0) + 1
+          return acc
+        }, {})
+        
+        console.log('Student states breakdown:', studentStates)
+        console.log('Students created in last 30 days:', students.filter(s => new Date(s.createdAt) > thirtyDaysAgo).map(s => ({
+          name: s.firstName + ' ' + s.lastName,
+          createdAt: s.createdAt,
+          estado: s.estadoAcademico
+        })))
 
         setStats({
           totalStudents: students.length,
           newStudents,
           activeStudents,
           totalTeachers: teachers.length,
-          activeTeachers,
-          uniqueSpecialties: uniqueSpecialties.length,
-          teacherSpecialties: uniqueSpecialties,
+          activeTeachers: teacherStats.overview.active,
+          uniqueSpecialties,
+          teacherSpecialties,
           scheduledClasses: 0, 
           upcomingClasses: 0, 
           pendingPayments: { count: 0, amount: 0 }, 
@@ -309,7 +317,8 @@ const AdminDashboard = () => {
                   Total Estudiantes
                 </p>
                 <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
-                  <div>{stats.activeStudents} activos • {stats.newStudents} nuevos (30d)</div>
+                  <div>Activos: {stats.activeStudents}</div>
+                  <div>Inactivos: {stats.totalStudents - stats.activeStudents}</div>
                 </div>
               </div>
 
@@ -328,7 +337,8 @@ const AdminDashboard = () => {
                   Total Profesores
                 </p>
                 <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
-                  <div>{stats.activeTeachers} activos • {stats.uniqueSpecialties} especialidades</div>
+                  <div>Activos: {stats.activeTeachers}</div>
+                  <div>Especialidades: {stats.uniqueSpecialties}</div>
                 </div>
               </div>
 
@@ -349,17 +359,7 @@ const AdminDashboard = () => {
                 <div style={{ opacity: 0.85, fontSize: '0.85rem', lineHeight: '1.4' }}>
                   {stats.teacherSpecialties.length > 0 ? (
                     <div>
-                      {stats.teacherSpecialties.slice(0, 3).map(spec => {
-                        const specNames = {
-                          'ingles': 'Inglés',
-                          'frances': 'Francés', 
-                          'aleman': 'Alemán',
-                          'italiano': 'Italiano',
-                          'portugues': 'Portugués',
-                          'espanol': 'Español'
-                        };
-                        return specNames[spec] || spec;
-                      }).join(', ')}
+                      {stats.teacherSpecialties.slice(0, 3).join(', ')}
                       {stats.teacherSpecialties.length > 3 && ` +${stats.teacherSpecialties.length - 3} más`}
                     </div>
                   ) : (

@@ -28,6 +28,19 @@ const {
 
 // Importar validadores
 const { body, param } = require('express-validator');
+const Language = require('../models/Language');
+
+// Helper function for validating language ObjectIds
+const validateLanguageObjectId = async (value) => {
+  const language = await Language.findById(value);
+  if (!language) {
+    throw new Error('Idioma no encontrado');
+  }
+  if (!language.isActive) {
+    throw new Error('Idioma no está activo');
+  }
+  return true;
+};
 
 // ==================== VALIDADORES ====================
 
@@ -106,8 +119,9 @@ const validateTeacherUpdate = [
     
   body('especialidades.*')
     .optional()
-    .isIn(['ingles', 'frances', 'aleman', 'italiano', 'portugues', 'espanol'])
-    .withMessage('Especialidad no válida'),
+    .isMongoId()
+    .withMessage('ID de especialidad inválido')
+    .custom(validateLanguageObjectId),
     
   body('tarifaPorHora')
     .optional()
