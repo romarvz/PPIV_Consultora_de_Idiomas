@@ -1,0 +1,88 @@
+
+{
+  "usuarios": [
+    {
+      "id": "user001",
+      "email": "admin@consultora.com",
+      "password": "admin123",
+      "nombre": "Administrador",
+      "rol": "admin",
+      "permisos": ["gestion_usuarios", "reportes", "configuracion", "finanzas", "todos"],
+      "activo": true,
+      "fechaCreacion": "2025-10-07"
+    }
+  ],
+  "profesores": [
+    {
+      "id": "prof001",
+      "nombre": "Carlos Santana",
+      "tarifa": 3000,
+      "disponibilidad": [
+        { "dia": "lunes", "horas": ["10:00", "11:00", "14:00"] },
+        { "dia": "miércoles", "horas": ["09:00", "10:00"] }
+      ]
+    },
+    {
+      "id": "prof002",
+      "nombre": "Ana Karenina",
+      "tarifa": 3500,
+      "disponibilidad": [
+        { "dia": "martes", "horas": ["15:00", "16:00"] },
+        { "dia": "jueves", "horas": ["11:00", "12:00"] }
+      ]
+    }
+  ],
+  "estudiantes": [
+    {
+      "id": "est001",
+      "nombre": "Pedro Páramo",
+      "deuda": 15000,
+      "pagos": [
+        { "id": "pago001", "fecha": "2025-09-15", "monto": 7500, "metodo": "Transferencia" }
+      ]
+    },
+    {
+      "id": "est002",
+      "nombre": "Juan Rulfo",
+      "deuda": 0,
+      "pagos": [
+        { "id": "pago002", "fecha": "2025-09-20", "monto": 10000, "metodo": "Mercado Pago" }
+      ]
+    }
+  ],
+  "clases": [
+    {
+      "id": "clase001",
+      "profesorId": "prof001",
+      "estudianteId": "est001",
+      "fecha": "2025-09-29",
+      "hora": "10:00",
+      "duracion": 1.5,
+      "pagada": false
+    },
+    {
+      "id": "clase002",
+      "profesorId": "prof001",
+      "estudianteId": "est001",
+      "fecha": "2025-10-01",
+      "hora": "09:00",
+      "duracion": 2,
+      "pagada": false
+    }
+  ],
+  "pagosPendientes": [
+    {
+      "id": "pp001",
+      "profesorId": "prof001",
+      "monto": 10500,
+      "fechaVencimiento": "2025-10-10"
+    }
+  ],
+  "empresas": [
+    {
+      "id": "emp001",
+      "nombre": "Empresa XYZ",
+      "cuentaCorriente": -50000
+    }
+  ]
+}
