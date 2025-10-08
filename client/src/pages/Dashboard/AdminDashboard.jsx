@@ -6,6 +6,8 @@ import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
 import AdminHeader from '../../components/common/AdminHeader'
+import PaymentHistory from '../payments/PaymentHistory.js' // <--- COMPONENTE IMPORTADO
+
 import api from '../../services/api'
 // React Icons - Updated for better UI
 import { 
@@ -26,7 +28,7 @@ import {
 const AdminDashboard = () => {
   const { user, logout, mustChangePassword } = useAuth()
   const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
-
+  const [paymentHistory, setPaymentHistory] = useState([]) // Para CU-COB-03
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [showTeachersManagement, setShowTeachersManagement] = useState(false)
@@ -63,8 +65,6 @@ const AdminDashboard = () => {
   const handlePasswordChanged = () => {
     setShowPasswordChange(false)
   }
-
-
 
   const handleTeacherRegistered = () => {
     setShowRegisterTeacher(false)
@@ -158,10 +158,8 @@ const AdminDashboard = () => {
 
   // Show forced password change if required
   if (showPasswordChange) {
-    return <ForcePasswordChange onPasswordChanged={handlePasswordChanged} />
+    return <ForcChange onPasswordChanged={handlePasswordChanged} />
   }
-
-
 
   // Show register teacher modal
   if (showRegisterTeacher) {
@@ -290,7 +288,7 @@ const AdminDashboard = () => {
             fontSize: '1.5rem',
             fontWeight: '600'
           }}>
-             Overview del Sistema
+            Overview del Sistema
           </h3>
           
           {loading ? (
@@ -387,6 +385,27 @@ const AdminDashboard = () => {
             </div>
           )}
         </div>
+        
+        {/* ========================================================== */}
+        {/* NUEVA SECCIÓN: Historial de Cobros (CU-COB-03)             */}
+        {/* ========================================================== */}
+        <div style={{ marginBottom: '3rem' }}>
+            <h3 style={{ 
+                color: 'var(--primary)', 
+                marginBottom: '1.5rem',
+                fontSize: '1.5rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+            }}>
+                <FaDollarSign /> Historial de Cobros Recientes
+            </h3>
+            
+            {/* 🚨 AQUÍ SE RENDERIZA EL COMPONENTE 🚨 */}
+            <PaymentHistory /> 
+        </div>
+
 
         {/* Quick Actions */}
         <div style={{ marginBottom: '3rem' }}>
