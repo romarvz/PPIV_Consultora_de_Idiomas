@@ -8,6 +8,7 @@ import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
 import AdminHeader from '../../components/common/AdminHeader'
 import api from '../../services/api'
+import { routes } from '../../utils/routes'
 // React Icons - Updated for better UI
 import { 
   FaUsers, 
@@ -486,7 +487,7 @@ const AdminDashboard = () => {
               <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
                 Gestionar pagos, generar facturas, revisar ingresos
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
+              <button className="cta-btn" style={{ width: '100%' }} onClick={() => navigate(routes.DASHBOARD.FINANCIAL)}>
                 Ver Finanzas
               </button>
             </div>
