@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { mockApi } from '../services/mockApi';
 import { FaFileInvoiceDollar, FaCheckCircle, FaExclamationCircle, FaClock } from 'react-icons/fa';
+import PaymentRegistration from './PaymentRegistration'; // Importar el nuevo componente
 
 // Componente para mostrar un badge de estado de pago
 const StatusBadge = ({ status }) => {
@@ -45,26 +46,32 @@ const PaymentsView = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const response = await mockApi.payments.getAll();
+      if (response.data.success) {
+        setPayments(response.data.data.payments);
+      } else {
+        throw new Error('Error al obtener los datos de pagos.');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        setLoading(true);
-        const response = await mockApi.payments.getAll();
-        if (response.data.success) {
-          setPayments(response.data.data.payments);
-        } else {
-          throw new Error('Error al obtener los datos de pagos.');
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPayments();
   }, []);
+
+  const handleRegistrationSuccess = () => {
+    setShowRegistrationModal(false);
+    fetchPayments(); // Actualizar la tabla de pagos
+  };
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando pagos...</div>;
@@ -81,8 +88,31 @@ const PaymentsView = () => {
           <FaFileInvoiceDollar style={{ marginRight: '1rem' }} />
           Gestión de Pagos
         </h1>
-        <button className="cta-btn">Registrar Nuevo Pago</button>
+        <button className="cta-btn" onClick={() => setShowRegistrationModal(true)}>
+          Registrar Nuevo Pago
+        </button>
       </header>
+
+      {/* Modal de Registro de Pago */}
+      {showRegistrationModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <PaymentRegistration 
+            onSuccess={handleRegistrationSuccess}
+            onCancel={() => setShowRegistrationModal(false)}
+          />
+        </div>
+      )}
 
       {/* Aquí irían los filtros */}
       
