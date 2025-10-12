@@ -223,3 +223,8 @@ const apiAdapter = {
     }
   }
 }
+
+export default apiAdapter
+
+// Exportar también el valor del switch para debugging
+export { USE_MOCK }
