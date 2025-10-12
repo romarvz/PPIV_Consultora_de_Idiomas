@@ -24,17 +24,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        console.log('🔧 Initializing auth...')
         if (authUtils.isAuthenticated()) {
+          console.log('🔑 Token found, verifying...')
           // Verify token is still valid
           await authAPI.verifyToken()
           const userData = authUtils.getCurrentUser()
+          console.log('✅ User data loaded:', userData)
           setUser(userData)
+        } else {
+          console.log('❌ No token found')
         }
       } catch (error) {
         console.error('Token verification failed:', error)
         authUtils.clearAuth()
         setUser(null)
       } finally {
+        console.log('🏁 Auth initialization complete')
         setLoading(false)
       }
     }
@@ -122,6 +128,9 @@ export const AuthProvider = ({ children }) => {
 
   // Get redirect path based on user role
   const getRedirectPath = () => {
+    console.log('🎯 getRedirectPath called - user:', user)
+    console.log('🎭 User role:', user?.role)
+    
     if (!user) return '/login'
     
     switch (user.role) {
@@ -132,6 +141,7 @@ export const AuthProvider = ({ children }) => {
       case 'estudiante':
         return '/dashboard/student'
       default:
+        console.log('⚠️ Unknown role, defaulting to student dashboard')
         return '/dashboard/student'
     }
   }

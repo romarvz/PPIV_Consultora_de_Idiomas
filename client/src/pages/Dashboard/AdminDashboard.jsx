@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
+import { useNavigate } from 'react-router-dom'
 import ForcChange from '../../components/common/ForcePasswordChange'
 
 import RegisterTeacher from '../../components/RegisterTeacher'
@@ -20,11 +21,13 @@ import {
   FaChartLine,
   FaCog,
   FaSignOutAlt,
-  FaTasks
+  FaTasks,
+  FaBuilding
 } from 'react-icons/fa'
 
 const AdminDashboard = () => {
   const { user, logout, mustChangePassword } = useAuth()
+  const navigate = useNavigate()
   const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
 
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
@@ -515,6 +518,32 @@ const AdminDashboard = () => {
               </p>
               <button className="cta-btn" style={{ width: '100%' }}>
                 Configurar Sistema
+              </button>
+            </div>
+
+            <div className="service-card">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaBuilding />
+              </div>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+                Panel Corporativo
+              </h4>
+              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Vista empresarial, gestión de empleados, pagos corporativos
+              </p>
+              <button 
+                className="cta-btn" 
+                style={{ 
+                  width: '100%',
+                  transform: 'none !important',
+                  transition: 'none !important'
+                }}
+                onClick={() => {
+                  console.log('Navegando a CompanyDashboard')
+                  navigate('/dashboard/company')
+                }}
+              >
+                Ver Panel Corporativo
               </button>
             </div>
           </div>

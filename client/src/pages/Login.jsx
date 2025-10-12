@@ -10,10 +10,16 @@ const Login = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
+    console.log('🔍 Login useEffect - isAuthenticated:', isAuthenticated)
+    console.log('👤 User:', user)
+    console.log('🎯 Redirect path:', getRedirectPath())
+    
     if (isAuthenticated) {
-      navigate(getRedirectPath(), { replace: true })
+      const redirectPath = getRedirectPath()
+      console.log('🚀 Navigating to:', redirectPath)
+      navigate(redirectPath, { replace: true })
     }
-  }, [isAuthenticated, navigate, getRedirectPath])
+  }, [isAuthenticated, navigate, getRedirectPath, user])
 
   // Make section visible when component mounts
   useEffect(() => {
