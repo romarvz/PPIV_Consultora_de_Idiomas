@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
+import StudentHeader from '../../components/common/StudentHeader'
 import { 
   FaCalendarAlt, 
   FaChartLine, 
@@ -99,16 +100,7 @@ const StudentDashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <div className="dashboard-header">
-        <div className="dashboard-header__left">
-          <FaUser className="dashboard-header__icon" />
-          <h1 className="dashboard-header__title">Dashboard del Estudiante</h1>
-        </div>
-        <button onClick={handleLogout} className="dashboard-header__logout">
-          <FaSignOutAlt style={{ marginRight: '8px' }} />
-          Cerrar Sesión
-        </button>
-      </div>
+      <StudentHeader user={user} onLogout={handleLogout} />
 
       {/* User Info */}
       <div className="dashboard-info-card">

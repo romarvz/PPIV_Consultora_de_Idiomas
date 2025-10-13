@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
+import CompanyHeader from '../../components/common/CompanyHeader'
 import { 
   FaBuilding, 
   FaUsers, 
@@ -100,16 +101,7 @@ const CompanyDashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <div className="dashboard-header">
-        <div className="dashboard-header__left">
-          <FaBuilding className="dashboard-header__icon" />
-          <h1 className="dashboard-header__title">Dashboard Corporativo</h1>
-        </div>
-        <button onClick={handleLogout} className="dashboard-header__logout">
-          <FaSignOutAlt style={{ marginRight: '8px' }} />
-          Cerrar Sesión
-        </button>
-      </div>
+      <CompanyHeader user={user} onLogout={handleLogout} />
 
       {/* Company Info */}
       <div className="dashboard-info-card">

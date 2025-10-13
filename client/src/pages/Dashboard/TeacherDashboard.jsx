@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
+import TeacherHeader from '../../components/common/TeacherHeader'
 import { 
   FaChalkboardTeacher, 
   FaUsers, 
@@ -136,16 +137,7 @@ const TeacherDashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <div className="dashboard-header">
-        <div className="dashboard-header__left">
-          <FaChalkboardTeacher className="dashboard-header__icon" />
-          <h1 className="dashboard-header__title">Dashboard del Profesor</h1>
-        </div>
-        <button onClick={handleLogout} className="dashboard-header__logout">
-          <FaSignOutAlt style={{ marginRight: '8px' }} />
-          Cerrar Sesión
-        </button>
-      </div>
+      <TeacherHeader user={user} onLogout={handleLogout} />
 
       {/* Teacher Info */}
       <div className="dashboard-info-card">
