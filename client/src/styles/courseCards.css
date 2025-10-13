@@ -5,7 +5,7 @@
   box-shadow: var(--card-shadow);
   transition: transform var(--transition-speed), box-shadow var(--transition-speed);
   background-color: var(--card-background);
-  /* ... el resto de las propiedades flexbox ... */
+  
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -29,7 +29,6 @@
   flex-direction: column;
 }
 
-/* Clases para los elementos que tenían estilos en línea */
 .course-card-title {
   margin-top: 0;
   color: var(--text-color-dark);
@@ -47,15 +46,16 @@
 }
 
 .course-card-tag {
-  background: #e7f3ff; /* Podríamos crear una variable --primary-light si quisiéramos */
+  background: #e7f3ff; 
   color: var(--primary-color);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
+  font-weight: bold;
 }
 
 .course-card-tag--secondary {
-  background: var(--background-grey);
+  background: var(--background-light);
   color: var(--text-color-dark);
 }
 

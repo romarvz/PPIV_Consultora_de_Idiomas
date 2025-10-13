@@ -1,6 +1,6 @@
 .course-management-page {
   padding: 2rem;
-  padding-top: 60px; /* Espacio para el botón "Volver" */
+  padding-top: 4.2 rem; /* Espacio para el botón "Volver" */
 }
 
 .course-management-page__header {
@@ -15,7 +15,7 @@
   border-collapse: collapse;
   background: var(--card-background);
   border-radius: var(--card-border-radius);
-  overflow: hidden; /* Para que los bordes redondeados se apliquen a la tabla */
+  overflow: hidden; 
   box-shadow: var(--card-shadow);
 }
 
@@ -74,5 +74,5 @@
 }
 
 .action-btn--delete:hover {
-  background-color: #c82333; 
+  background-color: --var(--darker-danger);
 }
