@@ -6,8 +6,9 @@ import {
   mockClasses, 
   mockPayments,
   mockLanguages,
-  mockCompanies, 
-  mockCourses
+  mockCompanies,
+  mockCourses,
+  mockFinancialData
 } from './mockData'
 
 // Simular delay de red realista
@@ -587,56 +588,13 @@ export const mockApi = {
     financial: async (params = {}) => {
       await delay()
       
-      let payments = [...storage.payments]
-      
-      // Filtrar por rango de fechas si se proporciona
-      if (params.dateFrom) {
-        payments = payments.filter(p => new Date(p.date) >= new Date(params.dateFrom))
-      }
-      if (params.dateTo) {
-        payments = payments.filter(p => new Date(p.date) <= new Date(params.dateTo))
-      }
-      
-      const paid = payments.filter(p => p.status === 'pagado')
-      const pending = payments.filter(p => p.status === 'pendiente')
-      const overdue = payments.filter(p => p.status === 'vencido')
-      
-      const totalIncome = paid.reduce((sum, p) => sum + p.amount, 0)
-      const pendingIncome = pending.reduce((sum, p) => sum + p.amount, 0)
-      const overdueAmount = overdue.reduce((sum, p) => sum + p.amount, 0)
-      
-      // Ingresos por estudiante
-      const incomeByStudent = {}
-      paid.forEach(p => {
-        if (!incomeByStudent[p.studentId]) {
-          incomeByStudent[p.studentId] = {
-            studentName: p.studentName,
-            total: 0,
-            payments: 0
-          }
-        }
-        incomeByStudent[p.studentId].total += p.amount
-        incomeByStudent[p.studentId].payments += 1
-      })
-      
-      // Convertir a array y ordenar
-      const topStudents = Object.values(incomeByStudent)
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 10)
-      
       return {
         data: {
           success: true,
           data: {
-            totalIncome,
-            pendingIncome,
-            overdueAmount,
-            totalPayments: payments.length,
-            paidPayments: paid.length,
-            pendingPayments: pending.length,
-            overduePayments: overdue.length,
-            topStudents,
-            payments: payments.slice(0, 50) // Últimos 50 pagos
+            totalIncome: mockFinancialData.totalIncome,
+            pendingIncome: mockFinancialData.pendingIncome,
+            topStudents: mockFinancialData.topStudents
           }
         }
       }
