@@ -216,244 +216,147 @@ const AdminDashboard = () => {
         </div>
         
 
-        {/* KPI Cards */}
-        <div style={{ marginBottom: '3rem' }}>
-          <h3 style={{ 
-            color: 'var(--primary)', 
-            marginBottom: '1.5rem',
-            fontSize: '1.5rem',
-            fontWeight: '600'
-          }}>
-             Overview del Sistema
-          </h3>
+        {/* KPI Cards */}{/* KPI Cards */}
+        <div className="dashboard-section">
+          <h3 className="dashboard-section__title">Overview del Sistema</h3>
           
           {loading ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
               <p>Cargando estadísticas...</p>
             </div>
           ) : (
-            <div className="services-grid" style={{ 
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '1.5rem'
-            }}>
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaUsers />
-                </div>
-                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
-                  {stats.totalStudents}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
-                  Total Estudiantes
-                </p>
-                <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
+            <div className="dashboard-grid">
+              {/* --- Tarjeta 1: Total Estudiantes  */}
+              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #0b3765, #035888)' }}>
+                <div className="kpi-card__icon"><FaUsers /></div>
+                <h3 className="kpi-card__value">{stats.totalStudents}</h3>
+                <p className="kpi-card__label">Total Estudiantes</p>
+                <div className="kpi-card__details">
                   <div>Activos: {stats.activeStudents}</div>
                   <div>Inactivos: {stats.totalStudents - stats.activeStudents}</div>
                 </div>
               </div>
 
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #e67e22, #d68910)',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaChalkboardTeacher />
-                </div>
-                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
-                  {stats.totalTeachers}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
-                  Total Profesores
-                </p>
-                <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
+              {/* --- Tarjeta 2: Total Profesores (Estructura correcta) --- */}
+              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #e67e22, #d68910)' }}>
+                <div className="kpi-card__icon"><FaChalkboardTeacher /></div>
+                <h3 className="kpi-card__value">{stats.totalTeachers}</h3>
+                <p className="kpi-card__label">Total Profesores</p>
+                <div className="kpi-card__details">
                   <div>Activos: {stats.activeTeachers}</div>
                   <div>Especialidades: {stats.uniqueSpecialties}</div>
                 </div>
               </div>
 
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #8e44ad, #9b59b6)',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaBookOpen />
-                </div>
-                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
-                  {stats.uniqueSpecialties}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
-                  Especialidades
-                </p>
-                <div style={{ opacity: 0.85, fontSize: '0.85rem', lineHeight: '1.4' }}>
+              {/* --- Tarjeta 3: Especialidades (Estructura correcta) --- */}
+              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #8e44ad, #9b59b6)' }}>
+                <div className="kpi-card__icon"><FaBookOpen /></div>
+                <h3 className="kpi-card__value">{stats.uniqueSpecialties}</h3>
+                <p className="kpi-card__label">Especialidades</p>
+                <div className="kpi-card__details">
                   {stats.teacherSpecialties.length > 0 ? (
-                    <div>
+                    <>
                       {stats.teacherSpecialties.slice(0, 3).join(', ')}
                       {stats.teacherSpecialties.length > 3 && ` +${stats.teacherSpecialties.length - 3} más`}
-                    </div>
+                    </>
                   ) : (
                     'Especialidades variadas'
                   )}
                 </div>
               </div>
 
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #F5B800, #fd7e14)',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaDollarSign />
+              {/* --- Tarjeta 4: Ingresos del Mes (ESTRUCTURA CORREGIDA) --- */}
+              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #F5b401, #fc7f13)' }}>
+                <div className="kpi-card__icon"><FaDollarSign /></div>
+                <h3 className="kpi-card__value">${stats.monthlyRevenue.toLocaleString()}</h3>
+                <p className="kpi-card__label">Ingresos del Mes</p>
+                <div className="kpi-card__details">
+                  <div>Pagos pendientes: {stats.pendingPayments.count}</div>
                 </div>
-                <h3 style={{ color: 'white', fontSize: '1.5rem', margin: '0.5rem 0' }}>
-                  ${stats.monthlyRevenue.toLocaleString()}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9 }}>Ingresos del Mes</p>
-                <small style={{ opacity: 0.8 }}>
-                  Pagos pendientes: {stats.pendingPayments.count}
-                </small>
               </div>
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div style={{ marginBottom: '3rem' }}>
-          <h3 style={{ 
-            color: 'var(--primary)', 
-            marginBottom: '1.5rem',
-            fontSize: '1.5rem',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <FaTasks /> Acciones Rápidas
-          </h3>
+        {/* Quick Actions */}
+        <div className="dashboard-section">
+          <h3 className="dashboard-section__title"><FaTasks /> Acciones Rápidas</h3>
           
-          <div className="services-grid" style={{ 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1.5rem'
-          }}>
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaUserGraduate />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Gestión de Estudiantes
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Ver, editar y gestionar información de estudiantes, estados académicos y progreso
+          <div className="dashboard-grid">
+            {/* --- Tarjeta 1: Gestión de Estudiantes --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaUserGraduate /></div>
+              <h4 className="action-card__title">Gestión de Estudiantes</h4>
+              <p className="action-card__description">
+                Ver, editar y gestionar información de estudiantes, estados académicos y progreso.
               </p>
-              <button 
-                className="cta-btn" 
-                style={{ 
-                  width: '100%',
-                  transform: 'none !important',
-                  transition: 'none !important'
-                }}
-                onClick={() => {
-                  console.log('Click en Gestionar Estudiantes')
-                  setShowStudentsManagement(true)
-                }}
-              >
-                Gestión de Estudiantes
+              <button className="cta-btn action-card__button" onClick={() => setShowStudentsManagement(true)}>
+                Gestionar Estudiantes
               </button>
             </div>
             
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaChalkboardTeacher />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Gestión de Profesores
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Registrar profesores, gestionar especialidades, configurar horarios
+            {/* --- Tarjeta 2: Gestión de Profesores --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaChalkboardTeacher /></div>
+              <h4 className="action-card__title">Gestión de Profesores</h4>
+              <p className="action-card__description">
+                Registrar profesores, gestionar especialidades y configurar sus horarios disponibles.
               </p>
-              <button 
-                className="cta-btn" 
-                style={{ 
-                  width: '100%',
-                  transform: 'none !important',
-                  transition: 'none !important'
-                }}
-                onClick={() => {
-                  console.log('Click en Gestión de Profesores')
-                  setShowTeachersManagement(true)
-                }}
-              >
-                Gestión de Profesores
+              <button className="cta-btn action-card__button" onClick={() => setShowTeachersManagement(true)}>
+                Gestionar Profesores
               </button>
             </div>
             
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaCalendarAlt />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Gestión de Clases
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Programar clases, asignar profesores, gestionar horarios
+            {/* --- Tarjeta 3: Gestión de Cursos (antes Clases) --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaCalendarAlt /></div>
+              <h4 className="action-card__title">Gestión de Cursos</h4>
+              <p className="action-card__description">
+                Crear y editar la oferta académica de la institución (cursos grupales, individuales, etc.).
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
-                Gestionar Clases
+              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE: Navegar al CRUD de Cursos')}>
+                Gestionar Cursos
               </button>
             </div>
             
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaCreditCard />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Pagos y Finanzas
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Gestionar pagos, generar facturas, revisar ingresos
+            {/* --- Tarjeta 4: Pagos y Finanzas --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaCreditCard /></div>
+              <h4 className="action-card__title">Pagos y Finanzas</h4>
+              <p className="action-card__description">
+                Gestionar pagos, generar facturas, revisar los ingresos y controlar las deudas.
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
+              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE')}>
                 Ver Finanzas
               </button>
             </div>
             
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaChartLine />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Reportes
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Estadísticas académicas, reportes financieros, exportaciones
+            {/* --- Tarjeta 5: Reportes --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaChartLine /></div>
+              <h4 className="action-card__title">Reportes</h4>
+              <p className="action-card__description">
+                Estadísticas académicas, reportes financieros y exportación de datos importantes.
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
+              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE')}>
                 Ver Reportes
               </button>
             </div>
             
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaCog />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Configuración
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Configurar sistema, gestionar roles, ajustar parámetros
+            {/* --- Tarjeta 6: Configuración --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaCog /></div>
+              <h4 className="action-card__title">Configuración</h4>
+              <p className="action-card__description">
+                Configurar sistema, gestionar roles de usuario y ajustar parámetros generales.
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
+              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE')}>
                 Configurar Sistema
               </button>
             </div>
           </div>
         </div>
-
         {/* Admin Profile Info */}
         <div className="service-card" style={{ marginBottom: '2rem' }}>
           <h3 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
