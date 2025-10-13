@@ -6,6 +6,7 @@ import ForcChange from '../../components/common/ForcePasswordChange'
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
+import ReportsView from '../../components/ReportsView'
 import AdminHeader from '../../components/common/AdminHeader'
 import api from '../../services/api'
 // React Icons - Updated for better UI
@@ -33,6 +34,7 @@ const AdminDashboard = () => {
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [showTeachersManagement, setShowTeachersManagement] = useState(false)
+  const [showReports, setShowReports] = useState(false)
   const [stats, setStats] = useState({
     totalStudents: 0,
     newStudents: 0,
@@ -279,6 +281,11 @@ const AdminDashboard = () => {
     )
   }
 
+  // Show reports
+  if (showReports) {
+    return <ReportsView onClose={() => setShowReports(false)} />
+  }
+
   return (
     <section className="section visible">
       <div className="container">
@@ -501,7 +508,18 @@ const AdminDashboard = () => {
               <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
                 Estadísticas académicas, reportes financieros, exportaciones
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
+              <button 
+                className="cta-btn" 
+                style={{ 
+                  width: '100%',
+                  transform: 'none !important',
+                  transition: 'none !important'
+                }}
+                onClick={() => {
+                  console.log('Click en Ver Reportes')
+                  setShowReports(true)
+                }}
+              >
                 Ver Reportes
               </button>
             </div>
@@ -552,7 +570,7 @@ const AdminDashboard = () => {
         {/* Admin Profile Info */}
         <div className="service-card" style={{ marginBottom: '2rem' }}>
           <h3 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
-            👤 Información Personal
+            Información Personal
           </h3>
           <div style={{ 
             display: 'grid',
