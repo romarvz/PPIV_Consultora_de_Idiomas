@@ -1,6 +1,7 @@
 :root {
   /* Paleta de Colores Primarios */
-  --primary-color: #195189;
+  --primary-color: #2c5aa0;
+  --primary: #2c5aa0; /* Alias for consistency */
   --success-color: linear-gradient(to right, #2863a7, #0F5C8C);
   --danger-color: #dc3545;
   --darker-danger: #c82333; 
@@ -9,23 +10,41 @@
   --medium-blue: #0F5C8C;
   --light-blue: #3088BF;
   --light-gray: #F2F2F2;
-  --dark-gray: #0D0D0D:
+  --dark-gray: #0D0D0D;
 
   /* Colores de Texto */
-  --text-color-dark: #0D0D0D;
-  --text-color-light: #555;
+  --text-color-dark: #333;
+  --text-color-medium: #666;
+  --text-color-light: #888;
+  --text-secondary: #666;
   --text-color-inverted: #F2F2F2;
 
   /* Fondos y Bordes */
-  --background-light: #f2F2F2;
+  --background-light: #f5f5f5;
   --background-grey: #777;
   --border-color: #ddd;
+  --border-light: #eee;
 
   /* Tarjetas (Cards) */
   --card-background: #ffffff;
   --card-border-radius: 8px;
-  --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   --card-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+  /* Dashboard específico */
+  --dashboard-background: #f5f5f5;
+  --dashboard-padding: 20px;
+
+  /* Botones */
+  --button-logout-bg: #dc3545;
+  --button-padding: 10px 20px;
+  --button-border-radius: 5px;
+
+  /* Progress bars */
+  --progress-bg: #e0e0e0;
+  --progress-success: #28a745;
+  --progress-warning: #ffc107;
+  --progress-danger: #dc3545;
 
   /* Transiciones */
   --transition-speed: 0.2s;

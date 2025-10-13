@@ -24,16 +24,16 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('🔧 Initializing auth...')
+        console.log('Initializing auth...')
         if (authUtils.isAuthenticated()) {
-          console.log('🔑 Token found, verifying...')
+          console.log('Token found, verifying...')
           // Verify token is still valid
           await authAPI.verifyToken()
           const userData = authUtils.getCurrentUser()
-          console.log('✅ User data loaded:', userData)
+          console.log('User data loaded:', userData)
           setUser(userData)
         } else {
-          console.log('❌ No token found')
+          console.log('No token found')
         }
       } catch (error) {
         console.error('Token verification failed:', error)
