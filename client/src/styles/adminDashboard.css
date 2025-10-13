@@ -398,3 +398,235 @@
   font-size: 12px;
   color: var(--text-color-medium);
 }
+
+/* Admin Header Responsive Styles */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-bottom: 3px solid var(--primary-color);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-header__left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-header__logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-header__logo {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
+.admin-header__title-section h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  line-height: 1.2;
+}
+
+.admin-header__title-section p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.admin-header__right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-header__theme-toggle {
+  background: none;
+  border: 2px solid #34495e;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #34495e;
+}
+
+.admin-header__theme-toggle--dark {
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.admin-header__theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(52, 73, 94, 0.3);
+}
+
+.admin-header__theme-toggle--dark:hover {
+  box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3);
+}
+
+.admin-header__user-info {
+  text-align: right;
+  border-right: 2px solid var(--border-color);
+  padding-right: 1rem;
+}
+
+.admin-header__user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.admin-header__user-role {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.admin-header__logout-btn {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.admin-header__logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+/* Responsive breakpoints for admin header */
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+  
+  .admin-header__left {
+    min-width: auto;
+    flex: none;
+  }
+  
+  .admin-header__logo {
+    height: 40px;
+  }
+  
+  .admin-header__title-section h2 {
+    font-size: 1.25rem;
+  }
+  
+  .admin-header__title-section p {
+    font-size: 0.8rem;
+  }
+  
+  .admin-header__right {
+    gap: 0.75rem;
+  }
+  
+  .admin-header__theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .admin-header__user-info {
+    border-right: none;
+    padding-right: 0;
+    text-align: left;
+  }
+  
+  .admin-header__logout-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .admin-header__left {
+    justify-content: center;
+  }
+  
+  .admin-header__right {
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  
+  .admin-header__logo-section {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .admin-header__title-section h2 {
+    font-size: 1.1rem;
+  }
+  
+  .admin-header__user-info {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header {
+    padding: 0.75rem;
+  }
+  
+  .admin-header__logo {
+    height: 35px;
+  }
+  
+  .admin-header__title-section h2 {
+    font-size: 1rem;
+  }
+  
+  .admin-header__title-section p {
+    font-size: 0.75rem;
+  }
+  
+  .admin-header__theme-toggle {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .admin-header__logout-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .admin-header__logout-btn span {
+    display: none;
+  }
+}

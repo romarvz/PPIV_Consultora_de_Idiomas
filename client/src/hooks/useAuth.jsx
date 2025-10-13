@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         authUtils.clearAuth()
         setUser(null)
       } finally {
-        console.log('🏁 Auth initialization complete')
+        console.log('Auth initialization complete')
         setLoading(false)
       }
     }
@@ -128,8 +128,8 @@ export const AuthProvider = ({ children }) => {
 
   // Get redirect path based on user role
   const getRedirectPath = () => {
-    console.log('🎯 getRedirectPath called - user:', user)
-    console.log('🎭 User role:', user?.role)
+    console.log('getRedirectPath called - user:', user)
+    console.log('User role:', user?.role)
     
     if (!user) return '/login'
     

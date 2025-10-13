@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { FaMoon, FaSun, FaSignOutAlt } from 'react-icons/fa';
+import '../../styles/adminDashboard.css';
 
 const AdminHeader = ({ user, onLogout }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Obtener modo guardado del localStorage o usar false por defecto
+    // Load saved preference from localStorage
     const savedMode = localStorage.getItem('darkMode');
     return savedMode ? JSON.parse(savedMode) : false;
   });
 
-  // Aplicar/quitar modo oscuro al documento
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark-mode');
     } else {
       document.documentElement.classList.remove('dark-mode');
     }
-    // Guardar preferencia en localStorage
+    //  localStorage
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
@@ -24,92 +24,35 @@ const AdminHeader = ({ user, onLogout }) => {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      marginBottom: '2rem',
-      background: 'var(--card-bg)',
-      padding: '1.5rem',
-      borderRadius: '10px',
-      boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
-      borderBottom: '3px solid var(--primary)'
-    }}>
-      {/* Logo y título */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0.75rem' 
-        }}>
+    <div className="admin-header">
+      {/* Logo and tittle section*/}
+      <div className="admin-header__left">
+        <div className="admin-header__logo-section">
           {/* Logo */}
           <img 
             src="/images/Logo.png" 
             alt="PPIV Consultora" 
-            style={{ 
-              height: '50px', 
-              width: 'auto',
-              objectFit: 'contain'
-            }}
+            className="admin-header__logo"
             onError={(e) => {
-              // Si no se puede cargar la imagen, mostrar un placeholder
+             
               e.target.style.display = 'none';
             }}
           />
-          
-          {/* Título y subtítulo */}
-          <div>
-            <h2 style={{ 
-              margin: 0, 
-              fontSize: '1.5rem', 
-              fontWeight: '700',
-              color: 'var(--primary)',
-              lineHeight: '1.2'
-            }}>
-              Panel de Administración
-            </h2>
-            <p style={{ 
-              color: 'var(--text-secondary)', 
-              margin: 0,
-              fontSize: '0.9rem',
-              fontWeight: '400'
-            }}>
-              ¡Bienvenido/a {user?.firstName || user?.name || 'Administrador'}!
-            </p>
+
+          {/* Title section */}
+          <div className="admin-header__title-section">
+            <h2>Panel de Administración</h2>
+            <p>¡Bienvenido/a {user?.firstName || user?.name || 'Administrador'}!</p>
           </div>
         </div>
       </div>
 
-      {/* Controles de la derecha */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '1rem' 
-      }}>
-        {/* Toggle modo oscuro */}
+     
+      <div className="admin-header__right">
+      
         <button
           onClick={toggleDarkMode}
-          style={{
-            background: 'none',
-            border: `2px solid ${isDarkMode ? '#f39c12' : '#34495e'}`,
-            borderRadius: '50%',
-            width: '45px',
-            height: '45px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            color: isDarkMode ? '#f39c12' : '#34495e'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'scale(1.1)';
-            e.target.style.boxShadow = `0 4px 8px rgba(${isDarkMode ? '243, 156, 18' : '52, 73, 94'}, 0.3)`;
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'scale(1)';
-            e.target.style.boxShadow = 'none';
-          }}
+          className={`admin-header__theme-toggle ${isDarkMode ? 'admin-header__theme-toggle--dark' : ''}`}
           title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
           {isDarkMode ? (
@@ -120,24 +63,11 @@ const AdminHeader = ({ user, onLogout }) => {
         </button>
 
         {/* Información del usuario */}
-        <div style={{ 
-          textAlign: 'right',
-          borderRight: '2px solid var(--border-color)',
-          paddingRight: '1rem'
-        }}>
-          <div style={{ 
-            fontSize: '0.85rem', 
-            fontWeight: '600',
-            color: 'var(--text-primary)',
-            marginBottom: '2px'
-          }}>
+        <div className="admin-header__user-info">
+          <div className="admin-header__user-name">
             {user?.firstName} {user?.lastName}
           </div>
-          <div style={{ 
-            fontSize: '0.75rem', 
-            color: 'var(--text-secondary)',
-            textTransform: 'capitalize'
-          }}>
+          <div className="admin-header__user-role">
             {user?.role || 'Administrador'}
           </div>
         </div>
@@ -145,31 +75,10 @@ const AdminHeader = ({ user, onLogout }) => {
         {/* Botón cerrar sesión */}
         <button 
           onClick={onLogout}
-          style={{
-            background: 'linear-gradient(135deg, #e74c3c, #c0392b)',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 4px 12px rgba(231, 76, 60, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = 'none';
-          }}
+          className="admin-header__logout-btn"
         >
           <FaSignOutAlt />
-          Cerrar Sesión
+          <span>Cerrar Sesión</span>
         </button>
       </div>
     </div>

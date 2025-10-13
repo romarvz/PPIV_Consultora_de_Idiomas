@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import { useNavigate } from 'react-router-dom'
-import ForcChange from '../../components/common/ForcePasswordChange'
+import ForcePasswordChange from '../../components/common/ForcePasswordChange'
 
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'

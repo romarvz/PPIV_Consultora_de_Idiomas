@@ -10,13 +10,13 @@ const Login = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    console.log('🔍 Login useEffect - isAuthenticated:', isAuthenticated)
-    console.log('👤 User:', user)
-    console.log('🎯 Redirect path:', getRedirectPath())
+    console.log('Login useEffect - isAuthenticated:', isAuthenticated)
+    console.log('User:', user)
+    console.log('Redirect path:', getRedirectPath())
     
     if (isAuthenticated) {
       const redirectPath = getRedirectPath()
-      console.log('🚀 Navigating to:', redirectPath)
+      console.log('Navigating to:', redirectPath)
       navigate(redirectPath, { replace: true })
     }
   }, [isAuthenticated, navigate, getRedirectPath, user])

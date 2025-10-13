@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth.jsx'
 import { authAPI } from '../../services/api'
 
 const ForcePasswordChange = ({ onPasswordChanged }) => {
-  console.log('🔐 ForcePasswordChange component rendering...')
+  console.log(' ForcePasswordChange component rendering...')
   
   const [formData, setFormData] = useState({
     newPassword: '',
@@ -14,7 +14,7 @@ const ForcePasswordChange = ({ onPasswordChanged }) => {
   const [error, setError] = useState('')
   const { user } = useAuth()
   
-  console.log('👤 ForcePasswordChange - user:', user)
+  console.log('ForcePasswordChange - user:', user)
 
   const handleChange = (e) => {
     setFormData({
