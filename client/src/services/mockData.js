@@ -382,6 +382,8 @@ export const mockCourses = [
   {
     _id: 'course-1',
     name: 'Inglés Conversacional',
+    type: 'Curso Grupal',
+    modality: 'Presencial',
     description: 'Cursos de inglés adaptados a todos los niveles (A1 a C2). Enfocados en la fluidez y la comunicación práctica para el día a día.',
     language: 'Inglés',
     level: 'Multi-nivel',
@@ -395,6 +397,8 @@ export const mockCourses = [
   {
     _id: 'course-2',
     name: 'Alemán Intermedio B2',
+    type: 'Curso Grupal',
+    modality: 'Presencial',
     description: 'Perfecciona tu alemán con nuestro curso de nivel B2. Ideal para quienes ya tienen una base y buscan consolidar su gramática y vocabulario avanzado.',
     language: 'Alemán',
     level: 'B2',
@@ -408,6 +412,8 @@ export const mockCourses = [
   {
     _id: 'course-3',
     name: 'Italiano para Principiantes',
+    type: 'Curso Grupal',
+    modality: 'Presencial',
     description: 'Iníciate en el idioma italiano. Nuestro curso de nivel A2 te dará las herramientas básicas para presentarte, hacer preguntas y entender conversaciones sencillas.',
     language: 'Italiano',
     level: 'A2',
@@ -421,6 +427,8 @@ export const mockCourses = [
   {
     _id: 'course-4',
     name: 'Francés Avanzado C2',
+    type: 'Curso Grupal',
+    modality: 'Presencial',
     description: 'Curso de perfeccionamiento para alcanzar la maestría en el idioma francés. Análisis de textos complejos, debate y producción de discursos a nivel nativo.',
     language: 'Francés',
     level: 'C2',
@@ -434,6 +442,8 @@ export const mockCourses = [
   {
     _id: 'course-5',
     name: 'Portugués desde Cero',
+    type: 'Curso Grupal',
+    modality: 'Presencial',
     description: 'Aprende portugués desde la base con nuestro curso de nivel A1. Ideal para planificar tu próximo viaje a Brasil o Portugal.',
     language: 'Portugués',
     level: 'A1',
@@ -443,8 +453,100 @@ export const mockCourses = [
     currency: 'ARS',
     isActive: true,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Redentor_Over_Clouds_1.jpg/640px-Redentor_Over_Clouds_1.jpg?q=80&w=2071&auto=format&fit=crop'
-  }
+  },
+  {
+    _id: 'course-6',
+    name: 'Clases Particulares de Inglés (Online)',
+    type: 'Clase Individual',
+    modality: 'Online',
+    description: 'Atención 1 a 1 con un plan de estudios totalmente personalizado a tus objetivos y ritmo de aprendizaje.',
+    language: 'Inglés',
+    level: 'Todos',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Horario a convenir',
+    price: 35000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1516534775068-ba3e7458af70?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-7',
+    name: 'Francés Intensivo (Online)',
+    type: 'Curso Grupal',
+    modality: 'Online',
+    description: 'Avanza rápidamente con nuestro curso grupal intensivo en modalidad virtual. Ideal para quienes tienen poco tiempo.',
+    language: 'Francés',
+    level: 'A2',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Lunes, Miércoles y Viernes - 19:00hs',
+    price: 28000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?q=80&w=1974&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-8',
+    name: 'Inglés de Negocios para Empresas',
+    type: 'Curso Corporativo',
+    modality: 'Presencial',
+    description: 'Programas In-Company diseñados a medida para mejorar las habilidades de comunicación de tus equipos de trabajo.',
+    language: 'Inglés',
+    level: 'B1 en adelante',
+    teacherId: 'mock-teacher-2',
+    scheduleText: 'A coordinar con la empresa',
+    price: 150000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1974&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-9',
+    name: 'Club de Conversación: Noche de Cine',
+    type: 'Inmersión Cultural',
+    modality: 'Presencial',
+    description: 'Practica tu italiano de forma relajada mientras disfrutas de una película clásica y un debate posterior con otros estudiantes.',
+    language: 'Italiano',
+    level: 'B1 en adelante',
+    teacherId: 'mock-teacher-2',
+    scheduleText: 'Último viernes de cada mes - 20:00hs',
+    price: 5000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-10',
+    name: 'Inglés Intensivo (Online)',
+    type: 'Curso Grupal',
+    modality: 'Online',
+    description: 'Curso de inglés conversacional intensivo. Interactúa con tus compañeros en escenificación de situaciones reales y mejora tu fluidez rápidamente.',
+    language: 'Inglés',
+    level: 'Multi-nivel',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Horarios flexibles por la mañana y tarde.',
+    price: 25000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://a.travel-assets.com/findyours-php/viewfinder/images/res70/166000/166870-Tower-Bridge.jpg?q=80&w=2070&auto=format&fit=crop'
+  },
+   {
+    _id: 'course-11',
+    name: 'Clases Particulares de Portugués (Online)',
+    type: 'Clase Individual',
+    modality: 'Online',
+    description: 'Atención 1 a 1 con un plan de estudios totalmente personalizado a tus objetivos y ritmo de aprendizaje.',
+    language: 'Portugués',
+    level: 'Todos',
+    teacherId: 'mock-teacher-4',
+    scheduleText: 'Horario a convenir',
+    price: 35000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl:  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Redentor_Over_Clouds_1.jpg/640px-Redentor_Over_Clouds_1.jpg?q=80&w=2071&auto=format&fit=crop'
+  },
 ];
+
+
 // ==================== PAGOS ====================
 export const mockPayments = [
   {

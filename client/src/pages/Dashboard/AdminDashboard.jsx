@@ -7,6 +7,7 @@ import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
 import AdminHeader from '../../components/common/AdminHeader'
 import CalendarView from '../../components/admin/CalendarView.jsx'
+import CourseManagementPage from './CourseManagementPage';
 import api from '../../services/api'
 // React Icons - Updated for better UI
 import { 
@@ -31,6 +32,7 @@ const AdminDashboard = () => {
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [showTeachersManagement, setShowTeachersManagement] = useState(false)
+  const [showCourseManagement, setShowCourseManagement] = useState(false);
   const [stats, setStats] = useState({
     totalStudents: 0,
     newStudents: 0,
@@ -203,6 +205,22 @@ const AdminDashboard = () => {
     )
   }
 
+if (showCourseManagement) {
+    return (
+      <div className="full-page-view">
+        <div className="full-page-view__close-wrapper">
+          <button 
+            onClick={() => setShowCourseManagement(false)} 
+            className="full-page-view__close-btn"
+          >
+            ← Volver al Dashboard
+          </button>
+        </div>
+        <CourseManagementPage />
+      </div>
+    );
+  }
+
   return (
     <section className="section visible">
       <div className="container">
@@ -308,14 +326,14 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* --- Tarjeta 3: Gestión de Cursos (antes Clases) --- */}
+            {/* --- Tarjeta 3: Gestión de Cursos  --- */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaCalendarAlt /></div>
               <h4 className="action-card__title">Gestión de Cursos</h4>
               <p className="action-card__description">
                 Crear y editar la oferta académica de la institución (cursos grupales, individuales, etc.).
               </p>
-              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE: Navegar al CRUD de Cursos')}>
+              <button className="cta-btn action-card__button" onClick={() => setShowCourseManagement(true)}>
                 Gestionar Cursos
               </button>
             </div>

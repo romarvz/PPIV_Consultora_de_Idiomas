@@ -5,9 +5,12 @@ import apiAdapter from '../services/apiAdapter';
 import CourseCard from '../components/courses/CourseCard';
 import CourseDetailModal from '../components/courses/CourseDetailModal';
 
+// Función para convertir un título en un ID para el link (ej: "Curso Grupal" -> "curso-grupal")
+const slugify = (text) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
 const CoursesPage = () => {
-  const [courses, setCourses] = useState([]);
-  const [teachers, setTeachers] = useState([]); 
+  const [groupedCourses, setGroupedCourses] = useState({});
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
@@ -15,16 +18,22 @@ const CoursesPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Solo los cursos activos para la vista pública
         const coursesResponse = await apiAdapter.courses.getAll({ activeOnly: true });
-        
-        // Ojo acá Mock API no tiene un endpoint para profesores
-        // En una app real sería: const teachersResponse = await apiAdapter.teachers.getAll();
         const { mockTeachers } = await import('../services/mockData');
 
         if (coursesResponse.data.success) {
-          setCourses(coursesResponse.data.data.courses);
-          setTeachers(mockTeachers); // Datos importados directamente
+          // Agrupamos los cursos por su 'tipo'
+          const groups = coursesResponse.data.data.courses.reduce((acc, course) => {
+            const type = course.type || 'Otros';
+            if (!acc[type]) {
+              acc[type] = [];
+            }
+            acc[type].push(course);
+            return acc;
+          }, {});
+
+          setGroupedCourses(groups);
+          setTeachers(mockTeachers);
         }
       } catch (error) {
         console.error("Error al cargar los cursos:", error);
@@ -36,45 +45,33 @@ const CoursesPage = () => {
     fetchData();
   }, []);
 
-  const handleSelectCourse = (course) => {
-    setSelectedCourse(course);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedCourse(null);
-  };
-
-  // Buscar el profesor del curso seleccionado para pasarlo al modal
+  const handleSelectCourse = (course) => setSelectedCourse(course);
+  const handleCloseModal = () => setSelectedCourse(null);
   const selectedTeacher = teachers.find(t => t._id === selectedCourse?.teacherId);
 
-  if (loading) {
-    return <div style={{ textAlign: 'center', padding: '4rem' }}><h2>Cargando cursos...</h2></div>;
-  }
-
-  const pageStyle = {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '2rem'
-  };
-
-  const gridStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '2rem'
-  };
+  if (loading) return <div style={{ textAlign: 'center', padding: '4rem' }}><h2>Cargando nuestra oferta...</h2></div>;
 
   return (
-    <div style={pageStyle}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '3rem' }}>Nuestra Oferta Académica</h1>
-      <div style={gridStyle}>
-        {courses.map(course => (
-          <CourseCard 
-            key={course._id} 
-            course={course} 
-            onSelectCourse={handleSelectCourse} 
-          />
-        ))}
-      </div>
+      
+      {Object.entries(groupedCourses).map(([type, courses]) => (
+        <section key={type} id={slugify(type)} style={{ marginBottom: '4rem' }}>
+          <h2 style={{ borderBottom: '2px solid var(--primary-color)', paddingBottom: '0.5rem', marginBottom: '2rem' }}>
+            {type}
+          </h2>
+          <div className="dashboard-grid"> {/* Reutilizamos la clase de la grilla del dashboard */}
+            {courses.map(course => (
+              <CourseCard 
+                key={course._id} 
+                course={course} 
+                onSelectCourse={handleSelectCourse} 
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+
       <CourseDetailModal 
         course={selectedCourse} 
         teacher={selectedTeacher}
