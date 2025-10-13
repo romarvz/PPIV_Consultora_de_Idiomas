@@ -6,7 +6,7 @@ import CourseFormModal from '../../components/courses/CourseFormModal';
 import { FaCheckCircle } from 'react-icons/fa';
 
 const CourseManagementPage = () => {
-  // --- LÓGICA DEL COMPONENTE (SIN CAMBIOS) ---
+  // Component logic
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ const CourseManagementPage = () => {
     return <p className="loading-message" style={{ textAlign: 'center', padding: '2rem' }}>Cargando gestión de cursos...</p>;
   }
 
-  // --- JSX DEL COMPONENTE (CON LA TABLA MODIFICADA) ---
+  // Component JSX with modified table
   return (
     <div className="course-management-page">
       <div className="course-management-page__header">

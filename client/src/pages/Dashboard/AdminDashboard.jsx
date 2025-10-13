@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import { useNavigate } from 'react-router-dom'
-import ForcChange from '../../components/common/ForcePasswordChange'
+import ForcePasswordChange from '../../components/common/ForcePasswordChange'
 
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
@@ -73,15 +73,15 @@ const AdminDashboard = () => {
 
   const handleTeacherRegistered = () => {
     setShowRegisterTeacher(false)
-    // Refrescar estadísticas después del registro
+    // Refresh statistics after registration
     fetchStats()
   }
 
-  // Extraer la función fetchStats para poder reutilizarla
+  // Extract fetchStats function for reusability
   const fetchStats = async () => {
     try {
       setLoading(true)
-      // Obtener estudiantes, profesores y estadísticas de profesores
+      // Get students, teachers and teacher statistics
       const [studentsResponse, teachersResponse, teacherStatsResponse] = await Promise.all([
         api.get('/auth/students?limit=1000'),
         api.get('/auth/professors?limit=1000'),
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
           specialtyStats
         })
 
-        // Debug: Let's see what student states we have
+        // Debug: Check what student states we have
         const studentStates = students.reduce((acc, student) => {
           const state = student.estadoAcademico || 'sin_estado'
           acc[state] = (acc[state] || 0) + 1
@@ -395,7 +395,7 @@ if (showCourseManagement) {
                   transition: 'none !important'
                 }}
                 onClick={() => {
-                  console.log('Navegando a CompanyDashboard')
+                  console.log('Navigating to CompanyDashboard')
                   navigate('/dashboard/company')
                 }}
               >

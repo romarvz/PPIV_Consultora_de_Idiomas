@@ -36,7 +36,7 @@ import './styles/adminDashboard.css';
 import './styles/courseManagement.css';
 
 function App() {
-  console.log('🚀 App component rendering...')
+  console.log('App component rendering...')
   
   return (
     // Auth provider wraps entire app to provide authentication context
