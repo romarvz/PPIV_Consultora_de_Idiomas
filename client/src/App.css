@@ -124,6 +124,57 @@ body {
   color: var(--accent);
 }
 
+/* Dropdown Menu Styles */
+.nav-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 8px;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+}
+
+.dropdown-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-menu li {
+  margin: 0;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-radius: 0;
+}
+
+.dropdown-menu a:hover {
+  background: var(--bg-secondary);
+  color: var(--accent);
+}
+
+.dropdown-menu a::after {
+  display: none;
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
@@ -274,6 +325,7 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
+  align-items: stretch;
 }
 
 .services-grid .service-card {
@@ -308,6 +360,10 @@ body {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
 }
 
 .service-card::before {
@@ -334,12 +390,18 @@ body {
 
 .service-card h3 {
   color: var(--primary);
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
   transition: all 0.3s ease;
 }
 
 [data-theme="dark"] .service-card h3 {
   color: var(--accent);
+}
+
+.service-card p {
+  margin: 0;
+  flex-grow: 1;
 }
 
 .service-card:hover h3 {
@@ -647,6 +709,22 @@ body {
     transform: translateY(0);
   }
 
+  .dropdown-menu {
+    position: static;
+    box-shadow: none;
+    background: var(--bg-secondary);
+    margin-left: 1rem;
+    border-radius: 4px;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .nav-dropdown:hover .dropdown-menu,
+  .dropdown-menu.show {
+    display: block;
+  }
+
   .menu-toggle {
     display: block;
   }
@@ -719,6 +797,135 @@ body {
 .dark-mode div[style*="background: #fff"] {
   background: var(--card-bg) !important;
   color: var(--text-primary);
+}
+
+/* Courses Page Styles */
+.courses-page {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+[data-theme="dark"] .courses-page {
+  background-color: var(--bg-primary);
+}
+
+.courses-page h1,
+.courses-page h2 {
+  color: var(--primary);
+  font-family: inherit;
+}
+
+[data-theme="dark"] .courses-page h1,
+[data-theme="dark"] .courses-page h2 {
+  color: var(--accent);
+}
+
+.courses-page h2 {
+  border-bottom: 2px solid var(--primary);
+}
+
+[data-theme="dark"] .courses-page h2 {
+  border-bottom-color: var(--accent);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.course-card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+[data-theme="dark"] .course-card {
+  background: #2a2a2a;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: var(--accent);
+}
+
+.course-card-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.course-card-content {
+  padding: 1.5rem;
+}
+
+.course-card-title {
+  color: var(--primary);
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .course-card-title {
+  color: var(--accent);
+}
+
+.course-card-description {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.course-card-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.course-card-tag {
+  background: var(--accent);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.course-card-tag--secondary {
+  background: var(--secondary);
+}
+
+.course-card-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.course-card-button:hover {
+  background: var(--secondary);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .course-card-button {
+  background: var(--accent);
+}
+
+[data-theme="dark"] .course-card-button:hover {
+  background: var(--secondary);
 }
 
 /* Dark mode table styles */
