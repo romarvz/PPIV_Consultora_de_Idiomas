@@ -11,7 +11,7 @@ module.exports = {
   Profesor,
   Admin,
   Language,
-  // Función helper para obtener el modelo correcto según el rol
+  //function helper
   getUserModel: (role) => {
     switch(role) {
       case 'estudiante':
@@ -24,11 +24,11 @@ module.exports = {
         return BaseUser;
     }
   },
-  // Función para buscar cualquier usuario sin importar el tipo
+  // Function to find any user regardless of type
   findUserByEmail: async (email) => {
     return await BaseUser.findOne({ email });
   },
-  // Función para buscar usuario por ID sin importar el tipo
+  // Function to find user by ID regardless of type
   findUserById: async (id) => {
     return await BaseUser.findById(id);
   }

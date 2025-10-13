@@ -35,10 +35,10 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
-  box-sizing: border-box; /* Importante para consistencia de tamaño */
+  box-sizing: border-box; 
 }
 
-/* Estilos para el botón de acción principal de los formularios */
+
 .cta-btn {
   padding: 0.85rem;
   border: none;
@@ -52,5 +52,5 @@
 }
 
 .cta-btn:hover {
-  background-color: #0056b3; /* Un azul un poco más oscuro */
+  background-color: #0056b3; 
 }

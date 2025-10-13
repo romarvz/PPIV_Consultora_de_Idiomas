@@ -1,5 +1,5 @@
 :root {
-  /* Paleta de Colores Primarios */
+  /* primary colors */
   --primary-color: #2c5aa0;
   --primary: #2c5aa0; /* Alias for consistency */
   --success-color: linear-gradient(to right, #2863a7, #0F5C8C);
@@ -12,7 +12,7 @@
   --light-gray: #F2F2F2;
   --dark-gray: #0D0D0D;
 
-  /* Colores de Texto */
+  /* text colors */
   --text-color-dark: #333;
   --text-color-medium: #666;
   --text-color-light: #888;
@@ -25,17 +25,17 @@
   --border-color: #ddd;
   --border-light: #eee;
 
-  /* Tarjetas (Cards) */
+  /* Card */
   --card-background: #ffffff;
   --card-border-radius: 8px;
   --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   --card-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
 
-  /* Dashboard específico */
+  /* Dashboard */
   --dashboard-background: #f5f5f5;
   --dashboard-padding: 20px;
 
-  /* Botones */
+  /* Buttons */
   --button-logout-bg: #dc3545;
   --button-padding: 10px 20px;
   --button-border-radius: 5px;
@@ -46,6 +46,6 @@
   --progress-warning: #ffc107;
   --progress-danger: #dc3545;
 
-  /* Transiciones */
+  /* Transitions */
   --transition-speed: 0.2s;
 }

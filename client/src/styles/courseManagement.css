@@ -1,6 +1,6 @@
 .course-management-page {
   padding: 2rem;
-  padding-top: 5rem; /* Espacio para el botón "Volver" */
+  padding-top: 5rem;
 }
 
 .course-management-page__header {
@@ -42,13 +42,13 @@
   border-bottom: 1px solid var(--border-color);
 }
 
-/* Clases para centrar el texto en las celdas que lo necesiten */
+
 .cell--center {
   text-align: center;
   font-size: 1.2rem;
 }
 
-/* Estilos para la "píldora" de estado (Activo/Inactivo) */
+
 .status-badge {
   padding: 0.4rem 1rem;
   border-radius: 16px;
@@ -72,19 +72,19 @@
   border-color: #c82333;
 }
 
-/* Contenedor para los botones de acción */
+
 .actions-cell {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
 }
 
-/* Botones pequeños para las acciones de la tabla */
+
 .action-btn {
   padding: 0.5rem 1rem;
 }
 
-/* Estilos responsivos para gestión de cursos */
+
 @media (max-width: 1200px) {
   .course-management-page {
     padding-top: 4rem;
