@@ -1,5 +1,3 @@
-// /client/src/components/courses/CourseFormModal.jsx
-
 import React, { useState, useEffect } from 'react';
 import apiAdapter from '../../services/apiAdapter';
 
@@ -13,7 +11,8 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
     modality: 'Online', // Valor por defecto
     teacherId: '',
     scheduleText: '',
-    price: 0,
+    // Corregimos la inicialización para que el placeholder aparezca
+    price: course ? (course.price || '') : '', 
     currency: 'ARS',
     isActive: true,
     imageUrl: ''
@@ -39,7 +38,8 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
         modality: course.modality || 'Online',
         teacherId: course.teacherId || '',
         scheduleText: course.scheduleText || '',
-        price: course.price || 0,
+        // Aseguramos que el precio sea string vacío si es 0, para el placeholder
+        price: course.price !== undefined && course.price !== null ? (course.price.toString() === '0' ? '' : course.price.toString()) : '',
         currency: course.currency || 'ARS',
         isActive: course.isActive !== undefined ? course.isActive : true,
         imageUrl: course.imageUrl || ''
@@ -59,7 +59,8 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
     e.preventDefault();
     try {
       let response;
-      const dataToSave = { ...formData, price: Number(formData.price) };
+      // Convertimos a número solo si hay un valor, si es '' se convierte a 0 (OK para el backend)
+      const dataToSave = { ...formData, price: Number(formData.price || 0) };
       
       if (course) {
         response = await apiAdapter.courses.update(course._id, dataToSave);
@@ -80,12 +81,14 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      {/* ⬅️ Aplicamos la clase para control de altura/scroll aquí */}
+      <div className="modal-content course-form-content" onClick={e => e.stopPropagation()}>
         <button className="modal-close-button" onClick={onClose}>&times;</button>
         <h2 className="modal-title">{course ? 'Editar Curso' : 'Crear Nuevo Curso'}</h2>
         
         <form onSubmit={handleSubmit} className="modal-form">
-          <input name="name" value={formData.name} onChange={handleChange} placeholder="Nombre del Curso" required />
+          {/* Añadimos form-input para asegurar el estilo consistente */}
+          <input name="name" value={formData.name} onChange={handleChange} placeholder="Nombre del Curso" required className="form-input" />
           
           {/* --- CAMPO: Tipo de Curso --- */}
           <select name="type" value={formData.type} onChange={handleChange} className="form-input" required>
@@ -93,10 +96,10 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
             {courseTypes.map(type => <option key={type} value={type}>{type}</option>)}
           </select>
 
-          {/* --- CAMPO: Modalidad --- */}
-          <fieldset style={{ border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px' }}>
-            <legend style={{ padding: '0 0.5rem' }}>Modalidad</legend>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          {/* --- CAMPO: Modalidad (Usamos clases CSS) --- */}
+          <fieldset className="form-radio-fieldset">
+            <legend className="form-radio-legend">Modalidad</legend>
+            <div className="form-radio-options">
               <label className="modal-form-label">
                 <input type="radio" name="modality" value="Online" checked={formData.modality === 'Online'} onChange={handleChange} />
                 Online
@@ -117,14 +120,16 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
           </select>
           
           <input name="scheduleText" value={formData.scheduleText} onChange={handleChange} placeholder="Horario (ej: Lunes y Miércoles 18hs)" className="form-input" />
-          <input name="price" type="number" value={formData.price} onChange={handleChange} placeholder="Precio" className="form-input" />
+          <div className="form-group-inline"> {/* Wrapper para el precio y moneda si fuera necesario, aunque el input es standalone */}
+            <input name="price" type="number" value={formData.price} onChange={handleChange} placeholder="Precio" className="form-input" />
+          </div>
           
-          <label className="modal-form-label">
+          <label className="modal-form-label checkbox-label"> {/* Clase extra para el checkbox */}
             <input name="isActive" type="checkbox" checked={formData.isActive} onChange={handleChange} />
             Curso Activo (visible en la página pública)
           </label>
           
-          <button type="submit" className="modal-form-submit">
+          <button type="submit" className="cta-btn modal-form-submit">
             {course ? 'Guardar Cambios' : 'Crear Curso'}
           </button>
         </form>

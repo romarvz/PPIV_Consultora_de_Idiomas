@@ -1,78 +1,402 @@
-.course-management-page {
-  padding: 2rem;
-  padding-top: 4.2 rem; /* Espacio para el botón "Volver" */
+/* --- Estilos para las vistas de pantalla completa (Gestión de Alumnos/Profesores) --- */
+.full-page-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  z-index: 9999;
+  overflow: auto;
 }
 
-.course-management-page__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+.full-page-view__close-wrapper {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
 }
 
-.course-management-page__table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--card-background);
-  border-radius: var(--card-border-radius);
-  overflow: hidden; 
-  box-shadow: var(--card-shadow);
-}
-
-.course-management-page__table th,
-.course-management-page__table td {
-  padding: 1rem;
-  text-align: left;
-}
-
-.course-management-page__table thead tr {
-  background: var(--background-light);
-  border-bottom: 2px solid var(--border-color);
-}
-
-.course-management-page__table tbody tr {
-  border-bottom: 1px solid var(--border-color);
-}
-
-/* Clases para centrar el texto en las celdas que lo necesiten */
-.cell--center {
-  text-align: center;
-  font-size: 1.2rem;
-}
-
-/* Estilos para la "píldora" de estado (Activo/Inactivo) */
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  color: var(--text-color-inverted);
-  font-size: 0.9rem;
+.full-page-view__close-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
   font-weight: 500;
 }
 
-.status-badge--active {
-  background-color: var(--success-color);
+/* --- Contenedor principal del Dashboard --- */
+.dashboard-container {
+  padding: 2rem;
 }
 
-.status-badge--inactive {
-  background-color: #6c757d; 
+/* --- Estilo para las secciones principales (Calendario, Overview, etc.) --- */
+.dashboard-section {
+  margin-bottom: 3rem;
+  background: #fff;
+  padding: 2rem;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+}
+/* Se usa como contenedor en las páginas de gestión */
+.kpi-section { 
+    padding: 1.5rem;
+    margin-bottom: 2rem; /* Espacio después de las KPI cards */
 }
 
-/* Contenedor para los botones de acción */
-.actions-cell {
+.dashboard-section__title {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
   display: flex;
-  justify-content: center;
+  align-items: center;
   gap: 0.5rem;
 }
 
-/* Botones pequeños para las acciones de la tabla */
+/* --- Grilla para las tarjetas de estadísticas (KPI) y Acciones Rápidas --- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ================================================= */
+/* === ESTILOS KPI CARDS: GENÉRICOS (Fondo de color, Dashboard principal) === */
+/* ================================================= */
+.kpi-card {
+  color: white;
+  border: none;
+  padding: 1.5rem;
+}
+
+.kpi-card__icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.kpi-card__value {
+  color: white !important;
+  font-size: 2.5rem;
+  margin: 0.5rem 0;
+  font-weight: 700;
+}
+
+.kpi-card__label {
+  margin: 0.5rem 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.kpi-card__details {
+  opacity: 0.85;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* --- Estilos para la sección de Acciones Rápidas --- */
+.action-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.action-card__icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.action-card__title {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.action-card__description {
+  margin-bottom: 1.5rem;
+  color: var(--text-color-light);
+  flex-grow: 1; 
+}
+
+.action-card__button {
+  width: 100%;
+}
+
+/* ================================================= */
+/* === CONFIGURACIÓN DE COLORES DE TARJETAS KPI (DASHBOARD GENERAL) === */
+/* ================================================= */
+
+/* Tarjeta 1: Total Estudiantes */
+.kpi-card--students {
+  background: linear-gradient(135deg, var(--dark-blue), var(--medium-blue)); 
+}
+
+/* Tarjeta 2: Total Profesores */
+.kpi-card--teachers {
+  background: linear-gradient(135deg, #195189, #3088BF); 
+}
+
+/* Tarjeta 3: Especialidades */
+.kpi-card--specialties {
+  background: linear-gradient(135deg, #4d6d9a, #6c8aab); 
+}
+
+/* Tarjeta 4: Ingresos del Mes */
+.kpi-card--revenue {
+  background: linear-gradient(135deg, #F5b401, #fc7f13); 
+}
+
+/* ================================================= */
+/* === ESTILOS KPI CARDS: COMPACTO/BLANCO (Gestión de Cursos/Profesores) === */
+/* ================================================= */
+
+/* Clase MODIFICADORA para lograr el estilo de fondo blanco, compacto y con sombra */
+.kpi-card--compact-white {
+    background: white !important;
+    border: none; /* Quitamos el borde, ya tenemos la sombra */
+    box-shadow: var(--card-shadow);
+    /* *** AJUSTE CLAVE DE ALTURA *** */
+    padding: 0.25rem 1.5rem; 
+    /* ***************************** */
+}
+
+/* Ocultar el ícono en las tarjetas compactas */
+.kpi-card--compact-white .kpi-card__icon {
+    display: none;
+}
+
+/* Etiqueta: Texto normal, más pequeño y en mayúsculas */
+.kpi-card--compact-white .kpi-card__label {
+    font-weight: 600 !important;
+    opacity: 1 !important;
+    font-size: 0.85rem !important; 
+    text-transform: uppercase !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0 !important;
+}
+
+/* Valor: Más grande, centrado y con margen ajustado */
+.kpi-card--compact-white .kpi-card__value {
+    color: var(--text-color-dark) !important; 
+    font-size: 2rem !important; 
+    margin-top: 0 !important; /* *** AJUSTE CLAVE DE ESPACIADO INTERNO *** */
+    margin-bottom: 0.25rem !important; 
+    font-weight: 700 !important;
+}
+
+/* Detalle: Asegura que el texto de detalle sea visible */
+.kpi-card--compact-white .kpi-card__details {
+    display: none; /* Ocultamos los detalles en las tarjetas compactas */
+}
+
+
+/* --- Colores específicos de TEXTO para las etiquetas y valores --- */
+
+/* Total Cursos / Profesores (Azul) */
+.kpi-card--courses-total.kpi-card--compact-white .kpi-card__label,
+.kpi-card--teachers-total.kpi-card--compact-white .kpi-card__label {
+  color: var(--dark-blue) !important; 
+}
+
+/* Activos (Verde) */
+.kpi-card--courses-active.kpi-card--compact-white .kpi-card__label,
+.kpi-card--teachers-active.kpi-card--compact-white .kpi-card__label {
+  color: #28a745 !important; 
+}
+
+/* Inactivos (Rojo) */
+.kpi-card--courses-inactive.kpi-card--compact-white .kpi-card__label,
+.kpi-card--teachers-inactive.kpi-card--compact-white .kpi-card__label {
+  color: var(--danger-color) !important; 
+}
+
+
+/* --- Estilos para el Bloque de Información Personal (AdminDashboard) --- */
+.profile-info-card {
+    margin-bottom: 2rem;
+    padding: 2rem;
+}
+
+.profile-info-card__title {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    text-align: left;
+}
+
+/* ================================================= */
+/* === GESTIÓN DE PÁGINAS (CONTENEDORES Y BARRAS) === */
+/* ================================================= */
+
+.gestion-page-container {
+    padding: 2rem;
+    padding-top: 4.2rem; 
+}
+
+.page-title {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* --- Barra de Acciones (Búsqueda + Nuevo Curso) --- */
+.table-actions-bar {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 2rem; 
+    gap: 1.5rem; 
+    /* Se elimina el margin-top aquí porque se aplica un margin-bottom al contenedor de KPI (.kpi-section) */
+}
+
+@media (max-width: 768px) {
+    .table-actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+
+/* --- INPUT DE BÚSQUEDA: BORDES REDONDEADOS Y TAMAÑO --- */
+.search-input {
+    flex-grow: 1;
+    max-width: 500px; 
+    padding: 0.75rem 1rem; 
+    font-size: 1rem; 
+    border-radius: 8px; /* Bordes redondeados */
+}
+.search-input--wide {
+    max-width: 650px; 
+}
+
+.new-entity-btn {
+    white-space: nowrap; 
+    padding: 0.85rem 1.5rem;
+}
+
+
+/* ================================================= */
+/* =================== TABLAS (.data-table) =================== */
+/* ================================================= */
+
+/* Contenedor responsivo que envuelve la tabla */
+.table-responsive {
+    overflow-x: auto;
+    background: var(--card-background);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: left;
+    background-color: var(--background-light); 
+    color: var(--text-color-dark);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tbody tr:hover {
+    background-color: var(--background-light);
+}
+
+/* Mensaje cuando no hay datos */
+.no-data-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color-light);
+}
+
+/* --- Celdas especiales --- */
+.actions-cell {
+    white-space: nowrap; 
+    text-align: center;
+    display: flex; 
+    justify-content: center;
+    gap: 0.5rem; 
+}
+
+.cell--center {
+    text-align: center !important;
+}
+
+/* ================================================= */
+/* ============= BADGES Y BOTONES DE ACCIÓN ============ */
+/* ================================================= */
+
+/* Badges de Estado */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px; 
+    color: var(--text-color-inverted);
+    font-size: 0.85rem; 
+    font-weight: 500;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-badge--activo {
+    background: var(--success-color);
+}
+
+.status-badge--inactivo {
+    background-color: #6c757d; 
+}
+
+
+/* --- Botones de Acción de la Tabla (Editar/Eliminar) --- */
 .action-btn {
-  padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    background: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1; 
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.action-btn--edit {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.action-btn--edit:hover {
+    background-color: var(--primary-color);
+    color: white;
 }
 
 .action-btn--delete {
-  background-color: var(--danger-color);
+    color: var(--danger-color);
+    border-color: var(--danger-color);
 }
 
 .action-btn--delete:hover {
-  background-color: --var(--darker-danger);
+    background-color: var(--darker-danger); 
+    color: white;
 }

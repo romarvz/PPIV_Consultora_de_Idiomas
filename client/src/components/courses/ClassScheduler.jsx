@@ -1,5 +1,3 @@
-// /client/src/components/ClassScheduler.jsx (o donde lo tengas)
-
 import React from 'react';
 
 const ClassScheduler = () => {
@@ -8,7 +6,7 @@ const ClassScheduler = () => {
       <h2> Programador de Clases</h2>
       
       <form className="form-container">
-        {/* Nombre del curso */}
+   
         <div className="form-group">
           <label htmlFor="course-name" className="form-label">Nombre del curso</label>
           <input

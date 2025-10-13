@@ -5,10 +5,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--background-light); /* Usamos variable */
+  background: white;
   z-index: 9999;
   overflow: auto;
-  padding: 2rem; /* Agregamos padding al contenedor para mejor visualización */
 }
 
 .full-page-view__close-wrapper {
@@ -20,56 +19,30 @@
 
 .full-page-view__close-btn {
   background: var(--primary-color);
-  color: var(--text-color-inverted);
+  color: white;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: var(--card-border-radius);
+  border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
-  transition: background var(--transition-speed);
 }
-
-.full-page-view__close-btn:hover {
-  background: var(--dark-blue);
-}
-
-/* --- Estilos para el modal de registro de profesores (eliminación de estilos inline) --- */
-.dashboard-modal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.dashboard-modal__content {
-    max-height: 90vh;
-    overflow-y: auto;
-    width: 100%;
-    max-width: 800px;
-}
-
 
 /* --- Contenedor principal del Dashboard --- */
 .dashboard-container {
-  padding: 0; /* Lo gestiona la sección 'section visible' */
+  padding: 2rem;
 }
-
-/* --- Estilo para el estado de carga --- */
-.loading-state {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-color-light);
-    font-size: 1.1rem;
-}
-
 
 /* --- Estilo para las secciones principales (Calendario, Overview, etc.) --- */
 .dashboard-section {
   margin-bottom: 3rem;
-  background: var(--card-background);
+  background: #fff;
   padding: 2rem;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
+}
+.kpi-section {
+    padding: 1.5rem;
 }
 
 .dashboard-section__title {
@@ -90,16 +63,13 @@
   gap: 1.5rem;
 }
 
-/* --- Estilos específicos para las tarjetas de estadísticas (KPI) --- */
+/* ================================================= */
+/* === ESTILOS KPI CARDS: GENÉRICOS (Fondo de color, Dashboard principal) === */
+/* ================================================= */
 .kpi-card {
   color: white;
   border: none;
-  padding: 1.5rem;
-  transition: transform var(--transition-speed);
-}
-
-.kpi-card:hover {
-    transform: translateY(-5px);
+  padding: 1.5rem; /* Padding original para tarjetas grandes de color */
 }
 
 .kpi-card__icon {
@@ -127,40 +97,10 @@
   line-height: 1.4;
 }
 
-/* --- CONFIGURACIÓN DE COLORES DE TARJETAS KPI (TONOS DE AZUL) --- */
-
-/* Tarjeta 1: Total Estudiantes (Azul Oscuro/Medio) */
-.kpi-card--students {
-  background: linear-gradient(135deg, var(--dark-blue), #195189);
-}
-
-/* Tarjeta 2: Total Profesores (Azul Medio/Claro - Un poco de contraste) */
-.kpi-card--teachers {
-  background: linear-gradient(135deg, var(--medium-blue), var(--light-blue));
-}
-
-/* Tarjeta 3: Especialidades (Azul Medio/Gris) */
-.kpi-card--specialties {
-  /* Usamos un color que contraste ligeramente, manteniéndonos en el rango frío */
-  background: linear-gradient(135deg, #4d6d9a, #6c8aab);
-}
-
-/* Tarjeta 4: Ingresos del Mes (Naranja/Éxito, para el tema financiero) */
-.kpi-card--revenue {
-  /* Mantenemos un tono de éxito/alerta para ingresos */
-  background: linear-gradient(135deg, #fc7f13, #e67e22); 
-}
-
-
 /* --- Estilos para la sección de Acciones Rápidas --- */
 .action-card {
   display: flex;
   flex-direction: column;
-  transition: box-shadow var(--transition-speed);
-}
-
-.action-card:hover {
-    box-shadow: var(--card-shadow-hover);
 }
 
 .action-card__icon {
@@ -177,14 +117,118 @@
 .action-card__description {
   margin-bottom: 1.5rem;
   color: var(--text-color-light);
-  flex-grow: 1; /* Empuja el botón hacia abajo */
+  flex-grow: 1; 
 }
 
 .action-card__button {
   width: 100%;
 }
 
-/* --- Estilos para el Bloque de Información Personal --- */
+/* ================================================= */
+/* === CONFIGURACIÓN DE COLORES DE TARJETAS KPI (DASHBOARD GENERAL) === */
+/* ================================================= */
+
+/* Tarjeta 1: Total Estudiantes */
+.kpi-card--students {
+  background: linear-gradient(135deg, var(--dark-blue), var(--medium-blue)); 
+}
+
+/* Tarjeta 2: Total Profesores */
+.kpi-card--teachers {
+  background: linear-gradient(135deg, #195189, #3088BF); 
+}
+
+/* Tarjeta 3: Especialidades */
+.kpi-card--specialties {
+  background: linear-gradient(135deg, #4d6d9a, #6c8aab); 
+}
+
+/* Tarjeta 4: Ingresos del Mes */
+.kpi-card--revenue {
+  background: linear-gradient(135deg, #F5b401, #fc7f13); 
+}
+
+/* ================================================= */
+/* === ESTILOS KPI CARDS: COMPACTO/BLANCO (Gestión de Cursos/Profesores) === */
+/* ================================================= */
+
+/* Clase MODIFICADORA para lograr el estilo de fondo blanco y más bajo */
+.kpi-card--compact-white {
+    background: white !important;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    /* *** AJUSTE CLAVE DE ALTURA *** */
+    padding: 0.25rem 1.5rem; 
+    /* ***************************** */
+}
+
+/* Ocultar el ícono en las tarjetas compactas */
+.kpi-card--compact-white .kpi-card__icon {
+    display: none;
+}
+
+/* Valor: Se fuerza el color oscuro para el texto por defecto */
+.kpi-card--compact-white .kpi-card__value {
+    color: var(--text-color-dark) !important; 
+    font-size: 2rem; 
+    margin: 0.25rem 0;
+    font-weight: 700;
+}
+
+/* Etiqueta: Texto normal y ajuste de márgenes */
+.kpi-card--compact-white .kpi-card__label {
+    color: var(--text-color-light) !important; 
+    font-weight: 600; /* Lo hacemos más grueso */
+    opacity: 1;
+    font-size: 0.85rem; /* Más pequeña */
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+}
+
+/* Detalle: Asegura que el texto de detalle también sea visible */
+.kpi-card--compact-white .kpi-card__details {
+    color: var(--text-color-light) !important; 
+    opacity: 1; 
+}
+
+
+/* --- Colores específicos de TEXTO para las etiquetas y valores (PARA IMITAR LA IMAGEN) --- */
+
+/* Total Cursos / Profesores (Etiqueta Azul) */
+.kpi-card--courses-total.kpi-card--compact-white .kpi-card__label,
+.kpi-card--courses-total.kpi-card--compact-white .kpi-card__value {
+  color: var(--dark-blue) !important; 
+}
+.kpi-card--teachers-total.kpi-card--compact-white .kpi-card__label,
+.kpi-card--teachers-total.kpi-card--compact-white .kpi-card__value {
+  color: var(--dark-blue) !important; 
+}
+
+/* Activos (Etiqueta Verde) */
+.kpi-card--courses-active.kpi-card--compact-white .kpi-card__label,
+.kpi-card--courses-active.kpi-card--compact-white .kpi-card__value {
+  color: #28a745 !important; 
+}
+.kpi-card--teachers-active.kpi-card--compact-white .kpi-card__label,
+.kpi-card--teachers-active.kpi-card--compact-white .kpi-card__value {
+  color: #28a745 !important; 
+}
+
+
+/* Inactivos (Etiqueta Roja) */
+.kpi-card--courses-inactive.kpi-card--compact-white .kpi-card__label,
+.kpi-card--courses-inactive.kpi-card--compact-white .kpi-card__value {
+  color: var(--danger-color) !important; /* Rojo de peligro */
+}
+.kpi-card--teachers-inactive.kpi-card--compact-white .kpi-card__label,
+.kpi-card--teachers-inactive.kpi-card--compact-white .kpi-card__value {
+  color: var(--danger-color) !important; /* Rojo de peligro */
+}
+
+
+
+/* --- Estilos para el Bloque de Información Personal (AdminDashboard) --- */
 .profile-info-card {
     margin-bottom: 2rem;
     padding: 2rem;
@@ -200,4 +244,171 @@
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
     text-align: left;
+}
+
+/* ================================================= */
+/* === GESTIÓN DE PÁGINAS (CONTENEDORES Y BARRAS) === */
+/* ================================================= */
+
+.gestion-page-container {
+    padding: 2rem;
+    padding-top: 4.2rem; 
+}
+
+.page-title {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* --- Barra de Acciones (Búsqueda + Nuevo Curso) --- */
+.table-actions-bar {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 2rem; 
+    gap: 1.5rem; 
+}
+
+@media (max-width: 768px) {
+    .table-actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+
+/* --- INPUT DE BÚSQUEDA: BORDES REDONDEADOS Y TAMAÑO --- */
+.search-input {
+    flex-grow: 1;
+    max-width: 500px; 
+    padding: 0.75rem 1rem; 
+    font-size: 1rem; 
+    border-radius: 8px; /* Bordes redondeados */
+}
+.search-input--wide {
+    max-width: 650px; 
+}
+
+.new-entity-btn {
+    white-space: nowrap; 
+    padding: 0.85rem 1.5rem;
+}
+
+
+/* ================================================= */
+/* =================== TABLAS (.data-table) =================== */
+/* ================================================= */
+
+/* Contenedor responsivo que envuelve la tabla */
+.table-responsive {
+    overflow-x: auto;
+    background: var(--card-background);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: left;
+    background-color: var(--background-light); 
+    color: var(--text-color-dark);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tbody tr:hover {
+    background-color: var(--background-light);
+}
+
+/* Mensaje cuando no hay datos */
+.no-data-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color-light);
+}
+
+/* --- Celdas especiales --- */
+.actions-cell {
+    white-space: nowrap; 
+    text-align: center;
+    display: flex; 
+    justify-content: center;
+    gap: 0.5rem; 
+}
+
+.cell--center {
+    text-align: center !important;
+}
+
+/* ================================================= */
+/* ============= BADGES Y BOTONES DE ACCIÓN ============ */
+/* ================================================= */
+
+/* Badges de Estado */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px; 
+    color: var(--text-color-inverted);
+    font-size: 0.85rem; 
+    font-weight: 500;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-badge--activo {
+    background: var(--success-color);
+}
+
+.status-badge--inactivo {
+    background-color: #6c757d; 
+}
+
+
+/* --- Botones de Acción de la Tabla (Editar/Eliminar) --- */
+.action-btn {
+    border: 1px solid var(--border-color);
+    background: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1; 
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.action-btn--edit {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.action-btn--edit:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.action-btn--delete {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.action-btn--delete:hover {
+    background-color: var(--darker-danger); 
+    color: white;
 }
