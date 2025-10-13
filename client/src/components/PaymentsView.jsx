@@ -1,43 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { mockApi } from '../services/mockApi';
-import { FaFileInvoiceDollar, FaCheckCircle, FaExclamationCircle, FaClock } from 'react-icons/fa';
-import PaymentRegistration from './PaymentRegistration'; // Importar el nuevo componente
+import { FaFileInvoiceDollar, FaCheckCircle, FaExclamationCircle, FaClock, FaEdit, FaTrash, FaPlus, FaFileExcel } from 'react-icons/fa';
+import { formatDate, formatCurrency } from '../utils/formatting';
+import Modal from './common/Modal';
+import PaymentRegistration from './PaymentRegistration';
 
-// Componente para mostrar un badge de estado de pago
 const StatusBadge = ({ status }) => {
-  const statusStyles = {
-    pagado: {
-      backgroundColor: 'rgba(34, 197, 94, 0.1)',
-      color: '#16a34a',
-      icon: <FaCheckCircle />,
-    },
-    pendiente: {
-      backgroundColor: 'rgba(249, 115, 22, 0.1)',
-      color: '#f97316',
-      icon: <FaExclamationCircle />,
-    },
-    vencido: {
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      color: '#ef4444',
-      icon: <FaClock />,
-    },
+  const statusConfig = {
+    pagado: { icon: <FaCheckCircle />, className: 'status-badge-pagado' },
+    pendiente: { icon: <FaExclamationCircle />, className: 'status-badge-pendiente' },
+    vencido: { icon: <FaClock />, className: 'status-badge-vencido' },
   };
 
-  const style = statusStyles[status] || statusStyles.pendiente;
+  const config = statusConfig[status] || statusConfig.pendiente;
 
   return (
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.25rem 0.75rem',
-      borderRadius: '9999px',
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      ...style
-    }}>
-      {style.icon}
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+    <span className={`status-badge ${config.className}`}>
+      {config.icon}
+      {status}
     </span>
   );
 };
@@ -47,6 +27,7 @@ const PaymentsView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [filters, setFilters] = useState({ studentName: '', status: 'todos' });
 
   const fetchPayments = async () => {
     try {
@@ -70,79 +51,126 @@ const PaymentsView = () => {
 
   const handleRegistrationSuccess = () => {
     setShowRegistrationModal(false);
-    fetchPayments(); // Actualizar la tabla de pagos
+    fetchPayments();
   };
 
-  if (loading) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando pagos...</div>;
-  }
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
 
-  if (error) {
-    return <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>Error: {error}</div>;
-  }
+  const filteredPayments = useMemo(() => {
+    return payments.filter(p => {
+      const studentMatch = p.studentName.toLowerCase().includes(filters.studentName.toLowerCase());
+      const statusMatch = filters.status === 'todos' || p.status === filters.status;
+      return studentMatch && statusMatch;
+    });
+  }, [payments, filters]);
 
-  return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>
-          <FaFileInvoiceDollar style={{ marginRight: '1rem' }} />
-          Gestión de Pagos
-        </h1>
-        <button className="cta-btn" onClick={() => setShowRegistrationModal(true)}>
-          Registrar Nuevo Pago
-        </button>
-      </header>
+  const renderContent = () => {
+    if (loading) {
+      return <div className="loading-state">Cargando pagos...</div>;
+    }
 
-      {/* Modal de Registro de Pago */}
-      {showRegistrationModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-        }}>
-          <PaymentRegistration 
-            onSuccess={handleRegistrationSuccess}
-            onCancel={() => setShowRegistrationModal(false)}
-          />
+    if (error) {
+      return <div className="error-state">Error: {error}</div>;
+    }
+
+    if (filteredPayments.length === 0) {
+      return (
+        <div className="empty-state">
+          <FaFileExcel className="empty-state-icon" />
+          <h3>No se encontraron pagos</h3>
+          <p>No hay pagos que coincidan con los filtros actuales, o aún no se ha registrado ninguno.</p>
+          <button className="cta-btn" onClick={() => setShowRegistrationModal(true)}>
+            <FaPlus style={{ marginRight: '0.5rem' }} />
+            Registrar Primer Pago
+          </button>
         </div>
-      )}
+      );
+    }
 
-      {/* Aquí irían los filtros */}
-      
-      <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+    return (
+      <div className="payments-table-container">
+        <table className="payments-table">
           <thead>
-            <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <th style={{ padding: '1rem' }}>Estudiante</th>
-              <th style={{ padding: '1rem' }}>Concepto</th>
-              <th style={{ padding: '1rem' }}>Monto</th>
-              <th style={{ padding: '1rem' }}>Fecha</th>
-              <th style={{ padding: '1rem' }}>Estado</th>
+            <tr>
+              <th>Estudiante</th>
+              <th>Concepto</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th className="col-actions">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {payments.map((payment) => (
-              <tr key={payment._id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '1rem' }}>{payment.studentName}</td>
-                <td style={{ padding: '1rem' }}>{payment.concept}</td>
-                <td style={{ padding: '1rem' }}>${payment.amount.toFixed(2)}</td>
-                <td style={{ padding: '1rem' }}>{new Date(payment.date).toLocaleDateString()}</td>
-                <td style={{ padding: '1rem' }}><StatusBadge status={payment.status} /></td>
+            {filteredPayments.map((payment) => (
+              <tr key={payment._id}>
+                <td>{payment.studentName}</td>
+                <td>{payment.concept}</td>
+                <td>${formatCurrency(payment.amount)}</td>
+                <td>{formatDate(payment.date)}</td>
+                <td><StatusBadge status={payment.status} /></td>
+                <td className="col-actions">
+                  <button className="action-btn edit" title="Editar Pago"><FaEdit /></button>
+                  <button className="action-btn delete" title="Eliminar Pago"><FaTrash /></button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+    );
+  };
 
-      {/* Aquí iría la paginación */}
+  return (
+    <div className="payments-view-container">
+      <div className="payments-controls-header">
+        <header className="payments-header">
+          <h1 className="payments-title">
+            <FaFileInvoiceDollar />
+            Gestión de Pagos
+          </h1>
+          <button className="cta-btn" onClick={() => setShowRegistrationModal(true)}>
+            <FaPlus style={{ marginRight: '0.5rem' }} />
+            Registrar Nuevo Pago
+          </button>
+        </header>
 
+        <div className="payments-filter-bar">
+          <div className="filter-group">
+            <label htmlFor="studentName">Buscar por Estudiante:</label>
+            <input
+              type="text"
+              id="studentName"
+              name="studentName"
+              value={filters.studentName}
+              onChange={handleFilterChange}
+              placeholder="Nombre del estudiante..."
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="status">Filtrar por Estado:</label>
+            <select id="status" name="status" value={filters.status} onChange={handleFilterChange}>
+              <option value="todos">Todos</option>
+              <option value="pagado">Pagado</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="vencido">Vencido</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {renderContent()}
+
+      {showRegistrationModal && (
+        <Modal title="Registrar Nuevo Pago" onClose={() => setShowRegistrationModal(false)}>
+          <PaymentRegistration 
+            onSuccess={handleRegistrationSuccess}
+            onCancel={() => setShowRegistrationModal(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 };
