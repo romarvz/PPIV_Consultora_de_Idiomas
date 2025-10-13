@@ -6,7 +6,6 @@ import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
 import AdminHeader from '../../components/common/AdminHeader'
-import ClassScheduler from '../../components/ClassScheduler'
 import CalendarView from '../../components/admin/CalendarView.jsx'
 import api from '../../services/api'
 // React Icons - Updated for better UI
@@ -65,7 +64,6 @@ const AdminDashboard = () => {
   const handlePasswordChanged = () => {
     setShowPasswordChange(false)
   }
-
 
 
   const handleTeacherRegistered = () => {
@@ -164,31 +162,10 @@ const AdminDashboard = () => {
   }
 
 
-
   // Show register teacher modal
   if (showRegisterTeacher) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.7)', // Fondo semitransparente normal
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999, // Z-index muy alto
-        padding: '20px'
-      }}>
-        <div style={{
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          width: '100%',
-          maxWidth: '800px',
-          position: 'relative',
-          zIndex: 10000 // Un z-index aún más alto que el overlay
-        }}>
+    return (<div className="modal-overlay"> {/* Reutilizamos la clase del modal para el fondo */}
+        <div style={{ maxHeight: '90vh', overflowY: 'auto', width: '100%', maxWidth: '800px' }}>
           <RegisterTeacher
             onSuccess={handleTeacherRegistered}
             onCancel={() => setShowRegisterTeacher(false)}
@@ -200,39 +177,13 @@ const AdminDashboard = () => {
 
   // Show students management
   if (showStudentsManagement) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'white',
-        zIndex: 9999,
-        overflow: 'auto'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 10000
-        }}>
-          <button
-            onClick={() => setShowStudentsManagement(false)}
-            style={{
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}
-          >
+    return (<div className="full-page-view">
+        <div className="full-page-view__close-wrapper">
+          <button onClick={() => setShowStudentsManagement(false)} className="full-page-view__close-btn">
             ← Volver al Dashboard
           </button>
         </div>
+      
         <StudentsManagement />
       </div>
     )
@@ -241,35 +192,9 @@ const AdminDashboard = () => {
   // Show teachers management
   if (showTeachersManagement) {
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'white',
-        zIndex: 9999,
-        overflow: 'auto'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 10000
-        }}>
-          <button
-            onClick={() => setShowTeachersManagement(false)}
-            style={{
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}
-          >
+      <div className="full-page-view">
+        <div className="full-page-view__close-wrapper">
+          <button onClick={() => setShowTeachersManagement(false)} className="full-page-view__close-btn">
             ← Volver al Dashboard
           </button>
         </div>
@@ -283,8 +208,13 @@ const AdminDashboard = () => {
       <div className="container">
         {/* Header */}
         <AdminHeader user={user} onLogout={handleLogout} />
-
-        <ClassScheduler />
+ <div className="dashboard-section">
+          <h3 className="dashboard-section__title">
+            <FaCalendarAlt /> Calendario de Clases
+          </h3>
+          <CalendarView />
+        </div>
+        
 
         {/* KPI Cards */}
         <div style={{ marginBottom: '3rem' }}>

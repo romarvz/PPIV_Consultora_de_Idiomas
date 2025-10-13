@@ -32,6 +32,7 @@ import './App.css'
 import './styles/courseModals.css';
 import './styles/courseCards.css';
 import './styles/courseForm.css';
+import './styles/adminDashboard.css'; 
 
 function App() {
   return (
