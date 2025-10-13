@@ -33,6 +33,7 @@ import './styles/courseModals.css';
 import './styles/courseCards.css';
 import './styles/courseForm.css';
 import './styles/adminDashboard.css'; 
+import './styles/courseManagement.css';
 
 function App() {
   return (

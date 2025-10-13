@@ -502,7 +502,7 @@ export const mockCourses = [
   {
     _id: 'course-9',
     name: 'Club de Conversación: Noche de Cine',
-    type: 'Inmersión Cultural',
+    type: 'Inmersion Cultural',
     modality: 'Presencial',
     description: 'Practica tu italiano de forma relajada mientras disfrutas de una película clásica y un debate posterior con otros estudiantes.',
     language: 'Italiano',
@@ -512,7 +512,7 @@ export const mockCourses = [
     price: 5000,
     currency: 'ARS',
     isActive: true,
-    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop'
+    imageUrl: 'src/assets/images/cine.png'
   },
   {
     _id: 'course-10',
@@ -527,7 +527,7 @@ export const mockCourses = [
     price: 25000,
     currency: 'ARS',
     isActive: true,
-    imageUrl: 'https://a.travel-assets.com/findyours-php/viewfinder/images/res70/166000/166870-Tower-Bridge.jpg?q=80&w=2070&auto=format&fit=crop'
+    imageUrl: 'src/assets/images/bigben.jpg'
   },
    {
     _id: 'course-11',
@@ -544,6 +544,83 @@ export const mockCourses = [
     isActive: true,
     imageUrl:  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Redentor_Over_Clouds_1.jpg/640px-Redentor_Over_Clouds_1.jpg?q=80&w=2071&auto=format&fit=crop'
   },
+ { 
+    _id: 'course-12',
+    name: 'Taller de Cocina Francesa',
+    type: 'Inmersion Cultural',
+    modality: 'Presencial',
+    description: "Aprende a preparar un clásico 'boeuf bourguignon' mientras practicas tu francés en un ambiente relajado y delicioso.",
+    language: 'Francés',
+    level: 'A2 en adelante',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Segundo sábado de cada mes - 11:00hs',
+    price: 7500,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'src/assets/images/cocina-francesa.png'
+  },
+  { 
+    _id: 'course-13',
+    name: 'Club de Lectura en Inglés',
+    type: 'Inmersion Cultural',
+    modality: 'Online',
+    description: 'Únete a nuestro club de lectura mensual. Analizaremos una novela corta o una colección de cuentos, todo en inglés, desde la comodidad de tu casa.',
+    language: 'Inglés',
+    level: 'B2 en adelante',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Primer jueves de cada mes - 19:00hs',
+    price: 4000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2106&auto=format&fit=crop'
+  },
+
+{
+    _id: 'course-12',
+    name: 'Preparación Examen IELTS (Online)',
+    type: 'Certificacion',
+    modality: 'Online',
+    description: 'Curso intensivo online con foco en las cuatro habilidades evaluadas en el examen IELTS. Incluye simulacros y material de práctica.',
+    language: 'Inglés',
+    level: 'B2 en adelante',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Martes y Jueves - 18:30hs',
+    price: 45000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'src/assets/images/biblioteca3.avif'
+  },
+  {
+    _id: 'course-13',
+    name: 'Curso Intensivo TOEFL (Presencial)',
+    type: 'Certificacion',
+    modality: 'Presencial',
+    description: 'Prepárate para el examen TOEFL con clases presenciales enfocadas en estrategias y práctica intensiva para cada sección del test.',
+    language: 'Inglés',
+    level: 'B2 en adelante',
+    teacherId: 'mock-teacher-2',
+    scheduleText: 'Sábados - 09:00 a 12:00hs',
+    price: 50000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1973&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-14',
+    name: 'Cambridge C1 Advanced (CAE)',
+    type: 'Certificacion',
+    modality: 'Presencial',
+    description: 'Curso anual diseñado para alcanzar el nivel C1 y superar con éxito el examen Cambridge Advanced English (CAE).',
+    language: 'Inglés',
+    level: 'C1',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Lunes y Miércoles - 19:00hs',
+    price: 48000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'src/assets/images/cambridge.jpg'
+  },
+
 ];
 
 

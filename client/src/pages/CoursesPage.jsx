@@ -1,11 +1,12 @@
 // /client/src/pages/CoursesPage.jsx
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom'; // 1. Importar useLocation
 import apiAdapter from '../services/apiAdapter';
 import CourseCard from '../components/courses/CourseCard';
 import CourseDetailModal from '../components/courses/CourseDetailModal';
 
-// Función para convertir un título en un ID para el link (ej: "Curso Grupal" -> "curso-grupal")
+// ... (la función slugify no cambia)
 const slugify = (text) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
 const CoursesPage = () => {
@@ -13,6 +14,8 @@ const CoursesPage = () => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  
+  const location = useLocation(); // 2. Obtener la información de la URL actual
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,16 +25,12 @@ const CoursesPage = () => {
         const { mockTeachers } = await import('../services/mockData');
 
         if (coursesResponse.data.success) {
-          // Agrupamos los cursos por su 'tipo'
           const groups = coursesResponse.data.data.courses.reduce((acc, course) => {
             const type = course.type || 'Otros';
-            if (!acc[type]) {
-              acc[type] = [];
-            }
+            if (!acc[type]) acc[type] = [];
             acc[type].push(course);
             return acc;
           }, {});
-
           setGroupedCourses(groups);
           setTeachers(mockTeachers);
         }
@@ -43,7 +42,21 @@ const CoursesPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, []); // Este efecto se ejecuta solo una vez para cargar los datos
+
+  useEffect(() => {
+    // Si no estamos cargando y hay un ancla en la URL...
+    if (!loading && location.hash) {
+      // Usamos un pequeño delay para asegurarnos de que el DOM esté 100% listo
+      setTimeout(() => {
+        const id = location.hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [loading, location.hash]); // Se ejecuta cuando 'loading' o el ancla cambian
 
   const handleSelectCourse = (course) => setSelectedCourse(course);
   const handleCloseModal = () => setSelectedCourse(null);
@@ -60,7 +73,7 @@ const CoursesPage = () => {
           <h2 style={{ borderBottom: '2px solid var(--primary-color)', paddingBottom: '0.5rem', marginBottom: '2rem' }}>
             {type}
           </h2>
-          <div className="dashboard-grid"> {/* Reutilizamos la clase de la grilla del dashboard */}
+          <div className="dashboard-grid">
             {courses.map(course => (
               <CourseCard 
                 key={course._id} 

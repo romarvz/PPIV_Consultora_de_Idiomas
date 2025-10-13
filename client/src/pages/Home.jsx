@@ -54,47 +54,62 @@ const Home = () => {
           </div>
         </div>
       </section>
+      
+      {/* Services Section */}
 
-      {/* 3. Services Section (MODIFICADA) */}
       <section id="servicios" className="section">
         <div className="container">
           <h2 className="section-title">Servicios</h2>
           <div className="services-grid">
-            <div className="service-card">
-              <h3>Clases Individuales</h3>
-              <p>Atención personalizada con horarios flexibles adaptados a tus necesidades específicas.</p>
-            </div>
-
-            <Link to={routes.COURSES} style={{ textDecoration: 'none', color: 'inherit' }}>
+            
+            <Link to="/cursos#clase-individual" style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="service-card">
-                <h3>Clases Grupales</h3>
-                <p>Aprende en grupos reducidos con metodología interactiva y ambiente colaborativo.</p> 
-                <p>Revisa aquí nuestra oferta académica.</p>
+                <h3>Clases Individuales</h3>
+                <p>Atención personalizada con horarios flexibles adaptados a tus necesidades específicas.</p>
               </div>
             </Link>
 
-            <div className="service-card">
-              <h3>Cursos Corporativos</h3>
-              <p>Programas especializados para empresas con enfoque en comunicación profesional.</p>
-            </div>
-            <div className="service-card">
-              <h3>Preparación Certificaciones</h3>
-              <p>Cursos de preparación para FCE, CAE, CPE, TOEFL, TOEIC, y otras certificaciones internacionales.</p>
-            </div>
-            <div className="service-card">
-              <h3>Modalidad Online</h3>
-              <p>Clases virtuales con plataforma interactiva propia y recursos multimedia avanzados.</p>
-            </div>
+            <Link to="/cursos#curso-grupal" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="service-card">
+                <h3>Clases Grupales</h3>
+                <p>Aprende en grupos reducidos con metodología interactiva y ambiente colaborativo.</p>
+              </div>
+            </Link>
+
+            <Link to="/cursos#curso-corporativo" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="service-card">
+                <h3>Cursos Corporativos</h3>
+                <p>Programas especializados para empresas con enfoque en comunicación profesional.</p>
+              </div>
+            </Link>
+
+            <Link to="/cursos#certificacion" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="service-card">
+                <h3>Preparación Certificaciones</h3>
+                <p>Cursos de preparación para FCE, CAE, CPE, TOEFL, TOEIC, y otras certificaciones internacionales.</p>
+              </div>
+            </Link>
+
+            <Link to="/cursos#inmersion-cultural" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="service-card">
+                <h3>Inmersión Cultural</h3>
+                <p>Programas que combinan idioma con cultura para una experiencia de aprendizaje integral.</p>
+              </div>
+            </Link>
+
+            <Link to="/cursos" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="service-card">
+                <h3>Modalidad Online</h3>
+                <p>Clases virtuales con plataforma interactiva propia y recursos multimedia avanzados.</p>
+              </div>
+            </Link>
             
-            <div className="service-card" onClick={() => setIsModalOpen(true)} style={{ cursor: 'pointer' }}>
-              <h3>Inmersión Cultural</h3>
-              <p>Programas que combinan idioma con cultura para una experiencia de aprendizaje integral. </p>
-              <p>Ver nuestras propuestas</p>
-            </div>
           </div>
         </div>
       </section>
 
+
+      {/* Clients Section */}
       <section id="clientes" className="section">
        <div className="container">
          <h2 className="section-title">Nuestros Clientes</h2>
@@ -174,23 +189,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 4. JSX del Modal (AÑADIDO AL FINAL) */}
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="modal-close-button" onClick={() => setIsModalOpen(false)}>&times;</button>
-            <h2 className="modal-title">Programas de Inmersión Cultural</h2>
-            <p className="modal-description">
-              ¡Aprender un idioma es vivir su cultura! Ofrecemos eventos especiales para que practiques de una forma diferente y divertida.
-            </p>
-            <ul className="modal-details" style={{paddingLeft: '20px'}}>
-              <li><strong>Noches de Cine:</strong> Proyecciones de películas en idioma original con debate posterior.</li>
-              <li><strong>Talleres de Cocina:</strong> Aprende a preparar platos típicos mientras practicas vocabulario.</li>
-              <li><strong>Clubes de Conversación:</strong> Encuentros temáticos en bares o cafés para charlar de forma distendida.</li>
-            </ul>
-          </div>
-        </div>
-      )}
+      
+     
     </>
   )
 }

@@ -1,0 +1,78 @@
+.course-management-page {
+  padding: 2rem;
+  padding-top: 60px; /* Espacio para el botón "Volver" */
+}
+
+.course-management-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.course-management-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-background);
+  border-radius: var(--card-border-radius);
+  overflow: hidden; /* Para que los bordes redondeados se apliquen a la tabla */
+  box-shadow: var(--card-shadow);
+}
+
+.course-management-page__table th,
+.course-management-page__table td {
+  padding: 1rem;
+  text-align: left;
+}
+
+.course-management-page__table thead tr {
+  background: var(--background-light);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.course-management-page__table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Clases para centrar el texto en las celdas que lo necesiten */
+.cell--center {
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+/* Estilos para la "píldora" de estado (Activo/Inactivo) */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  color: var(--text-color-inverted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.status-badge--active {
+  background-color: var(--success-color);
+}
+
+.status-badge--inactive {
+  background-color: #6c757d; 
+}
+
+/* Contenedor para los botones de acción */
+.actions-cell {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Botones pequeños para las acciones de la tabla */
+.action-btn {
+  padding: 0.5rem 1rem;
+}
+
+.action-btn--delete {
+  background-color: var(--danger-color);
+}
+
+.action-btn--delete:hover {
+  background-color: #c82333; 
+}
