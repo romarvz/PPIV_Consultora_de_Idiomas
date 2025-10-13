@@ -382,7 +382,7 @@ export const mockCourses = [
   {
     _id: 'course-1',
     name: 'Inglés Conversacional',
-    description: 'Cursos de inglés adaptados a todos los niveles (A2, B1, C1). Enfocados en la fluidez y la comunicación práctica para el día a día.',
+    description: 'Cursos de inglés adaptados a todos los niveles (A1 a C2). Enfocados en la fluidez y la comunicación práctica para el día a día.',
     language: 'Inglés',
     level: 'Multi-nivel',
     teacherId: 'mock-teacher-1',

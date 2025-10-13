@@ -7,7 +7,7 @@ import CourseDetailModal from '../components/courses/CourseDetailModal';
 
 const CoursesPage = () => {
   const [courses, setCourses] = useState([]);
-  const [teachers, setTeachers] = useState([]); // Necesitamos los profesores para mostrar sus nombres
+  const [teachers, setTeachers] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
@@ -15,16 +15,16 @@ const CoursesPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Pedimos solo los cursos activos para la vista pública
+        // Solo los cursos activos para la vista pública
         const coursesResponse = await apiAdapter.courses.getAll({ activeOnly: true });
         
-        // ¡OJO! Tu mock API no tiene un endpoint para profesores, así que usamos un truco
-        // En una app real, harías: const teachersResponse = await apiAdapter.teachers.getAll();
+        // Ojo acá Mock API no tiene un endpoint para profesores
+        // En una app real sería: const teachersResponse = await apiAdapter.teachers.getAll();
         const { mockTeachers } = await import('../services/mockData');
 
         if (coursesResponse.data.success) {
           setCourses(coursesResponse.data.data.courses);
-          setTeachers(mockTeachers); // Usamos los datos importados directamente
+          setTeachers(mockTeachers); // Datos importados directamente
         }
       } catch (error) {
         console.error("Error al cargar los cursos:", error);

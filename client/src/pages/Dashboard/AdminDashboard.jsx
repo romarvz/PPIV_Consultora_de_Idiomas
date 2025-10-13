@@ -6,7 +6,8 @@ import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
 import AdminHeader from '../../components/common/AdminHeader'
-import ClassScheduler from '../../components/ClassScheduler';
+import ClassScheduler from '../../components/ClassScheduler'
+import CalendarView from '../../components/admin/CalendarView.jsx'
 import api from '../../services/api'
 // React Icons - Updated for better UI
 import { 
