@@ -163,14 +163,14 @@ const AdminDashboard = () => {
 
   // Show forced password change if required
   if (showPasswordChange) {
-    return <ForcePasswordChange onPasswordChanged={handlePasswordChanged} />
+    return <ForcChange onPasswordChanged={handlePasswordChanged} />
   }
 
 
   // Show register teacher modal
   if (showRegisterTeacher) {
-    return (<div className="modal-overlay"> {/* Reutilizamos la clase del modal para el fondo */}
-        <div style={{ maxHeight: '90vh', overflowY: 'auto', width: '100%', maxWidth: '800px' }}>
+    return (<div className="modal-overlay dashboard-modal"> {/* Usamos dashboard-modal para el estilo específico */}
+        <div className="dashboard-modal__content">
           <RegisterTeacher
             onSuccess={handleTeacherRegistered}
             onCancel={() => setShowRegisterTeacher(false)}
@@ -226,10 +226,11 @@ if (showCourseManagement) {
 
   return (
     <section className="section visible">
-      <div className="container">
+      <div className="container dashboard-container">
         {/* Header */}
         <AdminHeader user={user} onLogout={handleLogout} />
- <div className="dashboard-section">
+        
+        <div className="dashboard-section">
           <h3 className="dashboard-section__title">
             <FaCalendarAlt /> Calendario de Clases
           </h3>
@@ -237,18 +238,18 @@ if (showCourseManagement) {
         </div>
         
 
-        {/* KPI Cards */}{/* KPI Cards */}
+        {/* KPI Cards */}
         <div className="dashboard-section">
           <h3 className="dashboard-section__title">Overview del Sistema</h3>
           
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div className="loading-state">
               <p>Cargando estadísticas...</p>
             </div>
           ) : (
             <div className="dashboard-grid">
               {/* --- Tarjeta 1: Total Estudiantes  */}
-              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #0b3765, #035888)' }}>
+              <div className="service-card kpi-card kpi-card--students">
                 <div className="kpi-card__icon"><FaUsers /></div>
                 <h3 className="kpi-card__value">{stats.totalStudents}</h3>
                 <p className="kpi-card__label">Total Estudiantes</p>
@@ -258,8 +259,8 @@ if (showCourseManagement) {
                 </div>
               </div>
 
-              {/* --- Tarjeta 2: Total Profesores (Estructura correcta) --- */}
-              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #e67e22, #d68910)' }}>
+              {/* --- Tarjeta 2: Total Profesores --- */}
+              <div className="service-card kpi-card kpi-card--teachers">
                 <div className="kpi-card__icon"><FaChalkboardTeacher /></div>
                 <h3 className="kpi-card__value">{stats.totalTeachers}</h3>
                 <p className="kpi-card__label">Total Profesores</p>
@@ -269,8 +270,8 @@ if (showCourseManagement) {
                 </div>
               </div>
 
-              {/* --- Tarjeta 3: Especialidades (Estructura correcta) --- */}
-              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #8e44ad, #9b59b6)' }}>
+              {/* --- Tarjeta 3: Especialidades --- */}
+              <div className="service-card kpi-card kpi-card--specialties">
                 <div className="kpi-card__icon"><FaBookOpen /></div>
                 <h3 className="kpi-card__value">{stats.uniqueSpecialties}</h3>
                 <p className="kpi-card__label">Especialidades</p>
@@ -286,8 +287,8 @@ if (showCourseManagement) {
                 </div>
               </div>
 
-              {/* --- Tarjeta 4: Ingresos del Mes (ESTRUCTURA CORREGIDA) --- */}
-              <div className="service-card kpi-card" style={{ background: 'linear-gradient(135deg, #F5b401, #fc7f13)' }}>
+              {/* --- Tarjeta 4: Ingresos del Mes --- */}
+              <div className="service-card kpi-card kpi-card--revenue">
                 <div className="kpi-card__icon"><FaDollarSign /></div>
                 <h3 className="kpi-card__value">${stats.monthlyRevenue.toLocaleString()}</h3>
                 <p className="kpi-card__label">Ingresos del Mes</p>
@@ -299,7 +300,6 @@ if (showCourseManagement) {
           )}
         </div>
 
-        {/* Quick Actions */}
         {/* Quick Actions */}
         <div className="dashboard-section">
           <h3 className="dashboard-section__title"><FaTasks /> Acciones Rápidas</h3>
@@ -405,16 +405,11 @@ if (showCourseManagement) {
           </div>
         </div>
         {/* Admin Profile Info */}
-        <div className="service-card" style={{ marginBottom: '2rem' }}>
-          <h3 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
-            👤 Información Personal
+        <div className="service-card profile-info-card"> {/* Nueva clase para estilos de perfil */}
+          <h3 className="profile-info-card__title">
+            Información Personal
           </h3>
-          <div style={{ 
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1rem',
-            textAlign: 'left'
-          }}>
+          <div className="profile-info-grid"> {/* Nueva clase para la grilla interna */}
             <div>
               <p><strong>Nombre:</strong> {user?.firstName} {user?.lastName}</p>
               <p><strong>Email:</strong> {user?.email}</p>
