@@ -1,0 +1,25 @@
+:root {
+  /* Paleta de Colores Primarios */
+  --primary-color: #007bff;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+
+  /* Colores de Texto */
+  --text-color-dark: #333;
+  --text-color-light: #555;
+  --text-color-inverted: #ffffff;
+
+  /* Fondos y Bordes */
+  --background-light: #f8f9fa;
+  --background-grey: #f0f0f0;
+  --border-color: #ddd;
+
+  /* Tarjetas (Cards) */
+  --card-background: #ffffff;
+  --card-border-radius: 8px;
+  --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --card-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+  /* Transiciones */
+  --transition-speed: 0.2s;
+}

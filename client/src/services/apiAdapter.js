@@ -136,6 +136,66 @@ const apiAdapter = {
     }
   },
 
+ // ==================== CURSOS (PLANTILLAS) - NUEVA SECCIÓN ====================
+  courses: {
+    /**
+     * Obtener todos los cursos.
+     * @param {Object} params - { activeOnly: Boolean }
+     */
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll(params);
+      }
+      return await api.get('/courses', { params });
+    },
+
+    /**
+     * Obtener un curso por ID
+     * @param {String} id - ID del curso
+     */
+    getById: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getById(id);
+      }
+      return await api.get(`/courses/${id}`);
+    },
+
+    /**
+     * Crear un nuevo curso
+     * @param {Object} courseData - Datos del curso a crear
+     */
+    create: async (courseData) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.create(courseData);
+      }
+      return await api.post('/courses', courseData);
+    },
+
+    /**
+     * Actualizar un curso
+     * @param {String} id - ID del curso
+     * @param {Object} courseData - Datos a actualizar
+     */
+    update: async (id, courseData) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.update(id, courseData);
+      }
+      return await api.put(`/courses/${id}`, courseData);
+    },
+
+    /**
+     * Eliminar un curso
+     * @param {String} id - ID del curso
+     */
+    delete: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.delete(id);
+      }
+      return await api.delete(`/courses/${id}`);
+    }
+  },
+
+
   // ==================== REPORTES ====================
   reports: {
     /**

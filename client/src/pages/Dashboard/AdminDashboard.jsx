@@ -6,6 +6,7 @@ import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
 import AdminHeader from '../../components/common/AdminHeader'
+import ClassScheduler from '../../components/ClassScheduler';
 import api from '../../services/api'
 // React Icons - Updated for better UI
 import { 
@@ -281,6 +282,8 @@ const AdminDashboard = () => {
       <div className="container">
         {/* Header */}
         <AdminHeader user={user} onLogout={handleLogout} />
+
+        <ClassScheduler />
 
         {/* KPI Cards */}
         <div style={{ marginBottom: '3rem' }}>

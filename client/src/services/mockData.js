@@ -377,6 +377,74 @@ export const mockClasses = [
   }
 ]
 
+// ==================== CURSOS (PLANTILLAS) ====================
+export const mockCourses = [
+  {
+    _id: 'course-1',
+    name: 'Inglés Conversacional',
+    description: 'Cursos de inglés adaptados a todos los niveles (A2, B1, C1). Enfocados en la fluidez y la comunicación práctica para el día a día.',
+    language: 'Inglés',
+    level: 'Multi-nivel',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Horarios flexibles por la mañana y tarde.',
+    price: 25000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://a.travel-assets.com/findyours-php/viewfinder/images/res70/166000/166870-Tower-Bridge.jpg?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-2',
+    name: 'Alemán Intermedio B2',
+    description: 'Perfecciona tu alemán con nuestro curso de nivel B2. Ideal para quienes ya tienen una base y buscan consolidar su gramática y vocabulario avanzado.',
+    language: 'Alemán',
+    level: 'B2',
+    teacherId: 'mock-teacher-3',
+    scheduleText: 'Viernes - 15:00hs',
+    price: 32000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://aunclicdelaaventura.com/wp-content/uploads/2018/02/Castillo-de-Neuschwanstein.jpg?q=80&w=1964&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-3',
+    name: 'Italiano para Principiantes',
+    description: 'Iníciate en el idioma italiano. Nuestro curso de nivel A2 te dará las herramientas básicas para presentarte, hacer preguntas y entender conversaciones sencillas.',
+    language: 'Italiano',
+    level: 'A2',
+    teacherId: 'mock-teacher-2',
+    scheduleText: 'Martes - 11:00hs',
+    price: 22000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-4',
+    name: 'Francés Avanzado C2',
+    description: 'Curso de perfeccionamiento para alcanzar la maestría en el idioma francés. Análisis de textos complejos, debate y producción de discursos a nivel nativo.',
+    language: 'Francés',
+    level: 'C2',
+    teacherId: 'mock-teacher-1',
+    scheduleText: 'Miércoles - 16:00hs',
+    price: 38000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://www.civitatis.com/f/francia/paris/subida-torre-eiffel-589x392.jpg?q=80&w=1974&auto=format&fit=crop'
+  },
+  {
+    _id: 'course-5',
+    name: 'Portugués desde Cero',
+    description: 'Aprende portugués desde la base con nuestro curso de nivel A1. Ideal para planificar tu próximo viaje a Brasil o Portugal.',
+    language: 'Portugués',
+    level: 'A1',
+    teacherId: 'mock-teacher-4',
+    scheduleText: 'Jueves - 10:00hs',
+    price: 20000,
+    currency: 'ARS',
+    isActive: true,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Redentor_Over_Clouds_1.jpg/640px-Redentor_Over_Clouds_1.jpg?q=80&w=2071&auto=format&fit=crop'
+  }
+];
 // ==================== PAGOS ====================
 export const mockPayments = [
   {

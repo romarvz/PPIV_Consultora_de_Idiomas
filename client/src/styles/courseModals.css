@@ -1,0 +1,112 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--card-background);
+  padding: 2rem;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow-hover);
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* --- Estilos para CourseDetailModal --- */
+
+.modal-title {
+  margin-top: 0;
+  color: var(--text-color-dark);
+}
+
+.modal-description {
+  color: var(--text-color-light);
+  line-height: 1.6;
+}
+
+.modal-details {
+  margin-top: 1.5rem;
+  color: var(--text-color-dark);
+}
+
+.modal-cta-button {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 2rem;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--success-color);
+  color: var(--text-color-inverted);
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+.modal-cta-button:hover {
+  background-color: #218838; /* Un verde un poco más oscuro */
+}
+
+
+/* --- Estilos para CourseFormModal --- */
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-form input,
+.modal-form textarea,
+.modal-form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
+}
+
+.modal-form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.modal-form-submit {
+  padding: 0.75rem;
+  background: var(--success-color);
+  color: var(--text-color-inverted);
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+.modal-form-submit:hover {
+  background-color: #218838; /* Mismo hover que el otro botón */
+}
