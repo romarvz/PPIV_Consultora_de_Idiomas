@@ -6,6 +6,7 @@ import ForcePasswordChange from '../../components/common/ForcePasswordChange'
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
+import ReportsView from '../../components/ReportsView'
 import AdminHeader from '../../components/common/AdminHeader'
 import CalendarView from '../../components/admin/CalendarView.jsx'
 import CourseManagementPage from './CourseManagementPage';
@@ -35,7 +36,8 @@ const AdminDashboard = () => {
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [showTeachersManagement, setShowTeachersManagement] = useState(false)
-  const [showCourseManagement, setShowCourseManagement] = useState(false);
+  const [showCourseManagement, setShowCourseManagement] = useState(false)
+  const [showReports, setShowReports] = useState(false)
   const [stats, setStats] = useState({
     totalStudents: 0,
     newStudents: 0,
@@ -208,7 +210,8 @@ const AdminDashboard = () => {
     )
   }
 
-if (showCourseManagement) {
+  // Show course management
+  if (showCourseManagement) {
     return (
       <div className="full-page-view">
         <div className="full-page-view__close-wrapper">
@@ -221,7 +224,12 @@ if (showCourseManagement) {
         </div>
         <CourseManagementPage />
       </div>
-    );
+    )
+  }
+
+  // Show reports
+  if (showReports) {
+    return <ReportsView onClose={() => setShowReports(false)} />
   }
 
   return (
@@ -360,7 +368,13 @@ if (showCourseManagement) {
               <p className="action-card__description">
                 Estadísticas académicas, reportes financieros y exportación de datos importantes.
               </p>
-              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE')}>
+              <button 
+                className="cta-btn action-card__button"
+                onClick={() => {
+                  console.log('Click en Ver Reportes')
+                  setShowReports(true)
+                }}
+              >
                 Ver Reportes
               </button>
             </div>
@@ -405,8 +419,8 @@ if (showCourseManagement) {
           </div>
         </div>
         {/* Admin Profile Info */}
-        <div className="service-card profile-info-card"> {/* Nueva clase para estilos de perfil */}
-          <h3 className="profile-info-card__title">
+        <div className="service-card profile-info-card" style={{ marginBottom: '2rem' }}>
+          <h3 className="profile-info-card__title" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
             Información Personal
           </h3>
           <div className="profile-info-grid"> {/* Nueva clase para la grilla interna */}

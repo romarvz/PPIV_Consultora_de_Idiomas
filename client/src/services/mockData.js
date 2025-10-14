@@ -748,6 +748,80 @@ export const mockPayments = [
   }
 ]
 
+// ==================== DATOS FINANCIEROS PARA REPORTES ====================
+export const mockFinancialData = {
+  topStudents: [
+    {
+      id: 'mock-student-1',
+      studentName: 'Juan Pérez',
+      total: 15000,
+      pending: 3000,
+      payments: 5,
+      monthlyDetails: [
+        { month: 'Enero 2025', expected: 4000, received: 4000 },
+        { month: 'Febrero 2025', expected: 4000, received: 4000 },
+        { month: 'Marzo 2025', expected: 4000, received: 4000 },
+        { month: 'Abril 2025', expected: 3000, received: 3000 },
+        { month: 'Mayo 2025', expected: 3000, received: 0 }
+      ]
+    },
+    {
+      id: 'mock-student-2',
+      studentName: 'María González',
+      total: 8500,
+      pending: 1500,
+      payments: 3,
+      monthlyDetails: [
+        { month: 'Febrero 2025', expected: 3500, received: 3500 },
+        { month: 'Marzo 2025', expected: 3500, received: 3500 },
+        { month: 'Abril 2025', expected: 3000, received: 1500 }
+      ]
+    },
+    {
+      id: 'mock-student-3',
+      studentName: 'Carlos Fernández',
+      total: 12000,
+      pending: 0,
+      payments: 4,
+      monthlyDetails: [
+        { month: 'Enero 2025', expected: 3000, received: 3000 },
+        { month: 'Febrero 2025', expected: 3000, received: 3000 },
+        { month: 'Marzo 2025', expected: 3000, received: 3000 },
+        { month: 'Abril 2025', expected: 3000, received: 3000 }
+      ]
+    },
+    {
+      id: 'mock-student-4',
+      studentName: 'Ana Martínez',
+      total: 6000,
+      pending: 6000,
+      payments: 2,
+      monthlyDetails: [
+        { month: 'Marzo 2025', expected: 3000, received: 3000 },
+        { month: 'Abril 2025', expected: 3000, received: 3000 },
+        { month: 'Mayo 2025', expected: 3000, received: 0 },
+        { month: 'Junio 2025', expected: 3000, received: 0 }
+      ]
+    },
+    {
+      id: 'mock-student-5',
+      studentName: 'Luis Rodríguez',
+      total: 4500,
+      pending: 7500,
+      payments: 2,
+      monthlyDetails: [
+        { month: 'Abril 2025', expected: 2500, received: 2500 },
+        { month: 'Mayo 2025', expected: 2500, received: 2000 },
+        { month: 'Junio 2025', expected: 2500, received: 0 },
+        { month: 'Julio 2025', expected: 2500, received: 0 },
+        { month: 'Agosto 2025', expected: 2500, received: 0 }
+      ]
+    }
+  ],
+  totalIncome: 46000,
+  pendingIncome: 18000
+}
+
 // ==================== IDIOMAS ====================
 export const mockLanguages = [
   { 
