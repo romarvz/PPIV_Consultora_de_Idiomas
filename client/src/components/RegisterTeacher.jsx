@@ -143,8 +143,8 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
         )
       }
 
-      console.log('🔍 DEBUG Frontend - Especialidades before sending:', formData.especialidades)
-      console.log('🔍 DEBUG Frontend - TeacherData:', JSON.stringify(teacherData, null, 2))
+      console.log('DEBUG Frontend - Especialidades before sending:', formData.especialidades)
+      console.log('DEBUG Frontend - TeacherData:', JSON.stringify(teacherData, null, 2))
 
       const response = await apiService.post('/auth/register/profesor', teacherData)
       

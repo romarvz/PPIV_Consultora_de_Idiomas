@@ -6,7 +6,9 @@ import {
   mockClasses, 
   mockPayments,
   mockLanguages,
-  mockCompanies
+  mockCompanies,
+  mockCourses,
+  mockFinancialData
 } from './mockData'
 
 // Simular delay de red realista
@@ -25,7 +27,8 @@ const initStorage = () => {
     classes: [...mockClasses],
     payments: [...mockPayments],
     languages: [...mockLanguages],
-    companies: [...mockCompanies]
+    companies: [...mockCompanies],
+    courses: [...mockCourses]
   }
 }
 
@@ -420,6 +423,111 @@ export const mockApi = {
     }
   },
 
+
+  // ==================== CURSOS (PLANTILLAS) - NUEVA SECCIÓN ====================
+  courses: {
+    /**
+     * Obtener todos los cursos.
+     * Si `activeOnly` es true, solo devuelve los que tienen isActive = true.
+     */
+    getAll: async (params = { activeOnly: false }) => {
+      await delay();
+      let courses = [...storage.courses];
+      
+      if (params.activeOnly) {
+        courses = courses.filter(course => course.isActive);
+      }
+      
+      // Ordenar por nombre para consistencia
+      courses.sort((a, b) => a.name.localeCompare(b.name));
+      
+      return {
+        data: {
+          success: true,
+          data: {
+            courses,
+            total: courses.length
+          }
+        }
+      };
+    },
+
+    /**
+     * Obtener un curso por su ID.
+     */
+    getById: async (id) => {
+      await delay();
+      const course = storage.courses.find(c => c._id === id);
+      
+      if (!course) {
+        throw new Error('Curso no encontrado');
+      }
+      
+      return { data: { success: true, data: course } };
+    },
+
+    /**
+     * Crear un nuevo curso.
+     */
+    create: async (courseData) => {
+      await delay();
+      if (!courseData.name || !courseData.language) {
+        throw new Error('El nombre y el idioma son requeridos');
+      }
+      
+      const newCourse = {
+        _id: generateId('course'),
+        ...courseData,
+        createdAt: new Date().toISOString(),
+        isActive: courseData.isActive !== undefined ? courseData.isActive : true
+      };
+      
+      storage.courses.unshift(newCourse);
+      saveStorage();
+      
+      return { data: { success: true, data: newCourse, message: 'Curso creado exitosamente' } };
+    },
+
+    /**
+     * Actualizar un curso existente.
+     */
+    update: async (id, courseData) => {
+      await delay();
+      const index = storage.courses.findIndex(c => c._id === id);
+      
+      if (index === -1) {
+        throw new Error('Curso no encontrado');
+      }
+      
+      storage.courses[index] = {
+        ...storage.courses[index],
+        ...courseData,
+        updatedAt: new Date().toISOString()
+      };
+      saveStorage();
+      
+      return { data: { success: true, data: storage.courses[index], message: 'Curso actualizado' } };
+    },
+
+    /**
+     * Eliminar un curso.
+     */
+    delete: async (id) => {
+      await delay();
+      const index = storage.courses.findIndex(c => c._id === id);
+      
+      if (index === -1) {
+        throw new Error('Curso no encontrado');
+      }
+      
+      storage.courses.splice(index, 1);
+      saveStorage();
+      
+      return { data: { success: true, message: 'Curso eliminado exitosamente' } };
+    }
+  },
+ 
+  
   // ==================== REPORTES ====================
   reports: {
     /**
@@ -480,56 +588,13 @@ export const mockApi = {
     financial: async (params = {}) => {
       await delay()
       
-      let payments = [...storage.payments]
-      
-      // Filtrar por rango de fechas si se proporciona
-      if (params.dateFrom) {
-        payments = payments.filter(p => new Date(p.date) >= new Date(params.dateFrom))
-      }
-      if (params.dateTo) {
-        payments = payments.filter(p => new Date(p.date) <= new Date(params.dateTo))
-      }
-      
-      const paid = payments.filter(p => p.status === 'pagado')
-      const pending = payments.filter(p => p.status === 'pendiente')
-      const overdue = payments.filter(p => p.status === 'vencido')
-      
-      const totalIncome = paid.reduce((sum, p) => sum + p.amount, 0)
-      const pendingIncome = pending.reduce((sum, p) => sum + p.amount, 0)
-      const overdueAmount = overdue.reduce((sum, p) => sum + p.amount, 0)
-      
-      // Ingresos por estudiante
-      const incomeByStudent = {}
-      paid.forEach(p => {
-        if (!incomeByStudent[p.studentId]) {
-          incomeByStudent[p.studentId] = {
-            studentName: p.studentName,
-            total: 0,
-            payments: 0
-          }
-        }
-        incomeByStudent[p.studentId].total += p.amount
-        incomeByStudent[p.studentId].payments += 1
-      })
-      
-      // Convertir a array y ordenar
-      const topStudents = Object.values(incomeByStudent)
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 10)
-      
       return {
         data: {
           success: true,
           data: {
-            totalIncome,
-            pendingIncome,
-            overdueAmount,
-            totalPayments: payments.length,
-            paidPayments: paid.length,
-            pendingPayments: pending.length,
-            overduePayments: overdue.length,
-            topStudents,
-            payments: payments.slice(0, 50) // Últimos 50 pagos
+            totalIncome: mockFinancialData.totalIncome,
+            pendingIncome: mockFinancialData.pendingIncome,
+            topStudents: mockFinancialData.topStudents
           }
         }
       }
@@ -626,7 +691,8 @@ export const mockApi = {
         classes: [...mockClasses],
         payments: [...mockPayments],
         languages: [...mockLanguages],
-        companies: [...mockCompanies]
+        companies: [...mockCompanies],
+        courses: [...mockCourses]
       }
       saveStorage()
       return { success: true, message: 'Datos reseteados exitosamente' }
@@ -640,7 +706,8 @@ export const mockApi = {
         studentsCount: storage.students.length,
         teachersCount: storage.teachers.length,
         classesCount: storage.classes.length,
-        paymentsCount: storage.payments.length
+        paymentsCount: storage.payments.length,
+        coursesCount: storage.courses.length
       }
     }
   }

@@ -1,0 +1,51 @@
+:root {
+  /* primary colors */
+  --primary-color: #2c5aa0;
+  --primary: #2c5aa0; /* Alias for consistency */
+  --success-color: linear-gradient(to right, #2863a7, #0F5C8C);
+  --danger-color: #dc3545;
+  --darker-danger: #c82333; 
+
+  --dark-blue: #0A2C59;
+  --medium-blue: #0F5C8C;
+  --light-blue: #3088BF;
+  --light-gray: #F2F2F2;
+  --dark-gray: #0D0D0D;
+
+  /* text colors */
+  --text-color-dark: #333;
+  --text-color-medium: #666;
+  --text-color-light: #888;
+  --text-secondary: #666;
+  --text-color-inverted: #F2F2F2;
+
+  /* Fondos y Bordes */
+  --background-light: #f5f5f5;
+  --background-grey: #777;
+  --border-color: #ddd;
+  --border-light: #eee;
+
+  /* Card */
+  --card-background: #ffffff;
+  --card-border-radius: 8px;
+  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --card-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+  /* Dashboard */
+  --dashboard-background: #f5f5f5;
+  --dashboard-padding: 20px;
+
+  /* Buttons */
+  --button-logout-bg: #dc3545;
+  --button-padding: 10px 20px;
+  --button-border-radius: 5px;
+
+  /* Progress bars */
+  --progress-bg: #e0e0e0;
+  --progress-success: #28a745;
+  --progress-warning: #ffc107;
+  --progress-danger: #dc3545;
+
+  /* Transitions */
+  --transition-speed: 0.2s;
+}

@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FaMoon, FaSun, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import { routes } from '../../utils/routes';
+import { FaMoon, FaSun, FaSignOutAlt } from 'react-icons/fa';
 import '../../styles/adminDashboard.css';
 
-const AdminHeader = ({ user, onLogout }) => {
-  const navigate = useNavigate();
+const TeacherHeader = ({ user, onLogout }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // Load saved preference from localStorage
     const savedMode = localStorage.getItem('darkMode');
@@ -18,7 +15,7 @@ const AdminHeader = ({ user, onLogout }) => {
     } else {
       document.documentElement.classList.remove('dark-mode');
     }
-    //  localStorage
+    // Save preference to localStorage
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
@@ -28,7 +25,7 @@ const AdminHeader = ({ user, onLogout }) => {
 
   return (
     <div className="admin-header">
-      {/* Logo and tittle section*/}
+      {/* Logo and title section */}
       <div className="admin-header__left">
         <div className="admin-header__logo-section">
           {/* Logo */}
@@ -37,22 +34,21 @@ const AdminHeader = ({ user, onLogout }) => {
             alt="PPIV Consultora" 
             className="admin-header__logo"
             onError={(e) => {
-             
               e.target.style.display = 'none';
             }}
           />
 
           {/* Title section */}
           <div className="admin-header__title-section">
-            <h2>Panel de Administración</h2>
-            <p>¡Bienvenido/a {user?.firstName || user?.name || 'Administrador'}!</p>
+            <h2>Dashboard del Profesor</h2>
+            <p>¡Bienvenido/a {user?.firstName || user?.name || 'Profesor'}!</p>
           </div>
         </div>
       </div>
 
-     
+      {/* Right controls */}
       <div className="admin-header__right">
-      
+        {/* Dark mode toggle */}
         <button
           onClick={toggleDarkMode}
           className={`admin-header__theme-toggle ${isDarkMode ? 'admin-header__theme-toggle--dark' : ''}`}
@@ -65,47 +61,17 @@ const AdminHeader = ({ user, onLogout }) => {
           )}
         </button>
 
-        {/* Información del usuario */}
+        {/* User information */}
         <div className="admin-header__user-info">
           <div className="admin-header__user-name">
             {user?.firstName} {user?.lastName}
           </div>
           <div className="admin-header__user-role">
-            {user?.role || 'Administrador'}
+            {user?.role || 'Profesor'}
           </div>
         </div>
 
-        {/* Botón para volver al Dashboard */}
-        <button 
-          onClick={() => navigate(routes.DASHBOARD.ADMIN)}
-          style={{
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = 'none';
-          }}
-        >
-          <FaArrowLeft />
-          Volver al Dashboard
-        </button>
-
-        {/* Botón cerrar sesión */}
+        {/* Logout button */}
         <button 
           onClick={onLogout}
           className="admin-header__logout-btn"
@@ -118,4 +84,4 @@ const AdminHeader = ({ user, onLogout }) => {
   );
 };
 
-export default AdminHeader;
+export default TeacherHeader;

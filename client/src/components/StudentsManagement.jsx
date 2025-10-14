@@ -46,9 +46,9 @@ const StudentsManagement = ({ onBack }) => {
       
       // Debug: información del usuario
       const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
-      console.log('👤 Usuario logueado:', userInfo);
-      console.log('🎭 Rol del usuario:', userInfo.role);
-      console.log('🔑 Token disponible:', localStorage.getItem('token') ? 'Sí' : 'No');
+      console.log('Usuario logueado:', userInfo);
+      console.log('Rol del usuario:', userInfo.role);
+      console.log('Token disponible:', localStorage.getItem('token') ? 'Sí' : 'No');
       
       const queryParams = new URLSearchParams({
         page: pagination.page,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
+import CompanyHeader from '../../components/common/CompanyHeader'
 import { 
   FaBuilding, 
   FaUsers, 
@@ -11,8 +12,9 @@ import {
   FaCog,
   FaFileAlt
 } from 'react-icons/fa'
+import '../../styles/adminDashboard.css'
 
-// Mock data para el dashboard corporativo
+// Mock data for corporate dashboard
 const mockEmployees = [
   { 
     id: 1, 
@@ -97,83 +99,39 @@ const CompanyDashboard = () => {
   }
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <div className="dashboard-container">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <FaBuilding style={{ color: '#2c5aa0', marginRight: '15px', fontSize: '32px' }} />
-          <h1 style={{ color: '#333', fontSize: '28px', margin: 0 }}>Dashboard Corporativo</h1>
-        </div>
-        <button 
-          onClick={handleLogout}
-          style={{
-            background: '#dc3545',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center'
-          }}
-        >
-          <FaSignOutAlt style={{ marginRight: '8px' }} />
-          Cerrar Sesión
-        </button>
-      </div>
+      <CompanyHeader user={user} onLogout={handleLogout} />
 
       {/* Company Info */}
-      <div style={{ 
-        background: 'white', 
-        padding: '20px', 
-        borderRadius: '8px',
-        marginBottom: '20px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ color: '#333', marginTop: 0 }}>Información de la Empresa</h3>
+      <div className="dashboard-info-card">
+        <h3 className="dashboard-info-card__title">Información de la Empresa</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
           <div>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Empresa:</strong> Tech Solutions Corp</p>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Plan:</strong> Corporativo Premium</p>
+            <p className="dashboard-info-card__text"><strong>Empresa:</strong> Tech Solutions Corp</p>
+            <p className="dashboard-info-card__text"><strong>Plan:</strong> Corporativo Premium</p>
           </div>
           <div>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Empleados Inscritos:</strong> {mockCompanyStats.totalEmployees}</p>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Empleados Activos:</strong> {mockCompanyStats.activeEmployees}</p>
+            <p className="dashboard-info-card__text"><strong>Empleados Inscritos:</strong> {mockCompanyStats.totalEmployees}</p>
+            <p className="dashboard-info-card__text"><strong>Empleados Activos:</strong> {mockCompanyStats.activeEmployees}</p>
           </div>
           <div>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Idiomas:</strong> {mockCompanyStats.languages.join(', ')}</p>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Progreso Promedio:</strong> {mockCompanyStats.averageProgress}%</p>
+            <p className="dashboard-info-card__text"><strong>Idiomas:</strong> {mockCompanyStats.languages.join(', ')}</p>
+            <p className="dashboard-info-card__text"><strong>Progreso Promedio:</strong> {mockCompanyStats.averageProgress}%</p>
           </div>
         </div>
       </div>
 
       {/* Dashboard Cards */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-        gap: '20px'
-      }}>
-        {/* Empleados Inscritos */}
-        <div style={{ 
-          background: 'white', 
-          padding: '20px', 
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+      <div className="dashboard-cards-grid dashboard-cards-grid--large">
+        {/* Enrolled Employees */}
+        <div className="dashboard-card">
+          <div className="dashboard-card__header dashboard-card__header--with-button">
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <FaUsers style={{ color: '#2c5aa0', marginRight: '10px', fontSize: '18px' }} />
-              <h4 style={{ color: '#2c5aa0', margin: 0 }}>Empleados Inscritos</h4>
+              <FaUsers className="dashboard-card__icon" />
+              <h4 className="dashboard-card__title">Empleados Inscritos</h4>
             </div>
-            <button style={{
-              background: '#2c5aa0',
-              color: 'white',
-              border: 'none',
-              padding: '5px 10px',
-              borderRadius: '3px',
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}>
+            <button className="dashboard-card__button">
               <FaCog style={{ marginRight: '5px' }} />
               Gestionar
             </button>
@@ -215,7 +173,7 @@ const CompanyDashboard = () => {
           ))}
         </div>
 
-        {/* Pagos Corporativos */}
+        {/* Corporate Payments */}
         <div style={{ 
           background: 'white', 
           padding: '20px', 
@@ -255,7 +213,7 @@ const CompanyDashboard = () => {
           ))}
         </div>
 
-        {/* Estadísticas y Reportes */}
+        {/* Statistics and Reports */}
         <div style={{ 
           background: 'white', 
           padding: '20px', 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
+import TeacherHeader from '../../components/common/TeacherHeader'
 import { 
   FaChalkboardTeacher, 
   FaUsers, 
@@ -13,8 +14,9 @@ import {
   FaGraduationCap,
   FaStar
 } from 'react-icons/fa'
+import '../../styles/adminDashboard.css'
 
-// Mock data para el dashboard del profesor
+// Mock data for teacher dashboard
 const mockTodayClasses = [
   { 
     id: 1, 
@@ -133,107 +135,60 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <div className="dashboard-container">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <FaChalkboardTeacher style={{ color: '#2c5aa0', marginRight: '15px', fontSize: '32px' }} />
-          <h1 style={{ color: '#333', fontSize: '28px', margin: 0 }}>Dashboard del Profesor</h1>
-        </div>
-        <button 
-          onClick={handleLogout}
-          style={{
-            background: '#dc3545',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center'
-          }}
-        >
-          <FaSignOutAlt style={{ marginRight: '8px' }} />
-          Cerrar Sesión
-        </button>
-      </div>
+      <TeacherHeader user={user} onLogout={handleLogout} />
 
       {/* Teacher Info */}
-      <div style={{ 
-        background: 'white', 
-        padding: '20px', 
-        borderRadius: '8px',
-        marginBottom: '20px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ color: '#333', marginTop: 0 }}>Información Personal</h3>
+      <div className="dashboard-info-card">
+        <h3 className="dashboard-info-card__title">Información Personal</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
           <div>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Email:</strong> {user?.email}</p>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>DNI:</strong> {user?.dni}</p>
+            <p className="dashboard-info-card__text"><strong>Email:</strong> {user?.email}</p>
+            <p className="dashboard-info-card__text"><strong>DNI:</strong> {user?.dni}</p>
           </div>
           <div>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Estudiantes Activos:</strong> {mockTeacherStats.activeStudents}</p>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Clases Completadas:</strong> {mockTeacherStats.completedClasses}</p>
+            <p className="dashboard-info-card__text"><strong>Estudiantes Activos:</strong> {mockTeacherStats.activeStudents}</p>
+            <p className="dashboard-info-card__text"><strong>Clases Completadas:</strong> {mockTeacherStats.completedClasses}</p>
           </div>
           <div>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Calificación:</strong> ⭐ {mockTeacherStats.averageRating}/5.0</p>
-            <p style={{ color: '#666', margin: '5px 0' }}><strong>Ganancias del Mes:</strong> ${mockTeacherStats.monthlyEarnings.toLocaleString()}</p>
+            <p className="dashboard-info-card__text"><strong>Calificación:</strong> ⭐ {mockTeacherStats.averageRating}/5.0</p>
+            <p className="dashboard-info-card__text"><strong>Ganancias del Mes:</strong> ${mockTeacherStats.monthlyEarnings.toLocaleString()}</p>
           </div>
         </div>
       </div>
 
       {/* Dashboard Cards */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-        gap: '20px'
-      }}>
-        {/* Clases de Hoy */}
-        <div style={{ 
-          background: 'white', 
-          padding: '20px', 
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <FaCalendarCheck style={{ color: '#2c5aa0', marginRight: '10px', fontSize: '18px' }} />
-            <h4 style={{ color: '#2c5aa0', margin: 0 }}>Mis Clases de Hoy</h4>
+      <div className="dashboard-cards-grid dashboard-cards-grid--large">
+        {/* Today's Classes */}
+        <div className="dashboard-card">
+          <div className="dashboard-card__header">
+            <FaCalendarCheck className="dashboard-card__icon" />
+            <h4 className="dashboard-card__title">Mis Clases de Hoy</h4>
           </div>
           {mockTodayClasses.map((clase) => (
-            <div key={clase.id} style={{ 
-              marginBottom: '15px', 
-              padding: '10px', 
-              border: '1px solid #eee',
-              borderRadius: '5px',
-              borderLeft: `4px solid ${
-                clase.status === 'completed' ? '#28a745' : 
-                clase.status === 'scheduled' ? '#2c5aa0' : '#ffc107'
-              }`
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                <div style={{ fontWeight: 'bold', color: '#333' }}>
-                  <FaUser style={{ marginRight: '8px', color: '#2c5aa0' }} />
+            <div key={clase.id} className={`dashboard-card__item dashboard-card__item--with-status ${
+              clase.status === 'completed' ? 'dashboard-card__item--completed' : 
+              clase.status === 'scheduled' ? 'dashboard-card__item--scheduled' : 'dashboard-card__item--pending'
+            }`}>
+              <div className="dashboard-card__item-header">
+                <div className="dashboard-card__item-title">
+                  <FaUser style={{ marginRight: '8px', color: 'var(--primary-color)' }} />
                   {clase.student}
                 </div>
-                <span style={{ 
-                  fontSize: '12px', 
-                  padding: '2px 8px', 
-                  borderRadius: '12px',
-                  backgroundColor: clase.status === 'completed' ? '#d4edda' : 
-                                  clase.status === 'scheduled' ? '#cce5ff' : '#fff3cd',
-                  color: clase.status === 'completed' ? '#155724' : 
-                         clase.status === 'scheduled' ? '#004085' : '#856404'
-                }}>
-                  {clase.status === 'completed' ? '✓ Completada' : 
-                   clase.status === 'scheduled' ? '📅 Programada' : '⏰ Pendiente'}
+                <span className={`status-badge ${
+                  clase.status === 'completed' ? 'status-badge--completed' : 
+                  clase.status === 'scheduled' ? 'status-badge--scheduled' : 'status-badge--pending'
+                }`}>
+                  {clase.status === 'completed' ? 'Completada' : 
+                   clase.status === 'scheduled' ? 'Programada' : 'Pendiente'}
                 </span>
               </div>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
+              <div className="dashboard-card__item-subtitle" style={{ marginBottom: '5px' }}>
                 <FaBookOpen style={{ marginRight: '5px' }} />
                 {clase.subject} • {clase.type === 'group' ? 'Grupal' : 'Individual'}
               </div>
-              <div style={{ fontSize: '13px', color: '#888' }}>
+              <div className="dashboard-card__item-meta">
                 <FaClock style={{ marginRight: '5px' }} />
                 {clase.time} • {clase.duration}
               </div>
@@ -241,16 +196,11 @@ const TeacherDashboard = () => {
           ))}
         </div>
 
-        {/* Mis Estudiantes */}
-        <div style={{ 
-          background: 'white', 
-          padding: '20px', 
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <FaUsers style={{ color: '#2c5aa0', marginRight: '10px', fontSize: '18px' }} />
-            <h4 style={{ color: '#2c5aa0', margin: 0 }}>Mis Estudiantes</h4>
+        {/* My Students */}
+        <div className="dashboard-card">
+          <div className="dashboard-card__header">
+            <FaUsers className="dashboard-card__icon" />
+            <h4 className="dashboard-card__title">Mis Estudiantes</h4>
           </div>
           {mockStudents.slice(0, 4).map((student) => (
             <div key={student.id} style={{ 
@@ -305,16 +255,11 @@ const TeacherDashboard = () => {
           </div>
         </div>
 
-        {/* Estadísticas del Profesor */}
-        <div style={{ 
-          background: 'white', 
-          padding: '20px', 
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <FaStar style={{ color: '#2c5aa0', marginRight: '10px', fontSize: '18px' }} />
-            <h4 style={{ color: '#2c5aa0', margin: 0 }}>Mi Rendimiento</h4>
+        {/* Teacher Performance */}
+        <div className="dashboard-card">
+          <div className="dashboard-card__header">
+            <FaStar className="dashboard-card__icon" />
+            <h4 className="dashboard-card__title">Mi Rendimiento</h4>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>

@@ -1,18 +1,18 @@
 const mongoose = require('mongoose');
 const BaseUser = require('./BaseUser');
 
-// Schema específico para administradores
+// Specific Schema for Admin
 const adminSchema = new mongoose.Schema({
-  // Los admins solo tienen los campos base, sin campos adicionales específicos
-  // Pero podríamos agregar campos como permisos, área de gestión, etc.
-  permisos: [{
+  // Admins only have the base fields, without specific additional fields
+  // But we could add fields like permissions, management area, etc.
+  permissions: [{
     type: String,
     enum: ['gestion_usuarios', 'reportes', 'configuracion', 'todos'],
     default: ['todos']
   }]
 });
 
-// Crear el modelo Admin usando discriminator
+// Create the Admin model using discriminator
 const Admin = BaseUser.discriminator('admin', adminSchema);
 
 module.exports = Admin;

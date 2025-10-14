@@ -13,6 +13,7 @@ import Layout from './components/layout/Layout'
 import Home from './pages/Home'
 import About from './pages/About'
 import Services from './pages/Services'
+import CoursesPage from './pages/CoursesPage'; 
 import Clients from './pages/Clients'
 import Demo from './pages/Demo'
 import Contact from './pages/Contact'
@@ -27,10 +28,16 @@ import FinancialDashboard from './pages/Dashboard/Financial/FinancialDashboard'
 
 // Centralized route paths to avoid typos and make changes easier
 import { routes } from './utils/routes'
+import './styles/variables.css'; 
 import './App.css'
+import './styles/courseModals.css';
+import './styles/courseCards.css';
+import './styles/courseForm.css';
+import './styles/adminDashboard.css'; 
+import './styles/courseManagement.css';
 
 function App() {
-  console.log('🚀 App component rendering...')
+  console.log('App component rendering...')
   
   return (
     // Auth provider wraps entire app to provide authentication context
@@ -46,6 +53,7 @@ function App() {
             {/* Public information pages */}
             <Route path={routes.ABOUT} element={<About />} />
             <Route path={routes.SERVICES} element={<Services />} />
+            <Route path={routes.COURSES} element={<CoursesPage />} />
             <Route path={routes.CLIENTS} element={<Clients />} />
             <Route path={routes.DEMO} element={<Demo />} />
             <Route path={routes.CONTACT} element={<Contact />} />
