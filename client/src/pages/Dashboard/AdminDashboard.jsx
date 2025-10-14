@@ -460,7 +460,7 @@ const AdminDashboard = () => {
               <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
                 Estadísticas académicas, reportes financieros, exportaciones
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
+              <button className="cta-btn" style={{ width: '100%' }} onClick={() => navigate(routes.DASHBOARD.FINANCIAL)}>
                 Ver Reportes
               </button>
             </div>
