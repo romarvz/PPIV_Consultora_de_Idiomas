@@ -894,3 +894,29 @@ export const mockCompanies = [
     createdAt: '2025-06-15T10:00:00Z'
   }
 ]
+
+// ==================== MÉTODOS DE PAGO Y COBRO ====================
+export const mockPaymentMethods = [
+  "Efectivo",
+  "Transferencia",
+  "Tarjeta",
+  "Mercado Pago"
+];
+
+export const mockCollectionMethods = [
+  "Efectivo",
+  "Transferencia",
+  "Tarjeta",
+  "Mercado Pago"
+];
+
+// ==================== TIPOS DE COMPROBANTES ====================
+export const mockCustomerInvoiceTypes = [
+  "Factura A",
+  "Factura B",
+  "Recibo"
+];
+
+export const mockPaymentOrderTypes = [
+  "Orden de pago"
+];

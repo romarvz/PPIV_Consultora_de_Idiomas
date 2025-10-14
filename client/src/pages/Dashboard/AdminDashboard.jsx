@@ -11,6 +11,7 @@ import AdminHeader from '../../components/common/AdminHeader'
 import CalendarView from '../../components/admin/CalendarView.jsx'
 import CourseManagementPage from './CourseManagementPage';
 import api from '../../services/api'
+import { routes } from '../../utils/routes'
 // React Icons - Updated for better UI
 import { 
   FaUsers, 
@@ -356,7 +357,7 @@ const AdminDashboard = () => {
               <p className="action-card__description">
                 Gestionar pagos, generar facturas, revisar los ingresos y controlar las deudas.
               </p>
-              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE')}>
+              <button className="cta-btn action-card__button" onClick={() => navigate(routes.DASHBOARD.FINANCIAL)}>
                 Ver Finanzas
               </button>
             </div>
