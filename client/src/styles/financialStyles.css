@@ -1,0 +1,38 @@
+/* Financial Navigation Button Styles */
+
+/* Base style for view-switcher buttons in financial nav */
+.financial-nav .nav-btn {
+    background-color: var(--light);
+    color: var(--text-secondary);
+    border: 1px solid #ddd;
+}
+
+/* Hover for view-switcher buttons */
+.financial-nav .nav-btn:not(.active):not(.nav-btn--back):hover {
+    background-color: #e9ecef; /* A slightly darker light color */
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+/* Active view-switcher button */
+.financial-nav .nav-btn.active {
+    background-color: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+.financial-nav .nav-btn.active:hover {
+    background-color: var(--secondary);
+}
+
+/* Specific style for the "Back" button */
+.financial-nav .nav-btn--back {
+    background-color: var(--secondary);
+    color: var(--white);
+    border-color: var(--secondary);
+}
+
+.financial-nav .nav-btn--back:hover {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}

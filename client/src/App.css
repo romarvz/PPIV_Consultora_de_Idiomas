@@ -1442,3 +1442,13 @@ body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Styles for payments-table */
+.payments-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #0F5C8C; 
+  color: white;
+  z-index: 10; /* Asegura que la cabecera esté por encima de las filas */
+  border-bottom: 2px solid #f0f0f0; /* Un borde sutil para separar */
+}

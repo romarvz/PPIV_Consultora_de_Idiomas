@@ -46,14 +46,10 @@ const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString
 export const mockApi = {
   // ==================== CLASES ====================
   classes: {
-    /**
-     * Obtener todas las clases con filtros opcionales
-     */
     getAll: async (params = {}) => {
       await delay()
       let filtered = [...storage.classes]
       
-      // Filtros
       if (params.teacherId) {
         filtered = filtered.filter(c => c.teacherId === params.teacherId)
       }
@@ -70,10 +66,8 @@ export const mockApi = {
         filtered = filtered.filter(c => c.subject.toLowerCase().includes(params.subject.toLowerCase()))
       }
       
-      // Ordenar por fecha descendente
       filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
       
-      // Paginación
       const page = parseInt(params.page) || 1
       const limit = parseInt(params.limit) || 10
       const startIndex = (page - 1) * limit
@@ -92,38 +86,25 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Crear nueva clase
-     */
     create: async (classData) => {
       await delay()
-      
-      // Validaciones
       if (!classData.studentId || !classData.teacherId) {
         throw new Error('Estudiante y profesor son requeridos')
       }
-      
-      // Buscar nombres
       const student = storage.students.find(s => s._id === classData.studentId)
       const teacher = storage.teachers.find(t => t._id === classData.teacherId)
-      
       if (!student || !teacher) {
         throw new Error('Estudiante o profesor no encontrado')
       }
-      
-      // Validar conflictos de horario
       const existingClass = storage.classes.find(c => 
         c.teacherId === classData.teacherId &&
         c.date === classData.date &&
         c.time === classData.time &&
         c.status !== 'cancelada'
       )
-      
       if (existingClass) {
         throw new Error('El profesor ya tiene una clase programada en ese horario')
       }
-      
       const newClass = {
         _id: generateId('mock-class'),
         studentId: classData.studentId,
@@ -138,10 +119,8 @@ export const mockApi = {
         status: 'programada',
         createdAt: new Date().toISOString()
       }
-      
       storage.classes.unshift(newClass)
       saveStorage()
-      
       return {
         data: {
           success: true,
@@ -150,25 +129,18 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Actualizar clase existente
-     */
     update: async (id, classData) => {
       await delay()
       const index = storage.classes.findIndex(c => c._id === id)
-      
       if (index === -1) {
         throw new Error('Clase no encontrada')
       }
-      
       storage.classes[index] = { 
         ...storage.classes[index], 
         ...classData,
         updatedAt: new Date().toISOString()
       }
       saveStorage()
-      
       return {
         data: {
           success: true,
@@ -177,21 +149,14 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Eliminar clase
-     */
     delete: async (id) => {
       await delay()
       const index = storage.classes.findIndex(c => c._id === id)
-      
       if (index === -1) {
         throw new Error('Clase no encontrada')
       }
-      
       storage.classes.splice(index, 1)
       saveStorage()
-      
       return {
         data: {
           success: true,
@@ -199,35 +164,22 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Obtener estadísticas de clases
-     */
     getStats: async () => {
       await delay()
       const total = storage.classes.length
       const programadas = storage.classes.filter(c => c.status === 'programada').length
       const completadas = storage.classes.filter(c => c.status === 'completada').length
       const canceladas = storage.classes.filter(c => c.status === 'cancelada').length
-      
-      // Próximas clases (próximos 7 días)
       const today = new Date()
       const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
       const upcoming = storage.classes.filter(c => {
         const classDate = new Date(c.date)
         return c.status === 'programada' && classDate >= today && classDate <= nextWeek
       }).length
-      
       return {
         data: {
           success: true,
-          data: {
-            total,
-            programadas,
-            completadas,
-            canceladas,
-            upcoming
-          }
+          data: { total, programadas, completadas, canceladas, upcoming }
         }
       }
     }
@@ -235,20 +187,22 @@ export const mockApi = {
 
   // ==================== PAGOS ====================
   payments: {
-    /**
-     * Obtener todos los pagos con filtros
-     */
     getAll: async (params = {}) => {
       await delay()
       let filtered = [...storage.payments]
       
-      // Filtros
       if (params.studentId) {
         filtered = filtered.filter(p => p.studentId === params.studentId)
       }
+      
       if (params.status) {
-        filtered = filtered.filter(p => p.status === params.status)
+        if (Array.isArray(params.status)) {
+          filtered = filtered.filter(p => params.status.includes(p.status));
+        } else {
+          filtered = filtered.filter(p => p.status === params.status);
+        }
       }
+
       if (params.dateFrom) {
         filtered = filtered.filter(p => new Date(p.date) >= new Date(params.dateFrom))
       }
@@ -256,15 +210,12 @@ export const mockApi = {
         filtered = filtered.filter(p => new Date(p.date) <= new Date(params.dateTo))
       }
       
-      // Ordenar por fecha descendente
       filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
       
-      // Calcular totales
       const totalAmount = filtered.reduce((sum, p) => sum + p.amount, 0)
       const paidAmount = filtered.filter(p => p.status === 'pagado').reduce((sum, p) => sum + p.amount, 0)
       const pendingAmount = filtered.filter(p => p.status === 'pendiente').reduce((sum, p) => sum + p.amount, 0)
       
-      // Paginación
       const page = parseInt(params.page) || 1
       const limit = parseInt(params.limit) || 10
       const startIndex = (page - 1) * limit
@@ -286,19 +237,11 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Crear nuevo pago
-     */
     create: async (paymentData) => {
       await delay()
-      
-      // Validaciones
       if (!paymentData.studentId || !paymentData.amount) {
         throw new Error('Estudiante y monto son requeridos')
       }
-      
-      // Buscar estudiante
       const student = storage.students.find(s => s._id === paymentData.studentId)
       if (!student) {
         throw new Error('Estudiante no encontrado')
@@ -312,7 +255,7 @@ export const mockApi = {
         concept: paymentData.concept || 'Pago de curso',
         date: paymentData.date || new Date().toISOString().split('T')[0],
         dueDate: paymentData.dueDate || null,
-        status: paymentData.status || 'pendiente',
+        status: paymentData.status,
         paymentMethod: paymentData.paymentMethod || null,
         createdAt: new Date().toISOString()
       }
@@ -328,25 +271,18 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Actualizar pago existente
-     */
     update: async (id, paymentData) => {
       await delay()
       const index = storage.payments.findIndex(p => p._id === id)
-      
       if (index === -1) {
         throw new Error('Pago no encontrado')
       }
-      
       storage.payments[index] = { 
         ...storage.payments[index], 
         ...paymentData,
         updatedAt: new Date().toISOString()
       }
       saveStorage()
-      
       return {
         data: {
           success: true,
@@ -355,21 +291,14 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Eliminar pago
-     */
     delete: async (id) => {
       await delay()
       const index = storage.payments.findIndex(p => p._id === id)
-      
       if (index === -1) {
         throw new Error('Pago no encontrado')
       }
-      
       storage.payments.splice(index, 1)
       saveStorage()
-      
       return {
         data: {
           success: true,
@@ -377,34 +306,24 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Obtener estadísticas de pagos
-     */
     getStats: async () => {
       await delay()
       const total = storage.payments.length
       const pagados = storage.payments.filter(p => p.status === 'pagado')
       const pendientes = storage.payments.filter(p => p.status === 'pendiente')
       const vencidos = storage.payments.filter(p => p.status === 'vencido')
-      
       const totalIncome = pagados.reduce((sum, p) => sum + p.amount, 0)
       const pendingIncome = pendientes.reduce((sum, p) => sum + p.amount, 0)
       const overdueAmount = vencidos.reduce((sum, p) => sum + p.amount, 0)
-      
-      // Ingresos por mes (últimos 6 meses)
       const monthlyIncome = {}
       const today = new Date()
-      
       for (let i = 5; i >= 0; i--) {
         const date = new Date(today.getFullYear(), today.getMonth() - i, 1)
-        const monthKey = date.toISOString().substring(0, 7) // YYYY-MM
+        const monthKey = date.toISOString().substring(0, 7)
         const monthName = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-        
         const monthPayments = pagados.filter(p => p.date.startsWith(monthKey))
         monthlyIncome[monthName] = monthPayments.reduce((sum, p) => sum + p.amount, 0)
       }
-      
       return {
         data: {
           success: true,
@@ -423,134 +342,84 @@ export const mockApi = {
     }
   },
 
-
-  // ==================== CURSOS (PLANTILLAS) - NUEVA SECCIÓN ====================
+  // ==================== CURSOS (PLANTILLAS) ====================
   courses: {
-    /**
-     * Obtener todos los cursos.
-     * Si `activeOnly` es true, solo devuelve los que tienen isActive = true.
-     */
     getAll: async (params = { activeOnly: false }) => {
       await delay();
       let courses = [...storage.courses];
-      
       if (params.activeOnly) {
         courses = courses.filter(course => course.isActive);
       }
-      
-      // Ordenar por nombre para consistencia
       courses.sort((a, b) => a.name.localeCompare(b.name));
-      
       return {
         data: {
           success: true,
-          data: {
-            courses,
-            total: courses.length
-          }
+          data: { courses, total: courses.length }
         }
       };
     },
-
-    /**
-     * Obtener un curso por su ID.
-     */
     getById: async (id) => {
       await delay();
       const course = storage.courses.find(c => c._id === id);
-      
       if (!course) {
         throw new Error('Curso no encontrado');
       }
-      
       return { data: { success: true, data: course } };
     },
-
-    /**
-     * Crear un nuevo curso.
-     */
     create: async (courseData) => {
       await delay();
       if (!courseData.name || !courseData.language) {
         throw new Error('El nombre y el idioma son requeridos');
       }
-      
       const newCourse = {
         _id: generateId('course'),
         ...courseData,
         createdAt: new Date().toISOString(),
         isActive: courseData.isActive !== undefined ? courseData.isActive : true
       };
-      
       storage.courses.unshift(newCourse);
       saveStorage();
-      
       return { data: { success: true, data: newCourse, message: 'Curso creado exitosamente' } };
     },
-
-    /**
-     * Actualizar un curso existente.
-     */
     update: async (id, courseData) => {
       await delay();
       const index = storage.courses.findIndex(c => c._id === id);
-      
       if (index === -1) {
         throw new Error('Curso no encontrado');
       }
-      
       storage.courses[index] = {
         ...storage.courses[index],
         ...courseData,
         updatedAt: new Date().toISOString()
       };
       saveStorage();
-      
       return { data: { success: true, data: storage.courses[index], message: 'Curso actualizado' } };
     },
-
-    /**
-     * Eliminar un curso.
-     */
     delete: async (id) => {
       await delay();
       const index = storage.courses.findIndex(c => c._id === id);
-      
       if (index === -1) {
         throw new Error('Curso no encontrado');
       }
-      
       storage.courses.splice(index, 1);
       saveStorage();
-      
       return { data: { success: true, message: 'Curso eliminado exitosamente' } };
     }
   },
- 
   
   // ==================== REPORTES ====================
   reports: {
-    /**
-     * Reporte académico de estudiantes
-     */
-    academic: async (params = {}) => {
+    academic: async (params = {}) => { // <-- LÍNEA CORREGIDA
       await delay()
-      
       let students = [...storage.students]
-      
-      // Filtrar por estado si se proporciona
       if (params.status) {
         students = students.filter(s => s.condicion === params.status)
       }
-      
       const studentsWithProgress = students.map(student => {
         const studentClasses = storage.classes.filter(c => c.studentId === student._id)
         const completedClasses = studentClasses.filter(c => c.status === 'completada').length
         const totalClasses = studentClasses.length
-        const attendance = totalClasses > 0 
-          ? Math.round((completedClasses / totalClasses) * 100) 
-          : 0
-        
+        const attendance = totalClasses > 0 ? Math.round((completedClasses / totalClasses) * 100) : 0
         return {
           _id: student._id,
           firstName: student.firstName,
@@ -564,10 +433,7 @@ export const mockApi = {
           isActive: student.isActive
         }
       })
-      
-      // Ordenar por asistencia descendente
       studentsWithProgress.sort((a, b) => b.attendance - a.attendance)
-      
       return {
         data: {
           success: true,
@@ -575,19 +441,14 @@ export const mockApi = {
             students: studentsWithProgress,
             total: studentsWithProgress.length,
             averageAttendance: Math.round(
-              studentsWithProgress.reduce((sum, s) => sum + s.attendance, 0) / studentsWithProgress.length
+              studentsWithProgress.reduce((sum, s) => sum + s.attendance, 0) / (studentsWithProgress.length || 1)
             )
           }
         }
       }
     },
-
-    /**
-     * Reporte financiero
-     */
     financial: async (params = {}) => {
       await delay()
-      
       return {
         data: {
           success: true,
@@ -599,20 +460,14 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Reporte de profesores
-     */
     teachers: async () => {
       await delay()
-      
       const teachersWithStats = storage.teachers.map(teacher => {
         const teacherClasses = storage.classes.filter(c => c.teacherId === teacher._id)
         const completedClasses = teacherClasses.filter(c => c.status === 'completada').length
         const scheduledClasses = teacherClasses.filter(c => c.status === 'programada').length
-        const totalHours = completedClasses * 1 // Asumiendo 1 hora por clase
+        const totalHours = completedClasses * 1
         const estimatedEarnings = totalHours * (teacher.tarifaPorHora || 0)
-        
         return {
           _id: teacher._id,
           firstName: teacher.firstName,
@@ -628,14 +483,10 @@ export const mockApi = {
           isActive: teacher.isActive
         }
       })
-      
       return {
         data: {
           success: true,
-          data: {
-            teachers: teachersWithStats,
-            total: teachersWithStats.length
-          }
+          data: { teachers: teachersWithStats, total: teachersWithStats.length }
         }
       }
     }
@@ -643,9 +494,6 @@ export const mockApi = {
 
   // ==================== EMPRESAS ====================
   companies: {
-    /**
-     * Obtener todas las empresas
-     */
     getAll: async () => {
       await delay()
       return {
@@ -658,18 +506,12 @@ export const mockApi = {
         }
       }
     },
-
-    /**
-     * Obtener empresa por ID
-     */
     getById: async (id) => {
       await delay()
       const company = storage.companies.find(c => c._id === id)
-      
       if (!company) {
         throw new Error('Empresa no encontrada')
       }
-      
       return {
         data: {
           success: true,
@@ -681,9 +523,6 @@ export const mockApi = {
 
   // ==================== UTILIDADES ====================
   utils: {
-    /**
-     * Resetear datos mock a valores iniciales
-     */
     reset: () => {
       storage = {
         students: [...mockStudents],
@@ -697,10 +536,6 @@ export const mockApi = {
       saveStorage()
       return { success: true, message: 'Datos reseteados exitosamente' }
     },
-
-    /**
-     * Obtener estado actual del storage
-     */
     getStorageState: () => {
       return {
         studentsCount: storage.students.length,
@@ -713,5 +548,4 @@ export const mockApi = {
   }
 }
 
-// Exportar funciones individuales para facilitar importación
 export default mockApi

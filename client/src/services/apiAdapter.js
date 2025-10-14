@@ -78,10 +78,10 @@ const apiAdapter = {
     }
   },
 
-  // ==================== PAGOS ====================
+  // =============== COBROS A ESTUDIANTES ====================
   payments: {
     /**
-     * Obtener todos los pagos con filtros
+     * Obtener todos los cobros con filtros
      * @param {Object} params - Filtros: studentId, status, dateFrom, dateTo, page, limit
      */
     getAll: async (params = {}) => {
@@ -90,9 +90,21 @@ const apiAdapter = {
       }
       return await api.get('/payments', { params })
     },
-
+    /** obtener solo las deudas pendientes de cobro 
+    * @param {String} studentId - ID del estudiante
+    */
+    getPendingByStudent: async (studentId) => {
+      const params = { 
+        studentId, 
+        status: ['pendiente', 'vencido'] 
+      };
+      if (USE_MOCK) {
+        return await mockApi.payments.getAll(params)
+       }
+       return await api.get('/payments', { params });
+    },
     /**
-     * Crear nuevo pago
+     * Crear nuevo cobro
      * @param {Object} paymentData - { studentId, amount, concept, date, status, paymentMethod }
      */
     create: async (paymentData) => {
@@ -102,8 +114,9 @@ const apiAdapter = {
       return await api.post('/payments', paymentData)
     },
 
+    
     /**
-     * Actualizar pago existente
+     * Actualizar cobro existente
      * @param {String} id - ID del pago
      * @param {Object} paymentData - Datos a actualizar
      */

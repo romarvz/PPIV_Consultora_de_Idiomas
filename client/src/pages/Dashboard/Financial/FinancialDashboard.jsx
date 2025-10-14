@@ -7,6 +7,7 @@ import PaymentsView from '../../../modules/financial/components/PaymentsView';
 import InvoicingView from '../../../modules/financial/components/InvoicingView';
 import ReportsView from '../../../modules/financial/components/ReportsView';
 import { routes } from '../../../utils/routes';
+import '../../../styles/financialStyles.css';
 
 const FinancialDashboard = () => {
   const [activeView, setActiveView] = useState('charges');
@@ -30,7 +31,7 @@ const FinancialDashboard = () => {
   return (
     <section className="section visible">
       <div className="container">
-        <AdminSectionHeader title="Gestión Financiera" onBack={() => navigate(routes.adminDashboard)} />
+        <AdminSectionHeader title="Gestión Financiera" />
         <FinancialNav activeView={activeView} setActiveView={setActiveView} />
         <div className="financial-content">
           {renderView()}

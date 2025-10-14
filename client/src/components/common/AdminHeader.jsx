@@ -75,36 +75,6 @@ const AdminHeader = ({ user, onLogout }) => {
           </div>
         </div>
 
-        {/* Botón para volver al Dashboard */}
-        <button 
-          onClick={() => navigate(routes.DASHBOARD.ADMIN)}
-          style={{
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = 'none';
-          }}
-        >
-          <FaArrowLeft />
-          Volver al Dashboard
-        </button>
-
         {/* Botón cerrar sesión */}
         <button 
           onClick={onLogout}
