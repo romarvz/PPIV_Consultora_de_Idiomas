@@ -588,3 +588,14 @@ export const mockCollectionMethods = [
   "Tarjeta",
   "Mercado Pago"
 ];
+
+// ==================== TIPOS DE COMPROBANTES ====================
+export const mockCustomerInvoiceTypes = [
+  "Factura A",
+  "Factura B",
+  "Recibo"
+];
+
+export const mockPaymentOrderTypes = [
+  "Orden de pago"
+];
