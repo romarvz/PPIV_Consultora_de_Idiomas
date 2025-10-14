@@ -60,7 +60,7 @@ const PaymentRegistration = ({ onSuccess, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="payment-form">
+    <form onSubmit={handleSubmit} className="payment-form modal-form-background">
       {error && <div className="notification error">{error}</div>}
       {success && (
         <div className="notification success">

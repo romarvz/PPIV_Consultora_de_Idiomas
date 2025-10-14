@@ -747,9 +747,75 @@ body {
   background-color: var(--border-color);
 }
 
-/* ========================================= */
-/* ========= MODULE-SPECIFIC STYLES ======== */
-/* ========================================= */
+/* ========= Admin Section Header Styles ======== */
+.admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.admin-section-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+[data-theme="dark"] .admin-section-title {
+  color: var(--accent);
+}
+
+.financial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.financial-nav {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  background-color: var(--input-bg);
+  border-color: var(--accent);
+}
+
+.nav-btn.active {
+  background-color: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+.nav-btn.active:hover {
+  background-color: var(--secondary);
+}
+
 
 /* ========= Modal Styles ======== */
 .modal-overlay {
@@ -767,7 +833,7 @@ body {
 }
 
 .modal-content {
-  background: var(--card-bg);
+  background: var(--white);
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   width: 90%;
@@ -820,6 +886,12 @@ body {
     transform: translateY(0) scale(1);
     opacity: 1;
   }
+}
+
+.modal-form-background {
+    background-color: var(--white);
+    padding: 1.5rem;
+    border-radius: 8px;
 }
 
 /* ========= Payments View Styles ======== */

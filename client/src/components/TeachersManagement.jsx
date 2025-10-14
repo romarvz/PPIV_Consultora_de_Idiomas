@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa';
 import api from '../services/api';
 import RegisterTeacher from './RegisterTeacher';
+import AdminSectionHeader from './common/AdminSectionHeader';
 
 // Componente SearchInput optimizado y simple
 const SearchInput = memo(({ onSearch, placeholder }) => {
@@ -65,7 +66,7 @@ const SearchInput = memo(({ onSearch, placeholder }) => {
 
 SearchInput.displayName = 'SearchInput';
 
-const TeachersManagement = () => {
+const TeachersManagement = ({ onBack }) => {
   // Estados principales
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -392,12 +393,7 @@ const TeachersManagement = () => {
   return (
     <div style={{ padding: '2rem', background: '#f8f9fa', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ color: '#2c3e50', fontSize: '2rem', fontWeight: '700', margin: '0' }}>
-          <FaUserGraduate style={{ marginRight: '0.5rem', color: '#3498db' }} />
-          Gestión de Profesores
-        </h2>
-      </div>
+      <AdminSectionHeader title="Gestión de Profesores" onBack={onBack} />
 
       {/* Estadísticas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>

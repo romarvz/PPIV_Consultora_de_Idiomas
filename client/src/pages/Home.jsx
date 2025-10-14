@@ -30,10 +30,10 @@ const Home = () => {
       {/* Hero Section */}
       <section className="hero">
         <div className="container">
-          <h1>Aprende las lenguas del mundo</h1>
+          <h1>Aprendé las lenguas del mundo</h1>
           <p>Consultora especializada en enseñanza de idiomas con metodologías innovadoras y profesores certificados</p>
           <button className="cta-btn" onClick={() => document.getElementById('servicios')?.scrollIntoView({ behavior: 'smooth' })}>
-            Conoce Nuestros Servicios
+            Conocé Nuestros Servicios
           </button>
         </div>
       </section>
@@ -67,7 +67,7 @@ const Home = () => {
             </div>
             <div className="service-card">
               <h3>Clases Grupales</h3>
-              <p>Aprende en grupos reducidos con metodología interactiva y ambiente colaborativo.</p>
+              <p>Aprendé en grupos reducidos con metodología interactiva y ambiente colaborativo.</p>
             </div>
             <div className="service-card">
               <h3>Cursos Corporativos</h3>
@@ -120,7 +120,7 @@ const Home = () => {
           <h2 className="section-title">Demo</h2>
           <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
-              Descubre nuestra plataforma de gestión integral. Experimenta cómo administramos estudiantes, 
+              Descubrí nuestra plataforma de gestión integral. Experimentá cómo administramos estudiantes, 
               clases, pagos y seguimiento académico de manera eficiente.
             </p>
             <button className="cta-btn" onClick={() => navigate(routes.LOGIN)}>
@@ -153,7 +153,7 @@ const Home = () => {
                 <textarea 
                   id="mensaje" 
                   name="mensaje" 
-                  placeholder="Cuéntanos sobre tus objetivos de aprendizaje..." 
+                  placeholder="Contanos sobre tus objetivos de aprendizaje..." 
                   required
                 ></textarea>
               </div>

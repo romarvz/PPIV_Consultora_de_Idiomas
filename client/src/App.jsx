@@ -23,7 +23,7 @@ import AdminDashboard from './pages/Dashboard/AdminDashboard'
 import StudentDashboard from './pages/Dashboard/StudentDashboard'
 import TeacherDashboard from './pages/Dashboard/TeacherDashboard'
 import CompanyDashboard from './pages/Dashboard/CompanyDashboard'
-import PaymentsView from './components/PaymentsView'
+import FinancialDashboard from './pages/Dashboard/Financial/FinancialDashboard'
 
 // Centralized route paths to avoid typos and make changes easier
 import { routes } from './utils/routes'
@@ -95,7 +95,7 @@ function App() {
             path={routes.DASHBOARD.FINANCIAL} 
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <PaymentsView />
+                <FinancialDashboard />
               </ProtectedRoute>
             } 
           />

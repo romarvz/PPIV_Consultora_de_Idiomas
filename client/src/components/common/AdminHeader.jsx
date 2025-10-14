@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FaMoon, FaSun, FaSignOutAlt } from 'react-icons/fa';
+import { FaMoon, FaSun, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa';
+
+import { useNavigate } from 'react-router-dom';
+import { routes } from '../../utils/routes';
 
 const AdminHeader = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // Obtener modo guardado del localStorage o usar false por defecto
     const savedMode = localStorage.getItem('darkMode');
@@ -141,6 +145,36 @@ const AdminHeader = ({ user, onLogout }) => {
             {user?.role || 'Administrador'}
           </div>
         </div>
+
+        {/* Botón para volver al Dashboard */}
+        <button 
+          onClick={() => navigate(routes.DASHBOARD.ADMIN)}
+          style={{
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = 'none';
+          }}
+        >
+          <FaArrowLeft />
+          Volver al Dashboard
+        </button>
 
         {/* Botón cerrar sesión */}
         <button 

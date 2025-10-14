@@ -9,8 +9,9 @@ import {
   FaEye
 } from 'react-icons/fa';
 import api from '../services/api';
+import AdminSectionHeader from './common/AdminSectionHeader';
 
-const StudentsManagement = () => {
+const StudentsManagement = ({ onBack }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -175,13 +176,8 @@ const StudentsManagement = () => {
   return (
     <div className="students-management" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--primary)', fontSize: '1.8rem', fontWeight: '600' }}>
-          <FaUsers />
-          Gestión de Estudiantes
-        </h1>
-      </div>
-
+      <AdminSectionHeader title="Gestión de Estudiantes" onBack={onBack} />
+      
       {/* Estadísticas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>

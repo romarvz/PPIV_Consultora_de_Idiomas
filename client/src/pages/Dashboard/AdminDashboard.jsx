@@ -213,29 +213,8 @@ const AdminDashboard = () => {
         zIndex: 9999,
         overflow: 'auto'
       }}>
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 10000
-        }}>
-          <button
-            onClick={() => setShowStudentsManagement(false)}
-            style={{
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}
-          >
-            ← Volver al Dashboard
-          </button>
-        </div>
-        <StudentsManagement />
+
+        <StudentsManagement onBack={() => setShowStudentsManagement(false)} />
       </div>
     )
   }
@@ -253,29 +232,8 @@ const AdminDashboard = () => {
         zIndex: 9999,
         overflow: 'auto'
       }}>
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 10000
-        }}>
-          <button
-            onClick={() => setShowTeachersManagement(false)}
-            style={{
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}
-          >
-            ← Volver al Dashboard
-          </button>
-        </div>
-        <TeachersManagement />
+
+        <TeachersManagement onBack={() => setShowTeachersManagement(false)} />
       </div>
     )
   }
