@@ -24,12 +24,13 @@ import AdminDashboard from './pages/Dashboard/AdminDashboard'
 import StudentDashboard from './pages/Dashboard/StudentDashboard'
 import TeacherDashboard from './pages/Dashboard/TeacherDashboard'
 import CompanyDashboard from './pages/Dashboard/CompanyDashboard'
-import FinancialDashboard from './pages/Dashboard/Financial/FinancialDashboard'
+import FinancialDashboard from './pages/Dashboard/FinancialDashboard'
 
 // Centralized route paths to avoid typos and make changes easier
 import { routes } from './utils/routes'
-import './styles/variables.css'; 
+import './styles/variables.css';
 import './App.css'
+import './styles/auth.css';
 import './styles/courseModals.css';
 import './styles/courseCards.css';
 import './styles/courseForm.css';

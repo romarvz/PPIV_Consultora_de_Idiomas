@@ -1,51 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-  /* primary colors */
-  --primary-color: #2c5aa0;
-  --primary: #2c5aa0; /* Alias for consistency */
-  --success-color: linear-gradient(to right, #2863a7, #0F5C8C);
-  --danger-color: #dc3545;
-  --darker-danger: #c82333; 
+  /* === TYPOGRAPHY === */
+  --font-family-primary: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-5xl: 3rem;      /* 48px */
+  
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
 
-  --dark-blue: #0A2C59;
-  --medium-blue: #0F5C8C;
-  --light-blue: #3088BF;
-  --light-gray: #F2F2F2;
-  --dark-gray: #0D0D0D;
+  /* === COLORS === */
+  /* Primary Brand Colors */
+  --primary: #0A2C59;
+  --primary-light: #2c5aa0;
+  --primary-dark: #061a36;
+  --secondary: #0F5C8C;
+  --accent: #3088BF;
+  
+  /* Neutral Colors */
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  /* Status Colors */
+  --success: #16a34a;
+  --success-light: #dcfce7;
+  --success-dark: #166534;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --warning-dark: #92400e;
+  --error: #dc2626;
+  --error-light: #fee2e2;
+  --error-dark: #991b1b;
+  --info: #3b82f6;
+  --info-light: #dbeafe;
+  --info-dark: #1e40af;
 
-  /* text colors */
-  --text-color-dark: #333;
-  --text-color-medium: #666;
-  --text-color-light: #888;
-  --text-secondary: #666;
-  --text-color-inverted: #F2F2F2;
+  /* === LIGHT THEME === */
+  --bg-primary: var(--white);
+  --bg-secondary: var(--gray-50);
+  --bg-tertiary: var(--gray-100);
+  
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-muted: var(--gray-400);
+  
+  --border-color: var(--gray-200);
+  --border-light: var(--gray-100);
+  
+  --card-bg: var(--white);
+  --input-bg: var(--white);
+  --input-border: var(--gray-300);
+  
+  /* === LAYOUT === */
+  --border-radius-sm: 0.375rem;
+  --border-radius: 0.5rem;
+  --border-radius-lg: 0.75rem;
+  --border-radius-xl: 1rem;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
 
-  /* Fondos y Bordes */
-  --background-light: #f5f5f5;
-  --background-grey: #777;
-  --border-color: #ddd;
-  --border-light: #eee;
+  /* Legacy compatibility */
+  --primary-color: var(--primary);
+  --text-color-dark: var(--text-primary);
+  --text-color-medium: var(--text-secondary);
+  --text-color-light: var(--text-muted);
+  --card-background: var(--card-bg);
+  --card-border-radius: var(--border-radius);
+  --card-shadow: var(--shadow);
+  --dashboard-background: var(--bg-secondary);
+  --dashboard-padding: var(--spacing-xl);
+}
 
-  /* Card */
-  --card-background: #ffffff;
-  --card-border-radius: 8px;
-  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --card-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+/* === DARK THEME === */
+.dark-mode {
+  --bg-primary: #1a202c;
+  --bg-secondary: #2d3748;
+  --card-bg: #2d3748;
+  
+  --text-primary: #f7fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #a0aec0;
+  
+  --border-color: #4a5568;
+  --border-light: #2d3748;
+  
+  --input-bg: #4a5568;
+  --input-border: #718096;
+}
 
-  /* Dashboard */
-  --dashboard-background: #f5f5f5;
-  --dashboard-padding: 20px;
+/* === GLOBAL FONT APPLICATION === */
+* {
+  font-family: var(--font-family-primary);
+}
 
-  /* Buttons */
-  --button-logout-bg: #dc3545;
-  --button-padding: 10px 20px;
-  --button-border-radius: 5px;
+body {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
 
-  /* Progress bars */
-  --progress-bg: #e0e0e0;
-  --progress-success: #28a745;
-  --progress-warning: #ffc107;
-  --progress-danger: #dc3545;
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
 
-  /* Transitions */
-  --transition-speed: 0.2s;
+button {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+input, select, textarea {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+}
+
+/* === COURSE BUTTON FIXES === */
+.course-card button,
+button[class*="course"] {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+.course-card button:hover,
+button[class*="course"]:hover {
+  background: var(--secondary) !important;
+  color: white !important;
 }

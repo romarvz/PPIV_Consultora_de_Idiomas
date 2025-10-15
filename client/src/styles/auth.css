@@ -1,0 +1,31 @@
+/* === AUTHENTICATED PAGES STYLES === */
+/* Dashboard pages, admin panel, etc. */
+
+/* Dashboard button fixes for proper contrast */
+button[style*="background: var(--primary)"],
+button[style*="background: #0A2C59"],
+button[style*="background: #2c5aa0"],
+button[style*="background: linear-gradient"],
+.btn-primary,
+.cta-btn {
+  color: white !important;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Dark theme adjustments */
+.dark-mode {
+  color: var(--text-primary);
+}
+
+.dark-mode h1, 
+.dark-mode h2, 
+.dark-mode h3, 
+.dark-mode h4, 
+.dark-mode h5, 
+.dark-mode h6 {
+  color: var(--text-primary);
+}
+
+.dark-mode p {
+  color: var(--text-primary);
+}
