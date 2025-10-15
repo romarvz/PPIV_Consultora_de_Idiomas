@@ -920,3 +920,37 @@ export const mockCustomerInvoiceTypes = [
 export const mockPaymentOrderTypes = [
   "Orden de pago"
 ];
+
+// ==================== PAGOS A PROFESORES ====================
+export const mockTeacherPayments = [
+  {
+    _id: 'mock-tp-1',
+    teacherId: 'mock-teacher-1',
+    teacherName: 'Carlos Rodríguez',
+    amount: 75000,
+    concept: 'Pago de horas de Septiembre 2025',
+    date: '2025-10-05',
+    paymentMethod: 'Transferencia',
+    createdAt: '2025-10-05T10:00:00Z'
+  },
+  {
+    _id: 'mock-tp-2',
+    teacherId: 'mock-teacher-2',
+    teacherName: 'Patricia Gómez',
+    amount: 82000,
+    concept: 'Pago de horas de Septiembre 2025',
+    date: '2025-10-06',
+    paymentMethod: 'Transferencia',
+    createdAt: '2025-10-06T11:00:00Z'
+  },
+  {
+    _id: 'mock-tp-3',
+    teacherId: 'mock-teacher-1',
+    teacherName: 'Carlos Rodríguez',
+    amount: 25000,
+    concept: 'Adelanto Octubre 2025',
+    date: '2025-10-15',
+    paymentMethod: 'Efectivo',
+    createdAt: '2025-10-15T09:30:00Z'
+  }
+];

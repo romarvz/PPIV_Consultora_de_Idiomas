@@ -149,6 +149,22 @@ const apiAdapter = {
     }
   },
 
+  // ==================== PAGOS A PROFESORES ====================
+teacherPayments: {
+  getAll: async (params = {}) => {
+    if (USE_MOCK) {
+      return await mockApi.teacherPayments.getAll(params);
+    }
+    // return await api.get('/teacher-payments', { params }); // <-- Para el futuro backend real
+  },
+  create: async (paymentData) => {
+    if (USE_MOCK) {
+      return await mockApi.teacherPayments.create(paymentData);
+    }
+    // return await api.post('/teacher-payments', paymentData); // <-- Para el futuro backend real
+  },
+},
+
  // ==================== CURSOS (PLANTILLAS) - NUEVA SECCIÓN ====================
   courses: {
     /**

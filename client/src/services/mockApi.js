@@ -8,7 +8,8 @@ import {
   mockLanguages,
   mockCompanies,
   mockCourses,
-  mockFinancialData
+  mockFinancialData,
+  mockTeacherPayments
 } from './mockData'
 
 // Simular delay de red realista
@@ -28,7 +29,8 @@ const initStorage = () => {
     payments: [...mockPayments],
     languages: [...mockLanguages],
     companies: [...mockCompanies],
-    courses: [...mockCourses]
+    courses: [...mockCourses],
+    teacherPayments: [...mockTeacherPayments]
   }
 }
 
@@ -341,6 +343,56 @@ export const mockApi = {
       }
     }
   },
+
+  // ==================== PAGOS A PROFESORES ====================
+teacherPayments: {
+  getAll: async (params = {}) => {
+    await delay();
+    // Por ahora, simplemente devolvemos todos los pagos a profesores
+    const payments = [...storage.teacherPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+    return {
+      data: {
+        success: true,
+        data: {
+          payments,
+          total: payments.length,
+        },
+      },
+    };
+  },
+  create: async (paymentData) => {
+    await delay();
+    if (!paymentData.teacherId || !paymentData.amount) {
+      throw new Error('Profesor y monto son requeridos');
+    }
+    const teacher = storage.teachers.find(t => t._id === paymentData.teacherId);
+    if (!teacher) {
+      throw new Error('Profesor no encontrado');
+    }
+
+    const newPayment = {
+      _id: generateId('mock-tp'),
+      teacherId: paymentData.teacherId,
+      teacherName: `${teacher.firstName} ${teacher.lastName}`,
+      amount: parseFloat(paymentData.amount),
+      concept: paymentData.concept,
+      date: paymentData.date,
+      paymentMethod: paymentData.paymentMethod,
+      createdAt: new Date().toISOString()
+    };
+
+    storage.teacherPayments.unshift(newPayment);
+    saveStorage();
+
+    return {
+      data: {
+        success: true,
+        data: newPayment,
+        message: 'Pago a profesor registrado exitosamente'
+      }
+    };
+  }
+},
 
   // ==================== CURSOS (PLANTILLAS) ====================
   courses: {
