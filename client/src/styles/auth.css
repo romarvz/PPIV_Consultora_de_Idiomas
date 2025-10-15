@@ -1,31 +1,145 @@
 /* === AUTHENTICATED PAGES STYLES === */
 /* Dashboard pages, admin panel, etc. */
 
+/* Auth pages container */
+.dashboard-container,
+.authenticated-layout {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Typography for auth pages */
+.dashboard-container h1, .dashboard-container h2, .dashboard-container h3, 
+.dashboard-container h4, .dashboard-container h5, .dashboard-container h6 {
+  color: var(--primary);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+.dashboard-container h1 { font-size: var(--font-size-4xl); }
+.dashboard-container h2 { font-size: var(--font-size-3xl); }
+.dashboard-container h3 { font-size: var(--font-size-2xl); }
+.dashboard-container h4 { font-size: var(--font-size-xl); }
+.dashboard-container h5 { font-size: var(--font-size-lg); }
+.dashboard-container h6 { font-size: var(--font-size-base); }
+
+.dashboard-container p {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-normal);
+}
+
+/* Button styling for auth pages */
+.dashboard-container button {
+  font-weight: var(--font-weight-medium);
+}
+
 /* Dashboard button fixes for proper contrast */
-button[style*="background: var(--primary)"],
-button[style*="background: #0A2C59"],
-button[style*="background: #2c5aa0"],
-button[style*="background: linear-gradient"],
-.btn-primary,
-.cta-btn {
+.dashboard-container .cta-btn,
+.dashboard-container .btn-primary {
+  background: var(--primary) !important;
   color: white !important;
   font-weight: var(--font-weight-medium);
 }
 
+.dashboard-container .cta-btn:hover,
+.dashboard-container .btn-primary:hover {
+  background: var(--secondary) !important;
+}
+
+/* Input and form elements */
+.dashboard-container input, 
+.dashboard-container select, 
+.dashboard-container textarea {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+}
+
+/* Card styling for auth pages */
+.dashboard-container .service-card, 
+.dashboard-container .dashboard-section, 
+.dashboard-container .kpi-card, 
+.dashboard-container .action-card {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.dashboard-container .service-card h3, 
+.dashboard-container .service-card h4,
+.dashboard-container .dashboard-section h3, 
+.dashboard-container .dashboard-section h4,
+.dashboard-container .kpi-card h3, 
+.dashboard-container .kpi-card h4,
+.dashboard-container .action-card h3, 
+.dashboard-container .action-card h4 {
+  color: var(--primary);
+  font-weight: var(--font-weight-semibold);
+}
+
 /* Dark theme adjustments */
-.dark-mode {
+.dark-mode .dashboard-container,
+.dark-mode .authenticated-layout {
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
 }
 
-.dark-mode h1, 
-.dark-mode h2, 
-.dark-mode h3, 
-.dark-mode h4, 
-.dark-mode h5, 
-.dark-mode h6 {
+.dark-mode .dashboard-container h1, 
+.dark-mode .dashboard-container h2, 
+.dark-mode .dashboard-container h3, 
+.dark-mode .dashboard-container h4, 
+.dark-mode .dashboard-container h5, 
+.dark-mode .dashboard-container h6 {
+  color: var(--primary);
+}
+
+.dark-mode .dashboard-container p {
   color: var(--text-primary);
 }
 
-.dark-mode p {
+.dark-mode .dashboard-container .service-card,
+.dark-mode .dashboard-container .dashboard-section,
+.dark-mode .dashboard-container .kpi-card,
+.dark-mode .dashboard-container .action-card {
+  background-color: var(--card-bg);
   color: var(--text-primary);
+}
+
+.dark-mode .dashboard-container input, 
+.dark-mode .dashboard-container select, 
+.dark-mode .dashboard-container textarea {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+/* === ACCIONES RAPIDAS CARDS IMPROVEMENTS === */
+.dashboard-container .action-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2rem;
+}
+
+.dashboard-container .action-card__description {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin-bottom: 2rem;
+  flex-grow: 1;
+}
+
+.dashboard-container .action-card__button {
+  font-size: 0.875rem;
+  white-space: normal;
+  margin-top: auto;
+  width: 100%;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
 }

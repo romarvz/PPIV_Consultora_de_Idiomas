@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import { useNavigate } from 'react-router-dom'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
+import '../../styles/variables.css'
+import '../../styles/auth.css'
+import '../../styles/charts.css'
 
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
 import ReportsView from '../../components/ReportsView'
-import AdminHeader from '../../components/common/AdminHeader'
-import CalendarView from '../../components/admin/CalendarView.jsx'
+import AuthNavbar from '../../components/common/AuthNavbar'
+
 import CourseManagementPage from './CourseManagementPage';
+import SystemOverviewCharts from '../../components/charts/SystemOverviewCharts';
 import api from '../../services/api'
 import { routes } from '../../utils/routes'
 // React Icons - Updated for better UI
@@ -166,7 +170,7 @@ const AdminDashboard = () => {
 
   // Show forced password change if required
   if (showPasswordChange) {
-    return <ForcChange onPasswordChanged={handlePasswordChanged} />
+    return <ForcePasswordChange onPasswordChanged={handlePasswordChanged} />
   }
 
 
@@ -185,135 +189,80 @@ const AdminDashboard = () => {
 
   // Show students management
   if (showStudentsManagement) {
-    return (<div className="full-page-view">
-        <div className="full-page-view__close-wrapper">
-          <button onClick={() => setShowStudentsManagement(false)} className="full-page-view__close-btn">
-            ← Volver al Dashboard
-          </button>
+    React.useEffect(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+    return (
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} />
+          <StudentsManagement onBack={() => setShowStudentsManagement(false)} />
         </div>
-      
-        <StudentsManagement />
-      </div>
+      </section>
     )
   }
 
   // Show teachers management
   if (showTeachersManagement) {
+    React.useEffect(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
     return (
-      <div className="full-page-view">
-        <div className="full-page-view__close-wrapper">
-          <button onClick={() => setShowTeachersManagement(false)} className="full-page-view__close-btn">
-            ← Volver al Dashboard
-          </button>
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} />
+          <TeachersManagement />
         </div>
-        <TeachersManagement />
-      </div>
+      </section>
     )
   }
 
   // Show course management
   if (showCourseManagement) {
+    React.useEffect(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
     return (
-      <div className="full-page-view">
-        <div className="full-page-view__close-wrapper">
-          <button 
-            onClick={() => setShowCourseManagement(false)} 
-            className="full-page-view__close-btn"
-          >
-            ← Volver al Dashboard
-          </button>
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} />
+          <CourseManagementPage />
         </div>
-        <CourseManagementPage />
-      </div>
+      </section>
     )
   }
 
   // Show reports
   if (showReports) {
-    return <ReportsView onClose={() => setShowReports(false)} />
+    React.useEffect(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+    return (
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} />
+          <ReportsView onClose={() => setShowReports(false)} />
+        </div>
+      </section>
+    )
   }
 
   return (
     <section className="section visible">
       <div className="container dashboard-container">
         {/* Header */}
-        <AdminHeader user={user} onLogout={handleLogout} />
-        
-        <div className="dashboard-section">
-          <h3 className="dashboard-section__title">
-            <FaCalendarAlt /> Calendario de Clases
-          </h3>
-          <CalendarView />
-        </div>
+        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
         
 
-        {/* KPI Cards */}
-        <div className="dashboard-section">
-          <h3 className="dashboard-section__title">Overview del Sistema</h3>
-          
-          {loading ? (
-            <div className="loading-state">
-              <p>Cargando estadísticas...</p>
-            </div>
-          ) : (
-            <div className="dashboard-grid">
-              {/* --- Tarjeta 1: Total Estudiantes  */}
-              <div className="service-card kpi-card kpi-card--students">
-                <div className="kpi-card__icon"><FaUsers /></div>
-                <h3 className="kpi-card__value">{stats.totalStudents}</h3>
-                <p className="kpi-card__label">Total Estudiantes</p>
-                <div className="kpi-card__details">
-                  <div>Activos: {stats.activeStudents}</div>
-                  <div>Inactivos: {stats.totalStudents - stats.activeStudents}</div>
-                </div>
-              </div>
 
-              {/* --- Tarjeta 2: Total Profesores --- */}
-              <div className="service-card kpi-card kpi-card--teachers">
-                <div className="kpi-card__icon"><FaChalkboardTeacher /></div>
-                <h3 className="kpi-card__value">{stats.totalTeachers}</h3>
-                <p className="kpi-card__label">Total Profesores</p>
-                <div className="kpi-card__details">
-                  <div>Activos: {stats.activeTeachers}</div>
-                  <div>Especialidades: {stats.uniqueSpecialties}</div>
-                </div>
-              </div>
-
-              {/* --- Tarjeta 3: Especialidades --- */}
-              <div className="service-card kpi-card kpi-card--specialties">
-                <div className="kpi-card__icon"><FaBookOpen /></div>
-                <h3 className="kpi-card__value">{stats.uniqueSpecialties}</h3>
-                <p className="kpi-card__label">Especialidades</p>
-                <div className="kpi-card__details">
-                  {stats.teacherSpecialties.length > 0 ? (
-                    <>
-                      {stats.teacherSpecialties.slice(0, 3).join(', ')}
-                      {stats.teacherSpecialties.length > 3 && ` +${stats.teacherSpecialties.length - 3} más`}
-                    </>
-                  ) : (
-                    'Especialidades variadas'
-                  )}
-                </div>
-              </div>
-
-              {/* --- Tarjeta 4: Ingresos del Mes --- */}
-              <div className="service-card kpi-card kpi-card--revenue">
-                <div className="kpi-card__icon"><FaDollarSign /></div>
-                <h3 className="kpi-card__value">${stats.monthlyRevenue.toLocaleString()}</h3>
-                <p className="kpi-card__label">Ingresos del Mes</p>
-                <div className="kpi-card__details">
-                  <div>Pagos pendientes: {stats.pendingPayments.count}</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* System Overview Charts */}
+        <SystemOverviewCharts stats={stats} loading={loading} />
 
         {/* Quick Actions */}
         <div className="dashboard-section">
-          <h3 className="dashboard-section__title"><FaTasks /> Acciones Rápidas</h3>
+          <h3 className="dashboard-section__title">Acciones Rápidas</h3>
           
-          <div className="dashboard-grid">
+          <div className="quick-actions-grid">
             {/* --- Tarjeta 1: Gestión de Estudiantes --- */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaUserGraduate /></div>
@@ -350,19 +299,7 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* --- Tarjeta 4: Pagos y Finanzas --- */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaCreditCard /></div>
-              <h4 className="action-card__title">Pagos y Finanzas</h4>
-              <p className="action-card__description">
-                Gestionar pagos, generar facturas, revisar los ingresos y controlar las deudas.
-              </p>
-              <button className="cta-btn action-card__button" onClick={() => navigate(routes.DASHBOARD.FINANCIAL)}>
-                Ver Finanzas
-              </button>
-            </div>
-            
-            {/* --- Tarjeta 5: Reportes --- */}
+            {/* --- Tarjeta 4: Reportes --- */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaChartLine /></div>
               <h4 className="action-card__title">Reportes</h4>
@@ -380,7 +317,31 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* --- Tarjeta 6: Configuración --- */}
+            {/* --- Tarjeta 5: Pagos y Finanzas --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaCreditCard /></div>
+              <h4 className="action-card__title">Pagos y Finanzas</h4>
+              <p className="action-card__description">
+                Gestionar pagos, generar facturas, revisar los ingresos y controlar las deudas.
+              </p>
+              <button className="cta-btn action-card__button" onClick={() => navigate(routes.DASHBOARD.FINANCIAL)}>
+                Ver Finanzas
+              </button>
+            </div>
+            
+            {/* --- Tarjeta 6: Panel Corporativo --- */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaBuilding /></div>
+              <h4 className="action-card__title">Panel Corporativo</h4>
+              <p className="action-card__description">
+                Vista empresarial, gestión de empleados, pagos corporativos
+              </p>
+              <button className="cta-btn action-card__button" onClick={() => navigate('/dashboard/company')}>
+                Ver Panel Corporativo
+              </button>
+            </div>
+            
+            {/* --- Tarjeta 7: Configuración --- */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaCog /></div>
               <h4 className="action-card__title">Configuración</h4>
@@ -392,31 +353,7 @@ const AdminDashboard = () => {
               </button>
             </div>
 
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaBuilding />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Panel Corporativo
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Vista empresarial, gestión de empleados, pagos corporativos
-              </p>
-              <button 
-                className="cta-btn" 
-                style={{ 
-                  width: '100%',
-                  transform: 'none !important',
-                  transition: 'none !important'
-                }}
-                onClick={() => {
-                  console.log('Navigating to CompanyDashboard')
-                  navigate('/dashboard/company')
-                }}
-              >
-                Ver Panel Corporativo
-              </button>
-            </div>
+
           </div>
         </div>
         {/* Admin Profile Info */}
@@ -424,18 +361,27 @@ const AdminDashboard = () => {
           <h3 className="profile-info-card__title" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
             Información Personal
           </h3>
-          <div className="profile-info-grid"> {/* Nueva clase para la grilla interna */}
-            <div>
-              <p><strong>Nombre:</strong> {user?.firstName} {user?.lastName}</p>
-              <p><strong>Email:</strong> {user?.email}</p>
+          <div className="profile-info-grid">
+            <div className="profile-info-item">
+              <span className="profile-label">Nombre:</span>
+              <span className="profile-value">{user?.firstName} {user?.lastName}</span>
             </div>
-            <div>
-              <p><strong>DNI:</strong> {user?.dni}</p>
-              <p><strong>Rol:</strong> Administrador</p>
+            <div className="profile-info-item">
+              <span className="profile-label">Email:</span>
+              <span className="profile-value">{user?.email}</span>
+            </div>
+            <div className="profile-info-item">
+              <span className="profile-label">DNI:</span>
+              <span className="profile-value">{user?.dni}</span>
+            </div>
+            <div className="profile-info-item">
+              <span className="profile-label">Rol:</span>
+              <span className="profile-value">Administrador</span>
             </div>
             {user?.phone && (
-              <div>
-                <p><strong>Teléfono:</strong> {user.phone}</p>
+              <div className="profile-info-item">
+                <span className="profile-label">Teléfono:</span>
+                <span className="profile-value">{user.phone}</span>
               </div>
             )}
           </div>

@@ -3,18 +3,17 @@
 :root {
   /* === TYPOGRAPHY === */
   --font-family-primary: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   
   /* Font Sizes */
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-lg: 1.125rem;   /* 18px */
-  --font-size-xl: 1.25rem;    /* 20px */
-  --font-size-2xl: 1.5rem;    /* 24px */
-  --font-size-3xl: 1.875rem;  /* 30px */
-  --font-size-4xl: 2.25rem;   /* 36px */
-  --font-size-5xl: 3rem;      /* 48px */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
   
   /* Font Weights */
   --font-weight-light: 300;
@@ -30,7 +29,6 @@
   --line-height-relaxed: 1.75;
 
   /* === COLORS === */
-  /* Primary Brand Colors */
   --primary: #0A2C59;
   --primary-light: #2c5aa0;
   --primary-dark: #061a36;
@@ -102,17 +100,6 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
-
-  /* Legacy compatibility */
-  --primary-color: var(--primary);
-  --text-color-dark: var(--text-primary);
-  --text-color-medium: var(--text-secondary);
-  --text-color-light: var(--text-muted);
-  --card-background: var(--card-bg);
-  --card-border-radius: var(--border-radius);
-  --card-shadow: var(--shadow);
-  --dashboard-background: var(--bg-secondary);
-  --dashboard-padding: var(--spacing-xl);
 }
 
 /* === DARK THEME === */
@@ -130,45 +117,4 @@
   
   --input-bg: #4a5568;
   --input-border: #718096;
-}
-
-/* === GLOBAL FONT APPLICATION === */
-* {
-  font-family: var(--font-family-primary);
-}
-
-body {
-  font-family: var(--font-family-primary);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-normal);
-  line-height: var(--line-height-normal);
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-tight);
-}
-
-button {
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-medium);
-}
-
-input, select, textarea {
-  font-family: var(--font-family-primary);
-  font-size: var(--font-size-base);
-}
-
-/* === COURSE BUTTON FIXES === */
-.course-card button,
-button[class*="course"] {
-  background: var(--primary) !important;
-  color: white !important;
-}
-
-.course-card button:hover,
-button[class*="course"]:hover {
-  background: var(--secondary) !important;
-  color: white !important;
 }

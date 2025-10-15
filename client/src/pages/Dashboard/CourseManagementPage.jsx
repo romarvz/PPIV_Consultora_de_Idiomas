@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import apiAdapter from '../../services/apiAdapter';
 import CourseFormModal from '../../components/courses/CourseFormModal';
-import { FaCheckCircle } from 'react-icons/fa';
+import CalendarView from '../../components/admin/CalendarView.jsx';
+import { FaCheckCircle, FaCalendarAlt } from 'react-icons/fa';
 
 const CourseManagementPage = () => {
   // Component logic
@@ -59,6 +60,13 @@ const CourseManagementPage = () => {
         <button className="cta-btn" onClick={() => handleOpenModal()}>
           + Crear Nuevo Curso
         </button>
+      </div>
+      
+      <div className="dashboard-section" style={{ marginBottom: '2rem' }}>
+        <h3 className="dashboard-section__title">
+          <FaCalendarAlt /> Calendario de Clases
+        </h3>
+        <CalendarView />
       </div>
       
       <table className="course-management-page__table">

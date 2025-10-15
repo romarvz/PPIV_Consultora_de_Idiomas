@@ -28,14 +28,7 @@ import FinancialDashboard from './pages/Dashboard/FinancialDashboard'
 
 // Centralized route paths to avoid typos and make changes easier
 import { routes } from './utils/routes'
-import './styles/variables.css';
 import './App.css'
-import './styles/auth.css';
-import './styles/courseModals.css';
-import './styles/courseCards.css';
-import './styles/courseForm.css';
-import './styles/adminDashboard.css'; 
-import './styles/courseManagement.css';
 
 function App() {
   console.log('App component rendering...')
