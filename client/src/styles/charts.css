@@ -275,7 +275,7 @@
 .dashboard-container {
   margin-top: 120px;
   padding: 2rem;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   min-height: 100vh;
 }
 

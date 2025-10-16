@@ -164,7 +164,18 @@ const TeacherDashboard = () => {
       {/* Dashboard Cards */}
       <div className="dashboard-cards-grid dashboard-cards-grid--large">
         {/* Today's Classes */}
-        <div className="dashboard-card">
+        <div className="dashboard-card" style={{
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <div className="dashboard-card__header">
             <FaCalendarCheck className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mis Clases de Hoy</h4>
@@ -200,7 +211,18 @@ const TeacherDashboard = () => {
         </div>
 
         {/* My Students */}
-        <div className="dashboard-card">
+        <div className="dashboard-card" style={{
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <div className="dashboard-card__header">
             <FaUsers className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mis Estudiantes</h4>
@@ -234,7 +256,7 @@ const TeacherDashboard = () => {
                 <div style={{ 
                   width: `${student.progress}%`, 
                   height: '100%', 
-                  backgroundColor: student.progress > 70 ? '#28a745' : student.progress > 40 ? '#ffc107' : '#dc3545',
+                  backgroundColor: student.progress > 70 ? 'var(--primary)' : student.progress > 40 ? 'var(--warning)' : 'var(--error)',
                   borderRadius: '2px'
                 }}></div>
               </div>
@@ -246,8 +268,8 @@ const TeacherDashboard = () => {
           <div style={{ textAlign: 'center', marginTop: '10px' }}>
             <button style={{
               background: 'transparent',
-              color: '#2c5aa0',
-              border: '1px solid #2c5aa0',
+              color: 'var(--primary)',
+              border: '1px solid var(--primary)',
               padding: '5px 15px',
               borderRadius: '3px',
               fontSize: '12px',
@@ -259,7 +281,18 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Teacher Performance */}
-        <div className="dashboard-card">
+        <div className="dashboard-card" style={{
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <div className="dashboard-card__header">
             <FaStar className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mi Rendimiento</h4>
@@ -267,13 +300,13 @@ const TeacherDashboard = () => {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
             <div style={{ textAlign: 'center', padding: '15px', background: '#f8f9fa', borderRadius: '5px' }}>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#2c5aa0' }}>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--primary)' }}>
                 {mockTeacherStats.todayClasses}
               </div>
               <div style={{ fontSize: '12px', color: '#666' }}>Clases Hoy</div>
             </div>
             <div style={{ textAlign: 'center', padding: '15px', background: '#f8f9fa', borderRadius: '5px' }}>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#28a745' }}>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--primary)' }}>
                 {mockTeacherStats.averageRating}
               </div>
               <div style={{ fontSize: '12px', color: '#666' }}>Calificación</div>
@@ -296,18 +329,18 @@ const TeacherDashboard = () => {
               <div style={{ 
                 width: `${(mockTeacherStats.activeStudents / mockTeacherStats.totalStudents) * 100}%`, 
                 height: '100%', 
-                backgroundColor: '#2c5aa0',
+                backgroundColor: 'var(--primary)',
                 borderRadius: '4px'
               }}></div>
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', padding: '10px', background: '#e8f5e8', borderRadius: '5px' }}>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#28a745' }}>
+          <div style={{ textAlign: 'center', padding: '10px', background: 'var(--primary-light)', borderRadius: '5px', color: 'white' }}>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary)' }}>
               <FaDollarSign style={{ marginRight: '5px' }} />
               ${mockTeacherStats.monthlyEarnings.toLocaleString()}
             </div>
-            <div style={{ fontSize: '12px', color: '#666' }}>Ganancias este mes</div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}>Ganancias este mes</div>
           </div>
         </div>
       </div>

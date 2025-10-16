@@ -176,7 +176,18 @@ const SystemOverviewCharts = ({ stats, loading }) => {
       
       <div className="charts-grid">
         {/* Students Distribution Chart */}
-        <div className="chart-card">
+        <div className="chart-card" style={{
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <h4 className="chart-title">Estudiantes</h4>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
@@ -211,7 +222,18 @@ const SystemOverviewCharts = ({ stats, loading }) => {
         </div>
 
         {/* Teachers Chart */}
-        <div className="chart-card">
+        <div className="chart-card" style={{
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <h4 className="chart-title">Profesores</h4>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={teachersData} margin={{ top: 20, right: 10, left: 10  , bottom: 25 }}>
@@ -243,7 +265,18 @@ const SystemOverviewCharts = ({ stats, loading }) => {
         </div>
 
         {/* Specialties Chart */}
-        <div className="chart-card">
+        <div className="chart-card" style={{
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <h4 className="chart-title">Top Especialidades</h4>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart 
@@ -279,7 +312,18 @@ const SystemOverviewCharts = ({ stats, loading }) => {
         </div>
 
         {/* Revenue Trend Chart */}
-        <div className="chart-card">
+        <div className="chart-card" style={{
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <h4 className="chart-title">Tendencia de Ingresos</h4>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={revenueData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>

@@ -398,21 +398,72 @@ const TeachersManagement = ({ onBack }) => {
   return (
     <div style={{ padding: '2rem', background: 'var(--bg-secondary)', minHeight: '100vh' }}>
       {/* Header */}
-      <div className="dashboard-section">
-        <h3 className="dashboard-section__title">Gestión de Profesores</h3>
+      <div style={{ marginBottom: '2rem' }}>
+        <h3 style={{ 
+          color: 'var(--text-primary)', 
+          fontSize: '1.75rem', 
+          fontWeight: '700', 
+          margin: '0',
+          background: 'transparent'
+        }}>Gestión de Profesores</h3>
       </div>
 
       {/* Estadísticas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
+        <div style={{ 
+          background: 'var(--card-bg)', 
+          padding: '1.5rem', 
+          borderRadius: '12px', 
+          boxShadow: 'var(--shadow-md)',
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <h3 style={{ color: '#3498db', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Total de Profesores</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'var(--text-primary)' }}>{stats.total}</p>
         </div>
-        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
+        <div style={{ 
+          background: 'var(--card-bg)', 
+          padding: '1.5rem', 
+          borderRadius: '12px', 
+          boxShadow: 'var(--shadow-md)',
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Profesores Activos</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'var(--text-primary)' }}>{stats.active}</p>
         </div>
-        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
+        <div style={{ 
+          background: 'var(--card-bg)', 
+          padding: '1.5rem', 
+          borderRadius: '12px', 
+          boxShadow: 'var(--shadow-md)',
+          transition: 'all 0.3s ease',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+        }}>
           <h3 style={{ color: '#e74c3c', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Profesores Inactivos</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'var(--text-primary)' }}>{stats.inactive}</p>
         </div>
@@ -447,7 +498,7 @@ const TeachersManagement = ({ onBack }) => {
           <button
             onClick={handleNewTeacher}
             style={{
-              background: 'linear-gradient(135deg, #27ae60, #229954)',
+              background: 'var(--primary)',
               color: 'white',
               border: 'none',
               padding: '0.75rem 1.5rem',
