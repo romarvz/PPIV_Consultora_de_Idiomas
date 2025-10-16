@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
-import StudentHeader from '../../components/common/StudentHeader'
+import AuthNavbar from '../../components/common/AuthNavbar'
+import '../../styles/variables.css'
+import '../../styles/auth.css'
+import '../../styles/charts.css'
 import { 
   FaCalendarAlt, 
   FaChartLine, 
@@ -12,7 +15,7 @@ import {
   FaSignOutAlt,
   FaUser
 } from 'react-icons/fa'
-import '../../styles/adminDashboard.css'
+
 
 // Mock data for student dashboard cards
 const mockClasses = [
@@ -100,7 +103,7 @@ const StudentDashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <StudentHeader user={user} onLogout={handleLogout} />
+        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
 
       {/* User Info */}
       <div className="dashboard-info-card">

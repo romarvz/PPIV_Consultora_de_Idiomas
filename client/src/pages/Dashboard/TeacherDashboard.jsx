@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
-import TeacherHeader from '../../components/common/TeacherHeader'
+import AuthNavbar from '../../components/common/AuthNavbar'
+import '../../styles/variables.css'
+import '../../styles/auth.css'
+import '../../styles/charts.css'
 import { 
   FaChalkboardTeacher, 
   FaUsers, 
@@ -14,7 +17,7 @@ import {
   FaGraduationCap,
   FaStar
 } from 'react-icons/fa'
-import '../../styles/adminDashboard.css'
+
 
 // Mock data for teacher dashboard
 const mockTodayClasses = [
@@ -137,7 +140,7 @@ const TeacherDashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <TeacherHeader user={user} onLogout={handleLogout} />
+        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
 
       {/* Teacher Info */}
       <div className="dashboard-info-card">

@@ -3,7 +3,7 @@ import { FaMoon, FaSun, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { routes } from '../../utils/routes';
 
-const AuthNavbar = ({ user, onLogout, showBackButton = true }) => {
+const AuthNavbar = ({ user, onLogout, showBackButton = true, onBack }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -59,11 +59,15 @@ const AuthNavbar = ({ user, onLogout, showBackButton = true }) => {
           </div>
         </div>
 
-        {showBackButton && !isMainDashboard && (
+        {showBackButton && (
           <button 
             onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
-              navigate('/dashboard/main');
+              if (onBack) {
+                onBack();
+              } else {
+                navigate('/dashboard/admin');
+              }
             }}
             className="auth-navbar__back-btn"
           >

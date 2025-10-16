@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import apiAdapter from '../services/apiAdapter'
+import apiAdapter from '../../services/apiAdapter'
 import { FaFileExport, FaSpinner } from 'react-icons/fa'
 
-const ReportsView = ({ onClose }) => {
+const ReportsDashboard = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('academic')
   const [loading, setLoading] = useState(false)
   const [academicData, setAcademicData] = useState(null)
@@ -145,117 +145,93 @@ const ReportsView = ({ onClose }) => {
   }
 
   return (
-    <div className="reports-container" style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'var(--bg-secondary)',
-      zIndex: 9999,
-      overflow: 'auto',
-      padding: '1.5rem'
-    }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: 'var(--primary)', margin: 0 }}>
-              Reportes
-            </h1>
-            <button
-              onClick={onClose}
-              className="cta-btn"
-              style={{
-                transform: 'none'
-              }}
-            >
-              ← Volver al Dashboard
-            </button>
-          </div>
-          <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-            Visualiza y exporta reportes académicos y financieros
-          </p>
-        </div>
+    <div>
+      {/* Header */}
+      <div className="dashboard-section">
+        <h3 className="dashboard-section__title">Reportes</h3>
+      </div>
 
-        {/* Tabs */}
-        <div className="reports-card" style={{
-          background: 'var(--card-bg)',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          marginBottom: '1.5rem',
-          border: '1px solid var(--input-border)'
-        }}>
-          <div style={{ borderBottom: '1px solid #e5e7eb' }}>
-            <div style={{ display: 'flex' }}>
-              <button
-                onClick={() => setActiveTab('academic')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '1rem 1.5rem',
-                  fontWeight: '600',
-                  fontSize: '1.1rem',
-                  border: 'none',
-                  background: activeTab === 'academic' ? 'var(--primary)' : 'transparent',
-                  cursor: 'pointer',
-                  borderBottom: activeTab === 'academic' ? '2px solid var(--primary)' : 'none',
-                  color: activeTab === 'academic' ? 'white' : 'var(--text-secondary)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Reporte Académico
-              </button>
-              <button
-                onClick={() => setActiveTab('financial')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '1rem 1.5rem',
-                  fontWeight: '600',
-                  fontSize: '1.1rem',
-                  border: 'none',
-                  background: activeTab === 'financial' ? 'var(--primary)' : 'transparent',
-                  cursor: 'pointer',
-                  borderBottom: activeTab === 'financial' ? '2px solid var(--primary)' : 'none',
-                  color: activeTab === 'financial' ? 'white' : 'var(--text-secondary)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Reporte Financiero
-              </button>
-            </div>
-          </div>
-
-          {/* Export Button */}
-          <div style={{
-            padding: '1rem',
-            background: 'var(--bg-secondary)',
-            borderBottom: '1px solid var(--input-border)',
-            display: 'flex',
-            justifyContent: 'flex-end'
-          }}>
+      {/* Tabs */}
+      <div style={{
+        background: 'var(--card-bg)',
+        borderRadius: '12px',
+        boxShadow: 'var(--shadow-md)',
+        overflow: 'hidden'
+      }}>
+        <div style={{ borderBottom: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex' }}>
             <button
-              onClick={handleExportCSV}
-              className="cta-btn"
+              onClick={() => setActiveTab('academic')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                transform: 'none',
-                padding: '0.5rem 1rem',
-                fontSize: '0.8rem'
+                padding: '1rem 1.5rem',
+                fontWeight: '600',
+                fontSize: '1rem',
+                border: 'none',
+                background: activeTab === 'academic' ? 'var(--primary)' : 'transparent',
+                cursor: 'pointer',
+                color: activeTab === 'academic' ? 'white' : 'var(--text-secondary)',
+                transition: 'all 0.2s ease',
+                minWidth: '200px'
               }}
             >
-              <FaFileExport size={14} />
-              Exportar a CSV
+              Reporte Académico
+            </button>
+            <button
+              onClick={() => setActiveTab('financial')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '1rem 1.5rem',
+                fontWeight: '600',
+                fontSize: '1rem',
+                border: 'none',
+                background: activeTab === 'financial' ? 'var(--primary)' : 'transparent',
+                cursor: 'pointer',
+                color: activeTab === 'financial' ? 'white' : 'var(--text-secondary)',
+                transition: 'all 0.2s ease',
+                minWidth: '200px'
+              }}
+            >
+              Reporte Financiero
             </button>
           </div>
+        </div>
 
-          {/* Content */}
-          <div style={{ padding: '1.5rem' }}>
+        {/* Export Button */}
+        <div style={{
+          padding: '1rem',
+          background: 'var(--bg-secondary)',
+          borderBottom: '1px solid var(--border-color)',
+          display: 'flex',
+          justifyContent: 'flex-end'
+        }}>
+          <button
+            onClick={handleExportCSV}
+            style={{
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <FaFileExport /> Exportar a CSV
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: '1.5rem' }}>
             {loading ? (
               <div style={{ 
                 textAlign: 'center', 
@@ -279,6 +255,69 @@ const ReportsView = ({ onClose }) => {
                 }}>
                   Progreso Académico de Estudiantes
                 </h2>
+
+                {/* Academic Performance Chart */}
+                <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
+                    {/* Progress Ring Chart */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                        <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color)" strokeWidth="8" />
+                          <circle 
+                            cx="60" 
+                            cy="60" 
+                            r="50" 
+                            fill="none" 
+                            stroke="#27ae60" 
+                            strokeWidth="8"
+                            strokeDasharray={`${(academicData?.averageAttendance || 0) * 3.14} 314`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>{academicData?.averageAttendance || 0}%</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Promedio</div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Performance Distribution */}
+                    <div>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Excelente (85%+)</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#27ae60' }}>{academicData?.students?.filter(s => s.attendance >= 85).length || 0}</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: 'var(--border-color)', borderRadius: '4px' }}>
+                          <div style={{ width: `${((academicData?.students?.filter(s => s.attendance >= 85).length || 0) / (academicData?.total || 1)) * 100}%`, height: '8px', background: '#27ae60', borderRadius: '4px' }} />
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Bueno (70-84%)</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#f39c12' }}>{academicData?.students?.filter(s => s.attendance >= 70 && s.attendance < 85).length || 0}</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: 'var(--border-color)', borderRadius: '4px' }}>
+                          <div style={{ width: `${((academicData?.students?.filter(s => s.attendance >= 70 && s.attendance < 85).length || 0) / (academicData?.total || 1)) * 100}%`, height: '8px', background: '#f39c12', borderRadius: '4px' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Necesita apoyo (&lt;70%)</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#e74c3c' }}>{academicData?.students?.filter(s => s.attendance < 70).length || 0}</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: 'var(--border-color)', borderRadius: '4px' }}>
+                          <div style={{ width: `${((academicData?.students?.filter(s => s.attendance < 70).length || 0) / (academicData?.total || 1)) * 100}%`, height: '8px', background: '#e74c3c', borderRadius: '4px' }} />
+                        </div>
+                      </div>
+                      <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: '6px', textAlign: 'center' }}>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Total: </span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{academicData?.total || 0} estudiantes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Filters */}
                 <div style={{
@@ -345,16 +384,16 @@ const ReportsView = ({ onClose }) => {
                 
                 {/* Academic Table */}
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--card-bg)' }}>
+                  <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ background: '#f3f4f6' }}>
+                      <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
                         <th 
                           onClick={() => handleSort('name')}
                           style={{ 
                             textAlign: 'left', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -365,9 +404,9 @@ const ReportsView = ({ onClose }) => {
                           onClick={() => handleSort('nivel')}
                           style={{ 
                             textAlign: 'center', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -378,9 +417,9 @@ const ReportsView = ({ onClose }) => {
                           onClick={() => handleSort('attendance')}
                           style={{ 
                             textAlign: 'center', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -391,16 +430,16 @@ const ReportsView = ({ onClose }) => {
                           onClick={() => handleSort('attendance')}
                           style={{ 
                             textAlign: 'center', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
                         >
                           Asistencia (%) {sortConfig.key === 'attendance' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ' ⇅'}
                         </th>
-                        <th style={{ textAlign: 'center', padding: '0.75rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
                           Estado
                         </th>
                       </tr>
@@ -408,20 +447,19 @@ const ReportsView = ({ onClose }) => {
                     <tbody>
                       {getFilteredAndSortedData(academicData)?.map((student, index) => (
                         <tr key={student._id} style={{ 
-                          borderBottom: '1px solid #e5e7eb',
-                          background: index % 2 === 0 ? 'white' : '#f9fafb'
-                        }}>
-                          <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                          borderBottom: '1px solid var(--border-color)'
+                        }} className="table-row-hover">
+                          <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>
                             {student.firstName} {student.lastName}
                           </td>
-                          <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                          <td style={{ padding: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
                             {student.nivel}
                           </td>
-                          <td style={{ padding: '0.75rem', textAlign: 'left' }}>
+                          <td style={{ padding: '1rem', textAlign: 'left' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <div style={{
                                 flex: 1,
-                                background: '#e5e7eb',
+                                background: 'var(--border-color)',
                                 borderRadius: '9999px',
                                 height: '8px',
                                 maxWidth: '100px'
@@ -440,18 +478,19 @@ const ReportsView = ({ onClose }) => {
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                          <td style={{ padding: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
                             {student.attendance}%
                           </td>
-                          <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                          <td style={{ padding: '1rem', textAlign: 'center' }}>
                             <span style={{
                               display: 'inline-block',
-                              width: '100px',
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '9999px',
+                              minWidth: '120px',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
                               fontSize: '0.75rem',
-                              fontWeight: '500',
+                              fontWeight: '600',
                               textAlign: 'center',
+                              textTransform: 'uppercase',
                               background: student.attendance >= 85 ? 'var(--success-light)' : 
                                          student.attendance >= 70 ? 'var(--warning-light)' : 'var(--error-light)',
                               color: student.attendance >= 85 ? 'var(--success-dark)' : 
@@ -466,39 +505,6 @@ const ReportsView = ({ onClose }) => {
                     </tbody>
                   </table>
                 </div>
-
-                {/* Summary Statistics */}
-                <div style={{
-                  marginTop: '1.5rem',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '1rem'
-                }}>
-                  <div style={{ background: 'var(--info-light)', padding: '1rem', borderRadius: '8px' }}>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--info)', fontWeight: '500', margin: 0 }}>
-                      Promedio General
-                    </p>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--info-dark)', margin: '0.25rem 0 0 0' }}>
-                      {academicData?.averageAttendance || 0}%
-                    </p>
-                  </div>
-                  <div style={{ background: 'var(--success-light)', padding: '1rem', borderRadius: '8px' }}>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--success)', fontWeight: '500', margin: 0 }}>
-                      Asistencia Promedio
-                    </p>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--success-dark)', margin: '0.25rem 0 0 0' }}>
-                      {academicData?.averageAttendance || 0}%
-                    </p>
-                  </div>
-                  <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--input-border)' }}>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: '500', margin: 0 }}>
-                      Total Estudiantes
-                    </p>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)', margin: '0.25rem 0 0 0' }}>
-                      {academicData?.total || 0}
-                    </p>
-                  </div>
-                </div>
               </div>
             ) : (
               <div>
@@ -511,51 +517,65 @@ const ReportsView = ({ onClose }) => {
                   Reporte Financiero
                 </h2>
 
-                {/* Financial Summary Cards */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: '1rem',
-                  marginBottom: '1.5rem'
-                }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #16a34a, #15803d)',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    color: 'white'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <p style={{ color: 'rgba(255,255,255,0.8)', margin: 0 }}>Ingresos Totales</p>
+                {/* Financial Overview Chart */}
+                <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
+                    {/* Income vs Pending Chart */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ position: 'relative', width: '140px', height: '140px' }}>
+                        <svg width="140" height="140" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle cx="70" cy="70" r="60" fill="none" stroke="var(--border-color)" strokeWidth="12" />
+                          <circle 
+                            cx="70" 
+                            cy="70" 
+                            r="60" 
+                            fill="none" 
+                            stroke="#27ae60" 
+                            strokeWidth="12"
+                            strokeDasharray={`${((financialData?.totalIncome || 0) / ((financialData?.totalIncome || 0) + (financialData?.pendingIncome || 0)) || 0) * 377} 377`}
+                            strokeLinecap="round"
+                          />
+                          <circle 
+                            cx="70" 
+                            cy="70" 
+                            r="60" 
+                            fill="none" 
+                            stroke="#e74c3c" 
+                            strokeWidth="12"
+                            strokeDasharray={`${((financialData?.pendingIncome || 0) / ((financialData?.totalIncome || 0) + (financialData?.pendingIncome || 0)) || 0) * 377} 377`}
+                            strokeDashoffset={`-${((financialData?.totalIncome || 0) / ((financialData?.totalIncome || 0) + (financialData?.pendingIncome || 0)) || 0) * 377}`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                          <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>{((financialData?.totalIncome || 0) / ((financialData?.totalIncome || 0) + (financialData?.pendingIncome || 0)) * 100).toFixed(1)}%</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cobrado</div>
+                        </div>
+                      </div>
                     </div>
-                    <p style={{ fontSize: '1.875rem', fontWeight: 'bold', margin: 0 }}>
-                      {formatCurrency(financialData?.totalIncome || 0)}
-                    </p>
-                  </div>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #ea580c, #dc2626)',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    color: 'white'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <p style={{ color: 'rgba(255,255,255,0.8)', margin: 0 }}>Pagos Pendientes</p>
+                    {/* Financial Breakdown */}
+                    <div>
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <div style={{ width: '12px', height: '12px', background: '#27ae60', borderRadius: '50%' }} />
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '500' }}>Ingresos Cobrados</span>
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#27ae60', marginLeft: '1.5rem' }}>
+                          {formatCurrency(financialData?.totalIncome || 0)}
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <div style={{ width: '12px', height: '12px', background: '#e74c3c', borderRadius: '50%' }} />
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '500' }}>Pagos Pendientes</span>
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#e74c3c', marginLeft: '1.5rem' }}>
+                          {formatCurrency(financialData?.pendingIncome || 0)}
+                        </div>
+                      </div>
+
                     </div>
-                    <p style={{ fontSize: '1.875rem', fontWeight: 'bold', margin: 0 }}>
-                      {formatCurrency(financialData?.pendingIncome || 0)}
-                    </p>
-                  </div>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    color: 'white'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <p style={{ color: 'rgba(255,255,255,0.8)', margin: 0 }}>Tasa de Pago</p>
-                    </div>
-                    <p style={{ fontSize: '1.875rem', fontWeight: 'bold', margin: 0 }}>
-                      {((financialData?.totalIncome || 0) / ((financialData?.totalIncome || 0) + (financialData?.pendingIncome || 0)) * 100).toFixed(1)}%
-                    </p>
                   </div>
                 </div>
 
@@ -631,16 +651,16 @@ const ReportsView = ({ onClose }) => {
 
                 {/* Top Students Table */}
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ background: '#f3f4f6' }}>
+                      <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
                         <th 
                           onClick={() => handleSort('studentName')}
                           style={{ 
                             textAlign: 'left', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -651,9 +671,9 @@ const ReportsView = ({ onClose }) => {
                           onClick={() => handleSort('total')}
                           style={{ 
                             textAlign: 'center', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -664,9 +684,9 @@ const ReportsView = ({ onClose }) => {
                           onClick={() => handleSort('pending')}
                           style={{ 
                             textAlign: 'center', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -677,9 +697,9 @@ const ReportsView = ({ onClose }) => {
                           onClick={() => handleSort('percentage')}
                           style={{ 
                             textAlign: 'center', 
-                            padding: '0.75rem', 
+                            padding: '1rem', 
                             fontWeight: '600', 
-                            color: 'var(--text-primary)',
+                            color: 'var(--text-secondary)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -699,31 +719,33 @@ const ReportsView = ({ onClose }) => {
                             <tr 
                               onClick={() => toggleExpandedRow(student.id || index)}
                               style={{ 
-                                borderBottom: '1px solid var(--input-border)',
-                                background: index % 2 === 0 ? 'var(--card-bg)' : 'var(--bg-secondary)',
+                                borderBottom: '1px solid var(--border-color)',
                                 cursor: 'pointer'
                               }}
+                              className="table-row-hover"
                             >
-                              <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                              <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: '500' }}>
                                 <span style={{ marginRight: '0.5rem' }}>
                                   {isExpanded ? '▼' : '▶'}
                                 </span>
                                 {student.studentName}
                               </td>
-                              <td style={{ padding: '0.75rem', color: 'var(--success)', fontWeight: '600', textAlign: 'center' }}>
+                              <td style={{ padding: '1rem', color: 'var(--success)', fontWeight: '600', textAlign: 'center' }}>
                                 {formatCurrency(student.total)}
                               </td>
-                              <td style={{ padding: '0.75rem', color: 'var(--error)', fontWeight: '600', textAlign: 'center' }}>
+                              <td style={{ padding: '1rem', color: (student.pending || 0) === 0 ? 'var(--success)' : 'var(--error)', fontWeight: '600', textAlign: 'center' }}>
                                 {formatCurrency(student.pending || 0)}
                               </td>
-                              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                              <td style={{ padding: '1rem', textAlign: 'center' }}>
                                 <span style={{
                                   display: 'inline-block',
+                                  minWidth: '120px',
                                   padding: '0.25rem 0.75rem',
-                                  borderRadius: '9999px',
+                                  borderRadius: '12px',
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   textAlign: 'center',
+                                  textTransform: 'uppercase',
                                   background: percentagePaid >= 80 ? 'var(--success-light)' : 
                                              percentagePaid >= 60 ? 'var(--warning-light)' : 
                                              percentagePaid >= 40 ? '#fed7aa' : 'var(--error-light)',
@@ -799,8 +821,7 @@ const ReportsView = ({ onClose }) => {
           </div>
         </div>
       </div>
-    </div>
   )
 }
 
-export default ReportsView
+export default ReportsDashboard

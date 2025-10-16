@@ -9,7 +9,7 @@ import {
   FaEye
 } from 'react-icons/fa';
 import api from '../services/api';
-import AdminSectionHeader from './common/AdminSectionHeader';
+import { mockStudents } from '../services/mockData';
 
 const StudentsManagement = ({ onBack }) => {
   const [students, setStudents] = useState([]);
@@ -44,31 +44,56 @@ const StudentsManagement = ({ onBack }) => {
     try {
       setLoading(true);
       
-      // Debug: información del usuario
-      const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
-      console.log('Usuario logueado:', userInfo);
-      console.log('Rol del usuario:', userInfo.role);
-      console.log('Token disponible:', localStorage.getItem('token') ? 'Sí' : 'No');
+      // Use mock data and apply filters
+      let filteredStudents = [...mockStudents];
       
-      const queryParams = new URLSearchParams({
-        page: pagination.page,
-        limit: pagination.limit,
-        ...filters
-      });
-
-      const response = await api.get(`/students?${queryParams}`);
-      setStudents(response.data.data.students);
+      // Apply search filter
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        filteredStudents = filteredStudents.filter(student => 
+          student.firstName.toLowerCase().includes(searchTerm) ||
+          student.lastName.toLowerCase().includes(searchTerm) ||
+          student.email.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Apply status filter
+      if (filters.status) {
+        if (filters.status === 'active') {
+          filteredStudents = filteredStudents.filter(student => student.isActive);
+        } else if (filters.status === 'inactive') {
+          filteredStudents = filteredStudents.filter(student => !student.isActive);
+        }
+      }
+      
+      // Apply nivel filter
+      if (filters.nivel) {
+        filteredStudents = filteredStudents.filter(student => student.nivel === filters.nivel);
+      }
+      
+      // Apply condicion filter
+      if (filters.condicion) {
+        filteredStudents = filteredStudents.filter(student => 
+          student.condicion === filters.condicion || student.estadoAcademico === filters.condicion
+        );
+      }
+      
+      // Apply pagination
+      const startIndex = (pagination.page - 1) * pagination.limit;
+      const endIndex = startIndex + pagination.limit;
+      const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
+      
+      setStudents(paginatedStudents);
       setPagination(prev => ({
         ...prev,
-        ...response.data.data.pagination
+        total: filteredStudents.length,
+        pages: Math.ceil(filteredStudents.length / pagination.limit),
+        hasPrev: pagination.page > 1,
+        hasNext: pagination.page < Math.ceil(filteredStudents.length / pagination.limit)
       }));
     } catch (error) {
       setError('Error al cargar estudiantes');
-      console.error('❌ Error fetching students:', error);
-      console.error('Error response:', error.response);
-      console.error('Status code:', error.response?.status);
-      console.error('Error message:', error.response?.data);
-      console.error('Token disponible:', localStorage.getItem('token') ? 'Sí' : 'No');
+      console.error('Error fetching students:', error);
     } finally {
       setLoading(false);
     }
@@ -76,11 +101,19 @@ const StudentsManagement = ({ onBack }) => {
 
   const fetchStats = async () => {
     try {
-      const response = await api.get('/students/stats');
-      setStats(response.data.data);
+      // Calculate stats from mock data
+      const total = mockStudents.length;
+      const active = mockStudents.filter(s => s.isActive).length;
+      const inactive = mockStudents.filter(s => !s.isActive).length;
+      const graduated = mockStudents.filter(s => s.condicion === 'graduado' || s.estadoAcademico === 'graduado').length;
+      
+      setStats({
+        overview: { total, active, inactive },
+        byLevel: [],
+        byCondition: [{ _id: 'graduado', count: graduated }]
+      });
     } catch (error) {
       console.error('Error fetching stats:', error);
-      console.error('Stats error response:', error.response);
     }
   };
 
@@ -100,7 +133,7 @@ const StudentsManagement = ({ onBack }) => {
   const handleDeactivate = async (studentId) => {
     if (window.confirm('¿Estás seguro de que quieres desactivar este estudiante?')) {
       try {
-        await api.delete(`/students/${studentId}`);
+        await api.delete(`/auth/students/${studentId}`);
         fetchStudents();
         fetchStats();
       } catch (error) {
@@ -112,7 +145,7 @@ const StudentsManagement = ({ onBack }) => {
   const handleReactivate = async (studentId) => {
     if (window.confirm('¿Estás seguro de que quieres reactivar este estudiante?')) {
       try {
-        await api.patch(`/students/${studentId}/reactivate`);
+        await api.patch(`/auth/students/${studentId}/reactivate`);
         fetchStudents();
         fetchStats();
       } catch (error) {
@@ -128,17 +161,7 @@ const StudentsManagement = ({ onBack }) => {
   const getStatusBadgeClass = (student) => {
     if (!student.isActive) return 'badge-inactive';
     
-    // Usar condicion si existe
-    if (student.condicion) {
-      switch (student.condicion) {
-        case 'graduado': return 'badge-graduated';
-        case 'activo': return 'badge-active';
-        case 'inactivo': return 'badge-inactive';
-        default: return 'badge-default';
-      }
-    }
-    
-    // Mapear estadoAcademico si condicion no existe
+    // Usar estadoAcademico como fuente principal
     if (student.estadoAcademico) {
       switch (student.estadoAcademico) {
         case 'graduado': return 'badge-graduated';
@@ -149,60 +172,73 @@ const StudentsManagement = ({ onBack }) => {
       }
     }
     
+    // Fallback a condicion si existe
+    if (student.condicion) {
+      switch (student.condicion) {
+        case 'graduado': return 'badge-graduated';
+        case 'activo': return 'badge-active';
+        case 'inactivo': return 'badge-inactive';
+        default: return 'badge-default';
+      }
+    }
+    
     return 'badge-active'; // Por defecto
   };
 
   const getStatusText = (student) => {
     if (!student.isActive) return 'Inactivo';
     
-    // Mapear estadoAcademico a condicion si condicion no existe
-    if (student.condicion) {
-      return student.condicion.charAt(0).toUpperCase() + student.condicion.slice(1);
-    }
-    
+    // Usar estadoAcademico como fuente principal
     if (student.estadoAcademico) {
       const estadoMap = {
         'en_curso': 'Activo',
-        'inscrito': 'Activo',
+        'inscrito': 'Inscrito', 
         'graduado': 'Graduado',
-        'suspendido': 'Inactivo'
+        'suspendido': 'Suspendido'
       };
-      return estadoMap[student.estadoAcademico] || 'Sin definir';
+      return estadoMap[student.estadoAcademico] || student.estadoAcademico;
+    }
+    
+    // Fallback a condicion si existe
+    if (student.condicion) {
+      return student.condicion.charAt(0).toUpperCase() + student.condicion.slice(1);
     }
     
     return 'Activo'; // Por defecto
   };
 
   return (
-    <div className="students-management" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="students-management" style={{ padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
-      <AdminSectionHeader title="Gestión de Estudiantes" onBack={onBack} />
+      <div className="dashboard-section">
+        <h3 className="dashboard-section__title">Gestión de Estudiantes</h3>
+      </div>
       
       {/* Estadísticas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{stats.overview.total}</div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Total Estudiantes</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#3498db', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Total de Estudiantes</h3>
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.total}</p>
         </div>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{stats.overview.active}</div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Activos</div>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Activos</h3>
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.active}</p>
         </div>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{stats.overview.inactive}</div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Inactivos</div>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#e74c3c', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Inactivos</h3>
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.inactive}</p>
         </div>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#f39c12', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Graduados</h3>
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>
             {stats.byCondition.find(c => c._id === 'graduado')?.count || 0}
-          </div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Graduados</div>
+          </p>
         </div>
       </div>
 
       {/* Filtros */}
       <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', alignItems: 'end' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FaSearch /> Buscar
@@ -212,7 +248,7 @@ const StudentsManagement = ({ onBack }) => {
               placeholder="Nombre, apellido o email..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
             />
           </div>
           
@@ -221,7 +257,7 @@ const StudentsManagement = ({ onBack }) => {
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
             >
               <option value="">Todos</option>
               <option value="active">Activos</option>
@@ -234,7 +270,7 @@ const StudentsManagement = ({ onBack }) => {
             <select
               value={filters.nivel}
               onChange={(e) => handleFilterChange('nivel', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
             >
               <option value="">Todos</option>
               <option value="A1">A1</option>
@@ -251,7 +287,7 @@ const StudentsManagement = ({ onBack }) => {
             <select
               value={filters.condicion}
               onChange={(e) => handleFilterChange('condicion', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
             >
               <option value="">Todas</option>
               <option value="inscrito">Inscrito</option>
@@ -284,95 +320,106 @@ const StudentsManagement = ({ onBack }) => {
           </div>
         ) : (
           <>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Estudiante</th>
-                  <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Email</th>
-                  <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Nivel</th>
-                  <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Estado</th>
-                  <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Fecha Registro</th>
-                  <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student._id} style={{ ':hover': { backgroundColor: '#f8f9fa' } }}>
-                    <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
-                      <div>
-                        <strong>{student.firstName} {student.lastName}</strong>
-                        {student.phone && (
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            {student.phone}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>{student.email}</td>
-                    <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
-                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '500', background: '#e2e3e5', color: '#383d41' }}>
-                        {student.nivel || 'No definido'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
-                      <span 
-                        style={{ 
-                          padding: '0.25rem 0.75rem', 
-                          borderRadius: '20px', 
-                          fontSize: '0.8rem', 
-                          fontWeight: '500',
-                          ...(getStatusBadgeClass(student) === 'badge-active' ? { background: '#d4edda', color: '#155724' } :
-                             getStatusBadgeClass(student) === 'badge-enrolled' ? { background: '#cce7ff', color: '#004085' } :
-                             getStatusBadgeClass(student) === 'badge-graduated' ? { background: '#fff3cd', color: '#856404' } :
-                             getStatusBadgeClass(student) === 'badge-inactive' ? { background: '#f8d7da', color: '#721c24' } :
-                             { background: '#e2e3e5', color: '#383d41' })
-                        }}
-                      >
-                        {getStatusText(student)}
-                      </span>
-                    </td>
-                    <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
-                      {new Date(student.createdAt).toLocaleDateString('es-ES')}
-                    </td>
-                    <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          onClick={() => handleEdit(student)}
-                          title="Ver detalles"
-                          style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#6c757d', color: 'white' }}
-                        >
-                          <FaEye />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(student)}
-                          title="Editar"
-                          style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#17a2b8', color: 'white' }}
-                        >
-                          <FaEdit />
-                        </button>
-                        {student.isActive ? (
-                          <button
-                            onClick={() => handleDeactivate(student._id)}
-                            title="Desactivar"
-                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#dc3545', color: 'white' }}
-                          >
-                            <FaUserTimes />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleReactivate(student._id)}
-                            title="Reactivar"
-                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#28a745', color: 'white' }}
-                          >
-                            <FaUserCheck />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Estudiante</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Email</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Nivel</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Estado</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Fecha Registro</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {students.map((student) => (
+                    <tr key={student._id} style={{ ':hover': { backgroundColor: '#f8f9fa' } }}>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #3498db, #2980b9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600', flexShrink: 0 }}>
+                            {student.firstName?.charAt(0)}{student.lastName?.charAt(0)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: '600', color: '#2c3e50' }}>
+                              {student.firstName} {student.lastName}
+                            </div>
+                            {student.phone && (
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                {student.phone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>{student.email}</td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
+                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '500', background: '#e2e3e5', color: '#383d41' }}>
+                          {student.nivel || 'No definido'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
+                        <span 
+                          style={{ 
+                            padding: '0.25rem 0.75rem', 
+                            borderRadius: '20px', 
+                            fontSize: '0.8rem', 
+                            fontWeight: '500',
+                            minWidth: '80px',
+                            display: 'inline-block',
+                            ...(getStatusBadgeClass(student) === 'badge-active' ? { background: '#d4edda', color: '#155724' } :
+                               getStatusBadgeClass(student) === 'badge-enrolled' ? { background: '#cce7ff', color: '#004085' } :
+                               getStatusBadgeClass(student) === 'badge-graduated' ? { background: '#fff3cd', color: '#856404' } :
+                               getStatusBadgeClass(student) === 'badge-inactive' ? { background: '#f8d7da', color: '#721c24' } :
+                               { background: '#e2e3e5', color: '#383d41' })
+                          }}
+                        >
+                          {getStatusText(student)}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
+                        {new Date(student.createdAt).toLocaleDateString('es-ES')}
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            onClick={() => handleEdit(student)}
+                            title="Ver detalles"
+                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#6c757d', color: 'white' }}
+                          >
+                            <FaEye />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(student)}
+                            title="Editar"
+                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#17a2b8', color: 'white' }}
+                          >
+                            <FaEdit />
+                          </button>
+                          {student.isActive ? (
+                            <button
+                              onClick={() => handleDeactivate(student._id)}
+                              title="Desactivar"
+                              style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#dc3545', color: 'white' }}
+                            >
+                              <FaUserTimes />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleReactivate(student._id)}
+                              title="Reactivar"
+                              style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#28a745', color: 'white' }}
+                            >
+                              <FaUserCheck />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {/* Paginación */}
             {pagination.pages > 1 && (
@@ -466,7 +513,7 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
     setError('');
 
     try {
-      await api.put(`/students/${student._id}`, formData);
+      await api.put(`/auth/students/${student._id}`, formData);
       onSave();
     } catch (error) {
       console.error('Error updating student:', error);

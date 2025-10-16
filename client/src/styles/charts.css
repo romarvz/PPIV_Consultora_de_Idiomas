@@ -24,6 +24,15 @@
   .charts-grid {
     gap: 0.75rem;
   }
+  
+  .chart-card {
+    min-width: auto;
+    padding: 0.75rem;
+  }
+  
+  .chart-title {
+    font-size: 0.9rem;
+  }
 }
 
 .chart-card {
@@ -264,7 +273,27 @@
 }
 
 .dashboard-container {
-  margin-top: 100px;
+  margin-top: 120px;
+  padding: 2rem;
+  background: var(--bg-secondary);
+  min-height: 100vh;
+}
+
+.dashboard-section {
+  margin-bottom: 3rem;
+}
+
+.dashboard-section:first-child {
+  margin-top: 2rem;
+}
+
+.dashboard-section__title {
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-section:last-child {
+  margin-bottom: 2rem;
 }
 
 .auth-navbar__left {
@@ -369,18 +398,43 @@
 
 @media (max-width: 768px) {
   .auth-navbar {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
+    min-height: auto;
+  }
+  
+  .auth-navbar__left {
+    flex: 1;
+  }
+  
+  .auth-navbar__logo {
+    height: 32px;
+  }
+  
+  .auth-navbar__title-section h2 {
+    font-size: 1rem;
+  }
+  
+  .auth-navbar__title-section p {
+    font-size: 0.8rem;
   }
   
   .auth-navbar__right {
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .auth-navbar__user-info {
+    display: none;
+  }
+  
+  .auth-navbar__back-btn,
+  .auth-navbar__logout-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
   }
   
   .dashboard-container {
-    margin-top: 140px;
+    margin-top: 80px;
+    padding: 1rem;
   }
 }
 

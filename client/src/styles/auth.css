@@ -116,7 +116,7 @@
   color: var(--text-primary);
 }
 
-/* === ACCIONES RAPIDAS CARDS IMPROVEMENTS === */
+/* Quick Actions Cards Improvements */
 .dashboard-container .action-card {
   display: flex;
   flex-direction: column;
@@ -142,4 +142,26 @@
   justify-content: center;
   text-align: center;
   line-height: 1.2;
+}
+
+/* Calendar and Tooltip Dark Mode Support */
+.dashboard-container {
+  --tooltip-bg: #4a5568;
+  --tooltip-text: #ffffff;
+  --primary-light: #e3f2fd;
+}
+
+.dark-mode .dashboard-container {
+  --tooltip-bg: #2d3748;
+  --tooltip-text: #e2e8f0;
+  --primary-light: #2c5282;
+}
+
+/* Table Row Hover Effect */
+.dashboard-container .table-row-hover:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark-mode .dashboard-container .table-row-hover:hover {
+  background-color: var(--bg-secondary) !important;
 }

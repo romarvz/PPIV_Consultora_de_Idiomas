@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
 import '../../styles/variables.css'
 import '../../styles/auth.css'
@@ -9,7 +9,7 @@ import '../../styles/charts.css'
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
-import ReportsView from '../../components/ReportsView'
+import ReportsDashboard from './ReportsDashboard'
 import AuthNavbar from '../../components/common/AuthNavbar'
 
 import CourseManagementPage from './CourseManagementPage';
@@ -18,24 +18,19 @@ import api from '../../services/api'
 import { routes } from '../../utils/routes'
 // React Icons - Updated for better UI
 import { 
-  FaUsers, 
-  FaGraduationCap, 
-  FaBookOpen, 
-  FaDollarSign,
   FaUserGraduate,
   FaChalkboardTeacher,
   FaCalendarAlt,
   FaCreditCard,
   FaChartLine,
   FaCog,
-  FaSignOutAlt,
-  FaTasks,
   FaBuilding
 } from 'react-icons/fa'
 
 const AdminDashboard = () => {
   const { user, logout, mustChangePassword } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
 
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
@@ -60,6 +55,18 @@ const AdminDashboard = () => {
   })
   const [loading, setLoading] = useState(true)
 
+  // Reset management views when URL changes to main dashboard
+  useEffect(() => {
+    console.log('Current pathname:', location.pathname);
+    if (location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/') {
+      console.log('Resetting management views');
+      setShowStudentsManagement(false)
+      setShowTeachersManagement(false)
+      setShowCourseManagement(false)
+      setShowReports(false)
+    }
+  }, [location.pathname])
+
   // Fetch dashboard statistics
   useEffect(() => {
     fetchStats()
@@ -76,7 +83,6 @@ const AdminDashboard = () => {
   const handlePasswordChanged = () => {
     setShowPasswordChange(false)
   }
-
 
   const handleTeacherRegistered = () => {
     setShowRegisterTeacher(false)
@@ -117,30 +123,7 @@ const AdminDashboard = () => {
         const teacherSpecialties = specialtyStats.map(spec => spec._id)
         const uniqueSpecialties = specialtyStats.length
 
-        console.log('Calculated stats:', {
-          totalStudents: students.length,
-          newStudents,
-          activeStudents,
-          totalTeachers: teachers.length,
-          activeTeachers: teacherStats.overview.active,
-          uniqueSpecialties,
-          teacherSpecialties,
-          specialtyStats
-        })
 
-        // Debug: Check what student states we have
-        const studentStates = students.reduce((acc, student) => {
-          const state = student.estadoAcademico || 'sin_estado'
-          acc[state] = (acc[state] || 0) + 1
-          return acc
-        }, {})
-        
-        console.log('Student states breakdown:', studentStates)
-        console.log('Students created in last 30 days:', students.filter(s => new Date(s.createdAt) > thirtyDaysAgo).map(s => ({
-          name: s.firstName + ' ' + s.lastName,
-          createdAt: s.createdAt,
-          estado: s.estadoAcademico
-        })))
 
         setStats({
           totalStudents: students.length,
@@ -176,7 +159,7 @@ const AdminDashboard = () => {
 
   // Show register teacher modal
   if (showRegisterTeacher) {
-    return (<div className="modal-overlay dashboard-modal"> {/* Usamos dashboard-modal para el estilo específico */}
+    return (<div className="modal-overlay dashboard-modal">
         <div className="dashboard-modal__content">
           <RegisterTeacher
             onSuccess={handleTeacherRegistered}
@@ -187,15 +170,20 @@ const AdminDashboard = () => {
     )
   }
 
+  // Scroll to top when switching views
+  useEffect(() => {
+    if (showStudentsManagement || showTeachersManagement || showCourseManagement || showReports) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [showStudentsManagement, showTeachersManagement, showCourseManagement, showReports]);
+
   // Show students management
   if (showStudentsManagement) {
-    React.useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
+    console.log('Rendering StudentsManagement component');
     return (
       <section className="section visible">
         <div className="container dashboard-container">
-          <AuthNavbar user={user} onLogout={handleLogout} />
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowStudentsManagement(false)} />
           <StudentsManagement onBack={() => setShowStudentsManagement(false)} />
         </div>
       </section>
@@ -204,13 +192,10 @@ const AdminDashboard = () => {
 
   // Show teachers management
   if (showTeachersManagement) {
-    React.useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
     return (
       <section className="section visible">
         <div className="container dashboard-container">
-          <AuthNavbar user={user} onLogout={handleLogout} />
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowTeachersManagement(false)} />
           <TeachersManagement />
         </div>
       </section>
@@ -219,13 +204,10 @@ const AdminDashboard = () => {
 
   // Show course management
   if (showCourseManagement) {
-    React.useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
     return (
       <section className="section visible">
         <div className="container dashboard-container">
-          <AuthNavbar user={user} onLogout={handleLogout} />
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowCourseManagement(false)} />
           <CourseManagementPage />
         </div>
       </section>
@@ -234,14 +216,11 @@ const AdminDashboard = () => {
 
   // Show reports
   if (showReports) {
-    React.useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
     return (
       <section className="section visible">
         <div className="container dashboard-container">
-          <AuthNavbar user={user} onLogout={handleLogout} />
-          <ReportsView onClose={() => setShowReports(false)} />
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowReports(false)} />
+          <ReportsDashboard onClose={() => setShowReports(false)} />
         </div>
       </section>
     )
@@ -252,8 +231,6 @@ const AdminDashboard = () => {
       <div className="container dashboard-container">
         {/* Header */}
         <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
-        
-
 
         {/* System Overview Charts */}
         <SystemOverviewCharts stats={stats} loading={loading} />
@@ -263,19 +240,28 @@ const AdminDashboard = () => {
           <h3 className="dashboard-section__title">Acciones Rápidas</h3>
           
           <div className="quick-actions-grid">
-            {/* --- Tarjeta 1: Gestión de Estudiantes --- */}
+            {/* Student Management Card */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaUserGraduate /></div>
               <h4 className="action-card__title">Gestión de Estudiantes</h4>
               <p className="action-card__description">
                 Ver, editar y gestionar información de estudiantes, estados académicos y progreso.
               </p>
-              <button className="cta-btn action-card__button" onClick={() => setShowStudentsManagement(true)}>
+              <button 
+                type="button"
+                className="cta-btn action-card__button" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Setting showStudentsManagement to true');
+                  setShowStudentsManagement(true);
+                }}
+              >
                 Gestionar Estudiantes
               </button>
             </div>
             
-            {/* --- Tarjeta 2: Gestión de Profesores --- */}
+            {/* Teacher Management Card */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaChalkboardTeacher /></div>
               <h4 className="action-card__title">Gestión de Profesores</h4>
@@ -287,7 +273,7 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* --- Tarjeta 3: Gestión de Cursos  --- */}
+            {/* Course Management Card */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaCalendarAlt /></div>
               <h4 className="action-card__title">Gestión de Cursos</h4>
@@ -299,7 +285,7 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* --- Tarjeta 4: Reportes --- */}
+            {/* Reports Card */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaChartLine /></div>
               <h4 className="action-card__title">Reportes</h4>
@@ -308,16 +294,13 @@ const AdminDashboard = () => {
               </p>
               <button 
                 className="cta-btn action-card__button"
-                onClick={() => {
-                  console.log('Click en Ver Reportes')
-                  setShowReports(true)
-                }}
+                onClick={() => setShowReports(true)}
               >
                 Ver Reportes
               </button>
             </div>
             
-            {/* --- Tarjeta 5: Pagos y Finanzas --- */}
+            {/* Payments and Finance Card */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaCreditCard /></div>
               <h4 className="action-card__title">Pagos y Finanzas</h4>
@@ -329,7 +312,7 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* --- Tarjeta 6: Panel Corporativo --- */}
+            {/* Corporate Panel Card */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaBuilding /></div>
               <h4 className="action-card__title">Panel Corporativo</h4>
@@ -341,7 +324,7 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* --- Tarjeta 7: Configuración --- */}
+            {/* Configuration Card */}
             <div className="service-card action-card">
               <div className="action-card__icon"><FaCog /></div>
               <h4 className="action-card__title">Configuración</h4>

@@ -56,8 +56,10 @@ const SearchInput = memo(({ onSearch, placeholder }) => {
           width: '100%',
           padding: '0.75rem',
           border: '1px solid #ddd',
-          borderRadius: '8px',
-          fontSize: '0.9rem'
+          borderRadius: '6px',
+          fontSize: '0.9rem',
+          height: '48px',
+          boxSizing: 'border-box'
         }}
       />
     </div>
@@ -373,11 +375,14 @@ const TeachersManagement = ({ onBack }) => {
     
     return (
       <span style={{ 
+        display: 'inline-block',
+        width: '80px',
         padding: '0.25rem 0.75rem', 
         borderRadius: '12px', 
         fontSize: '0.75rem', 
         fontWeight: '600', 
         textTransform: 'uppercase',
+        textAlign: 'center',
         ...style 
       }}>
         {text}
@@ -391,118 +396,125 @@ const TeachersManagement = ({ onBack }) => {
   }, [teachers]);
 
   return (
-    <div style={{ padding: '2rem', background: '#f8f9fa', minHeight: '100vh' }}>
+    <div style={{ padding: '2rem', background: 'var(--bg-secondary)', minHeight: '100vh' }}>
       {/* Header */}
-      <AdminSectionHeader title="Gestión de Profesores" onBack={onBack} />
+      <div className="dashboard-section">
+        <h3 className="dashboard-section__title">Gestión de Profesores</h3>
+      </div>
 
       {/* Estadísticas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
           <h3 style={{ color: '#3498db', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Total de Profesores</h3>
-          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.total}</p>
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'var(--text-primary)' }}>{stats.total}</p>
         </div>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
           <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Profesores Activos</h3>
-          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.active}</p>
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'var(--text-primary)' }}>{stats.active}</p>
         </div>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
           <h3 style={{ color: '#e74c3c', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Profesores Inactivos</h3>
-          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.inactive}</p>
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'var(--text-primary)' }}>{stats.inactive}</p>
         </div>
       </div>
 
       {/* Filtros y Acciones */}
-      <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
-          <SearchInput 
-            onSearch={handleSearchChange} 
-            placeholder="Buscar por nombre, email o especialidad..."
-          />
+      <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'stretch', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1', minWidth: '250px' }}>
+            <SearchInput 
+              onSearch={handleSearchChange} 
+              placeholder="Buscar por nombre, email o especialidad..."
+            />
+          </div>
           <select
             value={filterStatus}
             onChange={handleFilterStatusChange}
             style={{
               padding: '0.75rem',
               border: '1px solid #ddd',
-              borderRadius: '8px',
+              borderRadius: '6px',
               fontSize: '0.9rem',
-              minWidth: '150px'
+              minWidth: '150px',
+              height: '48px',
+              flexShrink: 0
             }}
           >
             <option value="all">Todos los estados</option>
             <option value="activo">Activos</option>
             <option value="inactivo">Inactivos</option>
           </select>
+          <button
+            onClick={handleNewTeacher}
+            style={{
+              background: 'linear-gradient(135deg, #27ae60, #229954)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(39, 174, 96, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
+            <FaPlus /> Nuevo Profesor
+          </button>
         </div>
-        
-        <button
-          onClick={handleNewTeacher}
-          style={{
-            background: 'linear-gradient(135deg, #27ae60, #229954)',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            transition: 'all 0.3s ease',
-            whiteSpace: 'nowrap'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-1px)';
-            e.target.style.boxShadow = '0 4px 12px rgba(39, 174, 96, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = 'none';
-          }}
-        >
-          <FaPlus /> Nuevo Profesor
-        </button>
       </div>
 
       {/* Tabla de profesores */}
-      <div style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '12px', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
         {loading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#7f8c8d' }}>
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             <div>Cargando profesores...</div>
           </div>
         ) : filteredTeachers.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#7f8c8d' }}>
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             <div>No se encontraron profesores</div>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Profesor</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Contacto</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Especialidades</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Estado</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600', color: '#495057' }}>Acciones</th>
+              <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '2px solid var(--border-color)' }}>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Profesor</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Contacto</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Especialidades</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Estado</th>
+                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600', color: 'var(--text-secondary)' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredTeachers.map((teacher, index) => (
-                <tr key={teacher._id} style={{ borderBottom: '1px solid #dee2e6', '&:hover': { background: '#f8f9fa' } }}>
+                <tr key={teacher._id} style={{ borderBottom: '1px solid var(--border-color)' }} className="table-row-hover">
                   <td style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #3498db, #2980b9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600' }}>
+                      <div style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #3498db, #2980b9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600', flexShrink: 0 }}>
                         {teacher.firstName?.charAt(0)}{teacher.lastName?.charAt(0)}
                       </div>
                       <div>
-                        <div style={{ fontWeight: '600', color: '#2c3e50' }}>
+                        <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
                           {teacher.firstName} {teacher.lastName}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td style={{ padding: '1rem' }}>
-                    <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                         <FaEnvelope style={{ fontSize: '0.75rem' }} />
                         {teacher.email}
@@ -534,7 +546,7 @@ const TeachersManagement = ({ onBack }) => {
                           </span>
                         ))
                       ) : (
-                        <span style={{ color: '#bdc3c7', fontStyle: 'italic', fontSize: '0.8rem' }}>Sin especialidades</span>
+                        <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.8rem' }}>Sin especialidades</span>
                       )}
                     </div>
                   </td>
@@ -578,6 +590,7 @@ const TeachersManagement = ({ onBack }) => {
             </tbody>
           </table>
         )}
+        </div>
       </div>
 
       {/* Modal de edición */}
@@ -756,28 +769,31 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
       bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'center',
       zIndex: 1000,
-      padding: '1rem'
+      padding: '20px',
+      overflowY: 'auto',
+      paddingTop: '40px',
+      paddingBottom: '40px'
     }}>
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: 'var(--card-bg)',
         borderRadius: '12px',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+        boxShadow: 'var(--shadow-xl)',
         width: '100%',
-        maxWidth: '600px',
-        maxHeight: '90vh',
-        overflow: 'auto'
+        maxWidth: '800px',
+        maxHeight: 'calc(100vh - 80px)',
+        overflow: 'hidden'
       }}>
         <div style={{
           padding: '1.5rem 1.5rem 0 1.5rem',
-          borderBottom: '1px solid #dee2e6',
+          borderBottom: '1px solid var(--border-color)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <h3 style={{ margin: '0', color: '#2c3e50', fontSize: '1.25rem', fontWeight: '600' }}>
+          <h3 style={{ margin: '0', color: 'var(--text-primary)', fontSize: '1.25rem', fontWeight: '600' }}>
             <FaEdit style={{ marginRight: '0.5rem', color: '#3498db' }} />
             Editar Profesor
           </h3>
@@ -787,13 +803,14 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
               background: 'none',
               border: 'none',
               fontSize: '1.5rem',
-              color: '#6c757d',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               padding: '0.25rem'
             }}
           >×</button>
         </div>
         
+        <div style={{ maxHeight: 'calc(100vh - 160px)', overflowY: 'auto' }}>
         <form onSubmit={handleSubmit} style={{ padding: '0 24px 24px 24px' }}>
           {successMessage && (
             <div style={{
@@ -810,13 +827,13 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
 
           {/* Información Personal */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <h4 style={{ color: '#495057', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
+            <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
               <FaUserGraduate style={{ marginRight: '0.5rem', color: '#3498db' }} />
               Información Personal
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
                   Nombre *
                 </label>
                 <input
@@ -827,14 +844,16 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--input-border)',
                     borderRadius: '6px',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
                   Apellido *
                 </label>
                 <input
@@ -845,16 +864,18 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--input-border)',
                     borderRadius: '6px',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
                   <FaEnvelope style={{ marginRight: '0.5rem' }} />
                   Email *
                 </label>
@@ -866,14 +887,16 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--input-border)',
                     borderRadius: '6px',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
                   <FaPhone style={{ marginRight: '0.5rem' }} />
                   Teléfono
                 </label>
@@ -884,9 +907,11 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--input-border)',
                     borderRadius: '6px',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
@@ -895,111 +920,69 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
 
           {/* Estado */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>
-              Estado *
-            </label>
-            <select
-              value={formData.condicion}
-              onChange={(e) => setFormData(prev => ({ ...prev, condicion: e.target.value }))}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '0.9rem'
-              }}
-            >
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <label style={{ fontWeight: '500', color: 'var(--text-primary)', margin: 0 }}>
+                Estado *
+              </label>
+              <select
+                value={formData.condicion}
+                onChange={(e) => setFormData(prev => ({ ...prev, condicion: e.target.value }))}
+                required
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid var(--input-border)',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  minWidth: '120px',
+                  height: '42px',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-primary)'
+                }}
+              >
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </div>
           </div>
 
           {/* Especialidades */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <h4 style={{ color: '#495057', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
+            <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
               <FaBook style={{ marginRight: '0.5rem', color: '#3498db' }} />
               Especialidades
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem' }}>
               {specialtyOptions.map(language => (
-                <label key={language._id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '0.5rem',
-                  border: `1px solid ${formData.especialidades.includes(language._id) ? '#3498db' : '#ddd'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  backgroundColor: formData.especialidades.includes(language._id) ? '#e3f2fd' : 'white',
-                  fontSize: '0.85rem'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={formData.especialidades.includes(language._id)}
-                    onChange={() => handleSpecialtyChange(language)}
-                    style={{ marginRight: '0.5rem' }}
-                  />
+                <div 
+                  key={language._id} 
+                  onClick={() => handleSpecialtyChange(language)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0.75rem',
+                    border: `2px solid ${formData.especialidades.includes(language._id) ? '#3498db' : 'var(--input-border)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    backgroundColor: formData.especialidades.includes(language._id) ? '#e3f2fd' : 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    textAlign: 'center',
+                    transition: 'all 0.2s ease',
+                    minHeight: '48px'
+                  }}
+                >
                   {language.name}
-                </label>
+                </div>
               ))}
             </div>
-            
-            {/* Especialidades seleccionadas */}
-            {formData.especialidades.length > 0 && (
-              <div style={{ marginTop: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>
-                  Especialidades seleccionadas:
-                </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {formData.especialidades.map((specialtyId, index) => {
-                    const language = languages.find(lang => lang._id === specialtyId);
-                    return (
-                      <div key={index} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        background: '#e3f2fd',
-                        color: '#1565c0',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '20px',
-                        fontSize: '0.85rem',
-                        fontWeight: '500'
-                      }}>
-                        <span>{language ? language.name : specialtyId}</span>
-                        <button
-                          type="button"
-                          onClick={() => language && handleSpecialtyChange(language)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#c62828',
-                          marginLeft: '0.5rem',
-                          cursor: 'pointer',
-                          fontSize: '16px',
-                          fontWeight: 'bold',
-                          width: '20px',
-                          height: '20px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: '50%',
-                          lineHeight: '1'
-                        }}
-                          title={`Eliminar ${language ? language.name : 'especialidad'}`}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Horarios */}
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h4 style={{ color: '#495057', margin: '0', display: 'flex', alignItems: 'center' }}>
+              <h4 style={{ color: 'var(--text-primary)', margin: '0', display: 'flex', alignItems: 'center' }}>
                 <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#3498db' }} />
                 Horarios
               </h4>
@@ -1028,18 +1011,20 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                 alignItems: 'center',
                 marginBottom: '0.5rem',
                 padding: '0.75rem',
-                border: '1px solid #dee2e6',
+                border: '1px solid var(--border-color)',
                 borderRadius: '6px',
-                backgroundColor: '#f8f9fa'
+                backgroundColor: 'var(--bg-tertiary)'
               }}>
                 <select
                   value={schedule.day}
                   onChange={(e) => updateSchedule(index, 'day', e.target.value)}
                   style={{
                     padding: '0.5rem',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--input-border)',
                     borderRadius: '4px',
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
                   }}
                 >
                   {dayOptions.map(day => (
@@ -1051,9 +1036,11 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
                   style={{
                     padding: '0.5rem',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--input-border)',
                     borderRadius: '4px',
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
                   }}
                 >
                   {timeOptions.map(time => (
@@ -1065,9 +1052,11 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
                   style={{
                     padding: '0.5rem',
-                    border: '1px solid #ddd',
+                    border: '1px solid var(--input-border)',
                     borderRadius: '4px',
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
                   }}
                 >
                   {timeOptions.map(time => (
@@ -1094,18 +1083,20 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
           </div>
 
           {/* Botones */}
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid #dee2e6' }}>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
             <button
               type="button"
               onClick={onCancel}
               style={{
-                background: '#6c757d',
+                background: 'linear-gradient(135deg, #95a5a6, #7f8c8d)',
                 color: 'white',
                 border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '6px',
+                padding: '12px 24px',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                fontWeight: '500'
+                fontWeight: '600',
+                fontSize: '0.95rem',
+                transition: 'all 0.3s ease'
               }}
             >
               Cancelar
@@ -1116,20 +1107,23 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
               style={{
                 background: isSubmitting 
                   ? 'linear-gradient(135deg, #95a5a6, #7f8c8d)' 
-                  : 'linear-gradient(135deg, #3498db, #2980b9)',
+                  : 'linear-gradient(135deg, #27ae60, #229954)',
                 color: 'white',
                 border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '6px',
+                padding: '12px 24px',
+                borderRadius: '8px',
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                fontWeight: '500',
-                opacity: isSubmitting ? 0.7 : 1
+                fontWeight: '600',
+                fontSize: '0.95rem',
+                opacity: isSubmitting ? 0.7 : 1,
+                transition: 'all 0.3s ease'
               }}
             >
               {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

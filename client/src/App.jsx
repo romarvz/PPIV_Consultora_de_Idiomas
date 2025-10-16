@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-// import TestMock from './components/TestMock'
+
 
 // Authentication provider and protected route component
 import { AuthProvider } from './hooks/useAuth.jsx'
@@ -31,8 +31,6 @@ import { routes } from './utils/routes'
 import './App.css'
 
 function App() {
-  console.log('App component rendering...')
-  
   return (
     // Auth provider wraps entire app to provide authentication context
     <AuthProvider>
@@ -55,9 +53,8 @@ function App() {
             {/* Authentication page */}
             <Route path={routes.LOGIN} element={<Login />} />
             
-            {/* Temporary test page to verify mock API functionality */}
-            {/* <Route path="/test-mock" element={<TestMock />} /> */}
-          {/** End of public routes **/}  
+
+          {/* End of public routes */}  
           </Route>
           
           {/* Protected dashboard pages WITHOUT layout (no header/footer) */}
