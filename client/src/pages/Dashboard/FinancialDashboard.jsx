@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import AuthNavbar from '../../components/common/AuthNavbar'
-import apiAdapter from '../../services/apiAdapter'
+import { mockPayments as mockPaymentsData, mockPaymentMethods, mockTeachers } from '../../services/mockData'
 import { 
-  FaDollarSign, 
-  FaCreditCard, 
-  FaFileInvoiceDollar,
-  FaChartLine,
-  FaUsers,
-  FaCalendarAlt,
   FaSpinner,
   FaPlus,
-  FaDownload
+  FaEdit,
+  FaTrash
 } from 'react-icons/fa'
 import '../../styles/variables.css'
 import '../../styles/auth.css'
@@ -19,34 +14,37 @@ import '../../styles/charts.css'
 
 const FinancialDashboard = () => {
   const { user, logout } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview')
-  const [financialData, setFinancialData] = useState(null)
-  const [payments, setPayments] = useState([])
-  const [invoices, setInvoices] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState('charges')
+  const [charges, setCharges] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('Todos')
+  const [showChargeModal, setShowChargeModal] = useState(false)
+  const [chargeForm, setChargeForm] = useState({
+    studentName: '',
+    amount: '',
+    date: new Date().toISOString().slice(0, 10),
+    concept: '',
+    method: mockPaymentMethods?.[0] || 'Efectivo'
+  })
+  // Teachers payments (Pagos)
+  const [teacherPayments, setTeacherPayments] = useState([])
+  const [searchTeacher, setSearchTeacher] = useState('')
+  const [showTeacherPaymentModal, setShowTeacherPaymentModal] = useState(false)
+  const [teacherPaymentForm, setTeacherPaymentForm] = useState({
+    teacherId: '',
+    amount: '',
+    date: new Date().toISOString().slice(0, 10),
+    concept: '',
+    method: mockPaymentMethods?.[0] || 'Transferencia'
+  })
 
+  // Initialize with mock data since backend will be developed later
   useEffect(() => {
-    loadFinancialData()
-  }, [])
-
-  const loadFinancialData = async () => {
     setLoading(true)
-    try {
-      const [financialResponse, paymentsResponse, invoicesResponse] = await Promise.all([
-        apiAdapter.reports.financial(),
-        apiAdapter.payments.getAll(),
-        apiAdapter.invoices.getAll()
-      ])
-      
-      setFinancialData(financialResponse.data.data)
-      setPayments(paymentsResponse.data.data.payments || [])
-      setInvoices(invoicesResponse.data.data.invoices || [])
-    } catch (error) {
-      console.error('Error loading financial data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+    // Simulate API call delay
+    setTimeout(() => setLoading(false), 500)
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -62,6 +60,37 @@ const FinancialDashboard = () => {
       currency: 'ARS'
     }).format(amount)
   }
+
+  // Initialize charges from mock data
+  useEffect(() => {
+    const mockCharges = (mockPaymentsData || []).map((p, idx) => ({
+      id: p._id || idx,
+      studentName: p.studentName,
+      amount: p.amount,
+      status: p.status,
+      date: p.date,
+      method: p.paymentMethod || '—',
+      concept: p.concept || '—'
+    }))
+    setCharges(mockCharges)
+  }, [])
+
+  // initialize teacher payments from mock teachers
+  useEffect(() => {
+    const defaults = (mockTeachers || []).slice(0, 3).map((t, idx) => ({
+      id: `tp-${idx + 1}`,
+      teacherId: t._id,
+      teacherName: `${t.firstName} ${t.lastName}`,
+      concept: idx === 0 ? 'Adelanto Octubre 2025' : 'Pago de horas de Septiembre 2025',
+      amount: idx === 0 ? 25000 : idx === 1 ? 82000 : 75000,
+      date: idx === 0 ? '2025-10-15' : idx === 1 ? '2025-10-06' : '2025-10-05',
+      method: idx === 0 ? 'Efectivo' : 'Transferencia'
+    }))
+    if (defaults.length > 0 && teacherPayments.length === 0) {
+      setTeacherPayments(defaults)
+      setTeacherPaymentForm(fp => ({ ...fp, teacherId: defaults[0].teacherId }))
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -85,26 +114,105 @@ const FinancialDashboard = () => {
     )
   }
 
-  const mockPayments = payments.length > 0 ? payments : [
-    { id: 1, studentName: 'Ana García', amount: 4500, status: 'paid', date: '2025-10-15', method: 'transferencia' },
-    { id: 2, studentName: 'Carlos López', amount: 4200, status: 'pending', date: '2025-10-20', method: 'efectivo' },
-    { id: 3, studentName: 'María Silva', amount: 5000, status: 'paid', date: '2025-10-12', method: 'tarjeta' },
-    { id: 4, studentName: 'Roberto Díaz', amount: 3800, status: 'overdue', date: '2025-10-05', method: 'transferencia' }
-  ]
+  const filteredCharges = charges.filter((c) => {
+    const matchesSearch = !searchTerm || (c.studentName || '').toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'Todos' || c.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
-  const mockInvoices = invoices.length > 0 ? invoices : [
-    { id: 1, number: 'FAC-001', studentName: 'Ana García', amount: 4500, status: 'paid', date: '2025-10-15' },
-    { id: 2, number: 'FAC-002', studentName: 'Carlos López', amount: 4200, status: 'pending', date: '2025-10-20' },
-    { id: 3, number: 'FAC-003', studentName: 'María Silva', amount: 5000, status: 'sent', date: '2025-10-12' }
-  ]
+  const handleOpenChargeModal = () => setShowChargeModal(true)
+  const handleCloseChargeModal = () => setShowChargeModal(false)
 
-  const stats = {
-    totalIncome: financialData?.totalIncome || 125000,
-    pendingIncome: financialData?.pendingIncome || 18500,
-    monthlyRevenue: financialData?.monthlyRevenue || 45000,
-    totalStudents: financialData?.totalStudents || 28,
-    paidStudents: financialData?.paidStudents || 22,
-    overduePayments: financialData?.overduePayments || 3
+  const handleRegisterCharge = (e) => {
+    e.preventDefault()
+    const newCharge = {
+      id: Date.now(),
+      studentName: chargeForm.studentName || '—',
+      amount: Number(chargeForm.amount) || 0,
+      status: 'pendiente',
+      date: chargeForm.date,
+      method: chargeForm.method,
+      concept: chargeForm.concept || '—'
+    }
+    setCharges([newCharge, ...charges])
+    setChargeForm({
+      studentName: '',
+      amount: '',
+      date: new Date().toISOString().slice(0, 10),
+      concept: '',
+      method: mockPaymentMethods?.[0] || 'Efectivo'
+    })
+    setShowChargeModal(false)
+  }
+
+  const handleDeleteCharge = (id) => {
+    if (window.confirm('¿Eliminar este cobro?')) {
+      setCharges(charges.filter(c => c.id !== id))
+    }
+  }
+
+  // Teacher payments handlers
+  const handleOpenTeacherPaymentModal = () => setShowTeacherPaymentModal(true)
+  const handleCloseTeacherPaymentModal = () => setShowTeacherPaymentModal(false)
+  const handleRegisterTeacherPayment = (e) => {
+    e.preventDefault()
+    const teacher = (mockTeachers || []).find(t => t._id === teacherPaymentForm.teacherId)
+    const newPayment = {
+      id: Date.now().toString(),
+      teacherId: teacherPaymentForm.teacherId,
+      teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : '—',
+      concept: teacherPaymentForm.concept || '—',
+      amount: Number(teacherPaymentForm.amount) || 0,
+      date: teacherPaymentForm.date,
+      method: teacherPaymentForm.method
+    }
+    setTeacherPayments([newPayment, ...teacherPayments])
+    setShowTeacherPaymentModal(false)
+    setTeacherPaymentForm({
+      teacherId: teacher ? teacher._id : '',
+      amount: '',
+      date: new Date().toISOString().slice(0, 10),
+      concept: '',
+      method: mockPaymentMethods?.[0] || 'Transferencia'
+    })
+  }
+  const handleDeleteTeacherPayment = (id) => {
+    if (window.confirm('¿Eliminar este pago?')) {
+      setTeacherPayments(teacherPayments.filter(p => p.id !== id))
+    }
+  }
+
+  // Common modal styles
+  const modalOverlayStyle = {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.4)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000
+  }
+  const modalContentStyle = {
+    width: 'min(95vw, 640px)',
+    background: 'var(--card-bg)',
+    borderRadius: '12px',
+    boxShadow: 'var(--shadow-lg)',
+    padding: '1.5rem'
+  }
+  const inputStyle = {
+    width: '100%',
+    padding: '0.75rem',
+    border: '1px solid var(--input-border)',
+    borderRadius: '6px',
+    background: 'var(--input-bg)',
+    color: 'var(--text-primary)'
+  }
+  const selectStyle = { ...inputStyle, height: '44px' }
+  const buttonStyle = {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '0.75rem',
+    marginTop: '1.25rem'
   }
 
   return (
@@ -115,86 +223,6 @@ const FinancialDashboard = () => {
         {/* Header */}
         <div className="dashboard-section">
           <h3 className="dashboard-section__title">Gestión Financiera</h3>
-          
-          {/* Financial Overview Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1.5rem',
-            marginBottom: '2rem'
-          }}>
-            <div className="service-card" style={{
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                <FaDollarSign style={{ color: 'var(--success)', fontSize: '1.5rem', marginRight: '0.75rem' }} />
-                <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Ingresos Totales</h4>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--success)', marginBottom: '0.5rem' }}>
-                {formatCurrency(stats.totalIncome)}
-              </div>
-              <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
-                Este mes: {formatCurrency(stats.monthlyRevenue)}
-              </p>
-            </div>
-            
-            <div className="service-card" style={{
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                <FaCreditCard style={{ color: 'var(--warning)', fontSize: '1.5rem', marginRight: '0.75rem' }} />
-                <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Pagos Pendientes</h4>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--warning)', marginBottom: '0.5rem' }}>
-                {formatCurrency(stats.pendingIncome)}
-              </div>
-              <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
-                {stats.overduePayments} pagos vencidos
-              </p>
-            </div>
-            
-            <div className="service-card" style={{
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                <FaUsers style={{ color: 'var(--primary)', fontSize: '1.5rem', marginRight: '0.75rem' }} />
-                <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Estado de Pagos</h4>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '0.5rem' }}>
-                {stats.paidStudents}/{stats.totalStudents}
-              </div>
-              <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
-                {Math.round((stats.paidStudents / stats.totalStudents) * 100)}% al día
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Tabs */}
@@ -208,19 +236,19 @@ const FinancialDashboard = () => {
           <div style={{ borderBottom: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex' }}>
               <button
-                onClick={() => setActiveTab('overview')}
+                onClick={() => setActiveTab('charges')}
                 style={{
                   padding: '1rem 1.5rem',
                   fontWeight: '600',
                   fontSize: '1rem',
                   border: 'none',
-                  background: activeTab === 'overview' ? 'var(--primary)' : 'transparent',
+                  background: activeTab === 'charges' ? 'var(--primary)' : 'transparent',
                   cursor: 'pointer',
-                  color: activeTab === 'overview' ? 'white' : 'var(--text-secondary)',
+                  color: activeTab === 'charges' ? 'white' : 'var(--text-secondary)',
                   transition: 'all 0.2s ease'
                 }}
               >
-                Resumen
+                Cobros
               </button>
               <button
                 onClick={() => setActiveTab('payments')}
@@ -252,100 +280,114 @@ const FinancialDashboard = () => {
               >
                 Facturación
               </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                style={{
+                  padding: '1rem 1.5rem',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  border: 'none',
+                  background: activeTab === 'reports' ? 'var(--primary)' : 'transparent',
+                  cursor: 'pointer',
+                  color: activeTab === 'reports' ? 'white' : 'var(--text-secondary)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Reportes
+              </button>
             </div>
           </div>
 
           <div style={{ padding: '1.5rem' }}>
-            {activeTab === 'overview' && (
+            {activeTab === 'charges' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Resumen Financiero</h4>
+                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Cobros</h4>
                   <button 
-                    className="cta-btn" 
+                    className="cta-btn"
                     style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-                    onClick={() => alert('Aquí se verán opciones de exportación de reportes financieros.\n\nEn proceso de desarrollo.')}
-                  >
-                    <FaDownload style={{ marginRight: '0.5rem' }} />
-                    Exportar Reporte
-                  </button>
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                  <div>
-                    <h5 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>Ingresos por Mes</h5>
-                    <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span>Octubre 2025</span>
-                        <span style={{ fontWeight: '600' }}>{formatCurrency(45000)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span>Septiembre 2025</span>
-                        <span style={{ fontWeight: '600' }}>{formatCurrency(42000)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Agosto 2025</span>
-                        <span style={{ fontWeight: '600' }}>{formatCurrency(38000)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h5 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>Métodos de Pago</h5>
-                    <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span>Transferencia</span>
-                        <span style={{ fontWeight: '600' }}>65%</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span>Tarjeta</span>
-                        <span style={{ fontWeight: '600' }}>25%</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Efectivo</span>
-                        <span style={{ fontWeight: '600' }}>10%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'payments' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Gestión de Pagos</h4>
-                  <button 
-                    className="cta-btn" 
-                    style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-                    onClick={() => alert('Aquí se verán opciones para registrar nuevos pagos.\n\nEn proceso de desarrollo.')}
+                    onClick={handleOpenChargeModal}
                   >
                     <FaPlus style={{ marginRight: '0.5rem' }} />
-                    Nuevo Pago
+                    Registrar Nuevo Cobro
                   </button>
                 </div>
-                
+
+                {/* Filters */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  padding: '1rem',
+                  background: 'var(--bg-secondary)',
+                  borderRadius: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ color: 'var(--text-secondary)', minWidth: '160px' }}>Buscar por Estudiante:</span>
+                    <input
+                      type="text"
+                      placeholder="Nombre del estudiante..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        border: '1px solid var(--input-border)',
+                        borderRadius: '6px',
+                        background: 'var(--input-bg)',
+                        color: 'var(--text-primary)'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ color: 'var(--text-secondary)', minWidth: '140px' }}>Filtrar por Estado:</span>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      style={{
+                        padding: '0.5rem',
+                        border: '1px solid var(--input-border)',
+                        borderRadius: '6px',
+                        background: 'var(--input-bg)',
+                        color: 'var(--text-primary)',
+                        minWidth: '160px'
+                      }}
+                    >
+                      <option value="Todos">Todos</option>
+                      <option value="pendiente">Pendiente</option>
+                      <option value="vencido">Vencido</option>
+                      <option value="pagado">Pagado</option>
+                    </select>
+                  </div>
+                </div>
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
+                  <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
                         <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Estudiante</th>
+                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Concepto</th>
                         <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Monto</th>
                         <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Método</th>
                         <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Fecha</th>
                         <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Estado</th>
+                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {mockPayments.map((payment) => (
+                      {filteredCharges.map((payment) => (
                         <tr key={payment.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--border-color)' }}>
                           <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: '500' }}>
                             {payment.studentName}
+                          </td>
+                          <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                            {payment.concept || '—'}
                           </td>
                           <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-primary)', fontWeight: '600' }}>
                             {formatCurrency(payment.amount)}
                           </td>
                           <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                            {payment.method}
+                            {payment.method || '—'}
                           </td>
                           <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                             {payment.date}
@@ -360,87 +402,306 @@ const FinancialDashboard = () => {
                               width: '90px',
                               textAlign: 'center',
                               display: 'inline-block',
-                              background: payment.status === 'paid' ? 'var(--success-light)' : 
-                                         payment.status === 'pending' ? 'var(--warning-light)' : 'var(--error-light)',
-                              color: payment.status === 'paid' ? 'var(--success-dark)' : 
-                                     payment.status === 'pending' ? 'var(--warning-dark)' : 'var(--error-dark)'
+                              background: payment.status === 'pagado' ? 'var(--success-light)' : payment.status === 'pendiente' ? 'var(--warning-light)' : 'var(--error-light)',
+                              color: payment.status === 'pagado' ? 'var(--success-dark)' : payment.status === 'pendiente' ? 'var(--warning-dark)' : 'var(--error-dark)'
                             }}>
-                              {payment.status === 'paid' ? 'Pagado' : 
-                               payment.status === 'pending' ? 'Pendiente' : 'Vencido'}
+                              {payment.status === 'pagado' ? 'Pagado' : payment.status === 'pendiente' ? 'Pendiente' : 'Vencido'}
                             </span>
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <button
+                              title="Editar"
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--text-secondary)',
+                                marginRight: '0.5rem'
+                              }}
+                              onClick={() => alert('Edición de cobros en desarrollo.')}
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              title="Eliminar"
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--error)'
+                              }}
+                              onClick={() => handleDeleteCharge(payment.id)}
+                            >
+                              <FaTrash />
+                            </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+
+                {/* Register Charge Modal */}
+                {showChargeModal && (
+                  <div style={modalOverlayStyle}>
+                    <div style={modalContentStyle}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Registrar Nuevo Cobro</h3>
+                        <button onClick={handleCloseChargeModal} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: 'var(--text-secondary)' }}>×</button>
+                      </div>
+                      <form onSubmit={handleRegisterCharge}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Estudiante</label>
+                            <input
+                              type="text"
+                              placeholder="Escriba para buscar un estudiante..."
+                              value={chargeForm.studentName}
+                              onChange={(e) => setChargeForm({ ...chargeForm, studentName: e.target.value })}
+                              style={inputStyle}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Monto</label>
+                            <input
+                              type="number"
+                              placeholder="Ej: 15000"
+                              value={chargeForm.amount}
+                              onChange={(e) => setChargeForm({ ...chargeForm, amount: e.target.value })}
+                              style={inputStyle}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha</label>
+                            <input
+                              type="date"
+                              value={chargeForm.date}
+                              onChange={(e) => setChargeForm({ ...chargeForm, date: e.target.value })}
+                              style={inputStyle}
+                              required
+                            />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Concepto</label>
+                            <input
+                              type="text"
+                              placeholder="Ej: Cuota mensual, Matrícula, etc."
+                              value={chargeForm.concept}
+                              onChange={(e) => setChargeForm({ ...chargeForm, concept: e.target.value })}
+                              style={inputStyle}
+                            />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Medio de Pago</label>
+                            <select
+                              value={chargeForm.method}
+                              onChange={(e) => setChargeForm({ ...chargeForm, method: e.target.value })}
+                              style={selectStyle}
+                            >
+                              {(mockPaymentMethods || ['Efectivo','Transferencia','Tarjeta','Mercado Pago']).map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div style={buttonStyle}>
+                          <button type="button" onClick={handleCloseChargeModal} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.95rem' }}>Cancelar</button>
+                          <button type="submit" className="cta-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.95rem' }}>Registrar</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'payments' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Pagos a Profesores</h4>
+                  <button 
+                    className="cta-btn"
+                    style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+                    onClick={handleOpenTeacherPaymentModal}
+                  >
+                    <FaPlus style={{ marginRight: '0.5rem' }} />
+                    Registrar Nuevo Pago
+                  </button>
+                </div>
+                {/* Search */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  padding: '1rem',
+                  background: 'var(--bg-secondary)',
+                  borderRadius: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ color: 'var(--text-secondary)', minWidth: '160px' }}>Buscar por Profesor:</span>
+                    <input
+                      type="text"
+                      placeholder="Nombre del profesor..."
+                      value={searchTeacher}
+                      onChange={(e) => setSearchTeacher(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        border: '1px solid var(--input-border)',
+                        borderRadius: '6px',
+                        background: 'var(--input-bg)',
+                        color: 'var(--text-primary)'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
+                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Profesor</th>
+                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Concepto</th>
+                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Monto</th>
+                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Fecha de Pago</th>
+                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Método</th>
+                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teacherPayments
+                        .filter(p => !searchTeacher || (p.teacherName || '').toLowerCase().includes(searchTeacher.toLowerCase()))
+                        .map((p) => (
+                        <tr key={p.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                            {p.teacherName}
+                          </td>
+                          <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                            {p.concept}
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-primary)', fontWeight: '600' }}>
+                            {formatCurrency(p.amount)}
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            {p.date}
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            {p.method}
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <button
+                              title="Editar"
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '0.5rem' }}
+                              onClick={() => alert('Edición de pagos en desarrollo.')}
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              title="Eliminar"
+                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--error)' }}
+                              onClick={() => handleDeleteTeacherPayment(p.id)}
+                            >
+                              <FaTrash />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Register Teacher Payment Modal */}
+                {showTeacherPaymentModal && (
+                  <div style={modalOverlayStyle}>
+                    <div style={modalContentStyle}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Registrar Pago a Profesor</h3>
+                        <button onClick={handleCloseTeacherPaymentModal} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: 'var(--text-secondary)' }}>×</button>
+                      </div>
+                      <form onSubmit={handleRegisterTeacherPayment}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Profesor</label>
+                            <select
+                              value={teacherPaymentForm.teacherId}
+                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, teacherId: e.target.value })}
+                              style={selectStyle}
+                            >
+                              {(mockTeachers || []).map(t => (
+                                <option key={t._id} value={t._id}>{t.firstName} {t.lastName}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Monto</label>
+                            <input
+                              type="number"
+                              placeholder="Ej: 25000"
+                              value={teacherPaymentForm.amount}
+                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, amount: e.target.value })}
+                              style={inputStyle}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha de Pago</label>
+                            <input
+                              type="date"
+                              value={teacherPaymentForm.date}
+                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, date: e.target.value })}
+                              style={inputStyle}
+                              required
+                            />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Concepto</label>
+                            <input
+                              type="text"
+                              placeholder="Ej: Pago de horas de Octubre"
+                              value={teacherPaymentForm.concept}
+                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, concept: e.target.value })}
+                              style={inputStyle}
+                            />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Método de Pago</label>
+                            <select
+                              value={teacherPaymentForm.method}
+                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, method: e.target.value })}
+                              style={selectStyle}
+                            >
+                              {(mockPaymentMethods || ['Efectivo','Transferencia','Tarjeta','Mercado Pago']).map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div style={buttonStyle}>
+                          <button type="button" onClick={handleCloseTeacherPaymentModal} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.95rem' }}>Cancelar</button>
+                          <button type="submit" className="cta-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.95rem' }}>Registrar Pago</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === 'invoices' && (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Facturación</h4>
-                  <button 
-                    className="cta-btn" 
-                    style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-                    onClick={() => alert('Aquí se verán opciones para generar nuevas facturas.\n\nEn proceso de desarrollo.')}
-                  >
-                    <FaFileInvoiceDollar style={{ marginRight: '0.5rem' }} />
-                    Nueva Factura
-                  </button>
+                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Facturación</h4>
+                  <p>Sección en desarrollo. Próximamente podrás generar y gestionar comprobantes.</p>
                 </div>
-                
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
-                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Número</th>
-                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Cliente</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Monto</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Fecha</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mockInvoices.map((invoice) => (
-                        <tr key={invoice.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: '600' }}>
-                            {invoice.number}
-                          </td>
-                          <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>
-                            {invoice.studentName}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-primary)', fontWeight: '600' }}>
-                            {formatCurrency(invoice.amount)}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                            {invoice.date}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center' }}>
-                            <span style={{
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '12px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              textTransform: 'uppercase',
-                              width: '90px',
-                              textAlign: 'center',
-                              display: 'inline-block',
-                              background: invoice.status === 'paid' ? 'var(--success-light)' : 
-                                         invoice.status === 'sent' ? 'var(--info-light)' : 'var(--warning-light)',
-                              color: invoice.status === 'paid' ? 'var(--success-dark)' : 
-                                     invoice.status === 'sent' ? 'var(--info-dark)' : 'var(--warning-dark)'
-                            }}>
-                              {invoice.status === 'paid' ? 'Pagada' : 
-                               invoice.status === 'sent' ? 'Enviada' : 'Pendiente'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              </div>
+            )}
+
+            {activeTab === 'reports' && (
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Reportes</h4>
+                <p>Sección en desarrollo. Próximamente verás reportes financieros aquí.</p>
               </div>
             )}
           </div>
