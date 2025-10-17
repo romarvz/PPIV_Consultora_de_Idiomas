@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
 const { Language } = require('../models');
 
-// Función auxiliar para manejar errores de validación
+// auxiliary function to handle validation errors
 const handleValidationErrors = (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -21,8 +21,8 @@ const handleValidationErrors = (req, res) => {
 const getLanguages = async (req, res) => {
   try {
     const { active } = req.query;
-    
-    // Filtrar por activos si se especifica
+
+    // Filter by active if specified
     const filter = active === 'true' ? { isActive: true } : {};
     
     const languages = await Language.find(filter).sort({ name: 1 });
@@ -117,9 +117,8 @@ const getLanguageByCode = async (req, res) => {
   }
 };
 
-// @desc    Crear nuevo idioma
-// @route   POST /api/languages
-// @access  Private (Admin only)
+//create language
+
 const createLanguage = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -127,7 +126,7 @@ const createLanguage = async (req, res) => {
 
     const { code, name, nativeName, description, level, demandLevel } = req.body;
 
-    // Verificar si ya existe un idioma con ese código
+    // verrify unique code
     const existingLanguage = await Language.findByCode(code);
     if (existingLanguage) {
       return res.status(400).json({
@@ -137,7 +136,7 @@ const createLanguage = async (req, res) => {
       });
     }
 
-    // Crear nuevo idioma
+    // Create and save new language
     const language = new Language({
       code,
       name,
@@ -189,9 +188,8 @@ const createLanguage = async (req, res) => {
   }
 };
 
-// @desc    Actualizar idioma
-// @route   PUT /api/languages/:id
-// @access  Private (Admin only)
+// update language
+
 const updateLanguage = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -210,7 +208,7 @@ const updateLanguage = async (req, res) => {
       });
     }
 
-    // Verificar código único si se está cambiando
+    // Verify unique code if changed
     if (code && code !== language.code) {
       const existingLanguage = await Language.findByCode(code);
       if (existingLanguage) {
@@ -222,7 +220,7 @@ const updateLanguage = async (req, res) => {
       }
     }
 
-    // Actualizar campos
+    // Update fields
     if (code) language.code = code;
     if (name) language.name = name;
     if (nativeName !== undefined) language.nativeName = nativeName;
@@ -268,9 +266,6 @@ const updateLanguage = async (req, res) => {
   }
 };
 
-// @desc    Activar/Desactivar idioma
-// @route   PATCH /api/languages/:id/toggle
-// @access  Private (Admin only)
 const toggleLanguageStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -314,9 +309,7 @@ const toggleLanguageStatus = async (req, res) => {
   }
 };
 
-// @desc    Eliminar idioma (soft delete - desactivar)
-// @route   DELETE /api/languages/:id
-// @access  Private (Admin only)
+// delete language (soft delete)
 const deleteLanguage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -331,7 +324,7 @@ const deleteLanguage = async (req, res) => {
       });
     }
 
-    // Soft delete - solo desactivar
+    // Soft delete 
     language.isActive = false;
     await language.save();
 
@@ -362,23 +355,20 @@ const deleteLanguage = async (req, res) => {
   }
 };
 
-// @desc    Obtener estadísticas de idiomas
-// @route   GET /api/languages/stats
-// @access  Private (Admin only)
+
 const getLanguageStats = async (req, res) => {
   try {
     const totalLanguages = await Language.countDocuments();
     const activeLanguages = await Language.countDocuments({ isActive: true });
     const inactiveLanguages = await Language.countDocuments({ isActive: false });
 
-    // Estadísticas por nivel de demanda
+    
     const demandStats = await Language.aggregate([
       { $match: { isActive: true } },
       { $group: { _id: '$demandLevel', count: { $sum: 1 } } },
       { $sort: { _id: 1 } }
     ]);
 
-    // Estadísticas por nivel de dificultad
     const levelStats = await Language.aggregate([
       { $match: { isActive: true } },
       { $group: { _id: '$level', count: { $sum: 1 } } },

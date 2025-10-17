@@ -54,9 +54,11 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/authNew');
 app.use('/api/auth', authRoutes);
 
-// Rutas CRUD para estudiantes y profesores
-const crudRoutes = require('./routes/crud');
-app.use('/api', crudRoutes);
+// Rutas específicas para estudiantes y profesores
+const studentRoutes = require('./routes/studentRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+app.use('/api/students', studentRoutes);
+app.use('/api/teachers', teacherRoutes);
 
 // Rutas para gestión de idiomas
 const languageRoutes = require('./routes/languages');
