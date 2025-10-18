@@ -123,13 +123,13 @@ const StudentDashboard = () => {
             <h4 className="dashboard-card__title">Mis Próximas Clases</h4>
           </div>
           {mockClasses.map((clase) => (
-            <div key={clase.id} className="dashboard-card__item">
+            <div key={clase.id} className="dashboard-card__item dashboard-card__item--scheduled">
               <div className="dashboard-card__item-title">
-                <FaBookOpen style={{ marginRight: '8px', color: 'var(--primary-color)' }} />
+                <FaBookOpen />
                 {clase.subject}
               </div>
-              <div className="dashboard-card__item-subtitle" style={{ marginTop: '5px' }}>
-                <FaClock style={{ marginRight: '5px' }} />
+              <div className="dashboard-card__item-subtitle">
+                <FaClock />
                 {clase.date} • {clase.time} • {clase.duration}
               </div>
               <div className="dashboard-card__item-meta">{clase.teacher}</div>
@@ -144,9 +144,10 @@ const StudentDashboard = () => {
             <h4 className="dashboard-card__title">Mis Pagos</h4>
           </div>
           {mockPayments.map((pago) => (
-            <div key={pago.id} className="dashboard-card__item">
+            <div key={pago.id} className={`dashboard-card__item ${pago.status === 'paid' ? 'dashboard-card__item--completed' : 'dashboard-card__item--pending'}`}>
               <div className="dashboard-card__item-header">
                 <span className="dashboard-card__item-title">
+                  <FaDollarSign />
                   ${pago.amount.toLocaleString()}
                 </span>
                 <span className={`status-badge ${pago.status === 'paid' ? 'status-badge--paid' : 'status-badge--pending'}`}>
@@ -165,10 +166,10 @@ const StudentDashboard = () => {
             <FaChartLine className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mi Progreso Académico</h4>
           </div>
-          <div style={{ marginBottom: '15px' }}>
+          <div className="dashboard-card__item dashboard-card__item--completed">
             <div className="dashboard-card__item-header">
               <span className="dashboard-card__item-title">
-                <FaCheckCircle style={{ color: 'var(--progress-success)', marginRight: '8px' }} />
+                <FaCheckCircle style={{ color: 'var(--success)' }} />
                 Inglés B2
               </span>
               <span className="dashboard-card__item-subtitle">85%</span>
@@ -180,10 +181,10 @@ const StudentDashboard = () => {
               12 de 14 lecciones completadas
             </div>
           </div>
-          <div style={{ marginBottom: '15px' }}>
+          <div className="dashboard-card__item dashboard-card__item--pending">
             <div className="dashboard-card__item-header">
               <span className="dashboard-card__item-title">
-                <FaClock style={{ color: 'var(--progress-warning)', marginRight: '8px' }} />
+                <FaClock style={{ color: 'var(--warning)' }} />
                 Francés A1
               </span>
               <span className="dashboard-card__item-subtitle">60%</span>

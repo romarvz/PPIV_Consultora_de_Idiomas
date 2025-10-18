@@ -164,18 +164,7 @@ const TeacherDashboard = () => {
       {/* Dashboard Cards */}
       <div className="dashboard-cards-grid dashboard-cards-grid--large">
         {/* Today's Classes */}
-        <div className="dashboard-card" style={{
-          transition: 'all 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-5px)';
-          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        }}>
+        <div className="dashboard-card">
           <div className="dashboard-card__header">
             <FaCalendarCheck className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mis Clases de Hoy</h4>
@@ -211,136 +200,85 @@ const TeacherDashboard = () => {
         </div>
 
         {/* My Students */}
-        <div className="dashboard-card" style={{
-          transition: 'all 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-5px)';
-          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        }}>
+        <div className="dashboard-card">
           <div className="dashboard-card__header">
             <FaUsers className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mis Estudiantes</h4>
           </div>
           {mockStudents.slice(0, 4).map((student) => (
-            <div key={student.id} style={{ 
-              marginBottom: '15px', 
-              padding: '10px', 
-              border: '1px solid #eee',
-              borderRadius: '5px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                <div>
-                  <div style={{ fontWeight: 'bold', color: '#333' }}>
-                    <FaGraduationCap style={{ marginRight: '8px', color: '#2c5aa0' }} />
-                    {student.name}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#666' }}>{student.level}</div>
+            <div key={student.id} className="dashboard-card__item">
+              <div className="dashboard-card__item-header">
+                <div className="dashboard-card__item-title">
+                  <FaGraduationCap />
+                  {student.name}
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '12px', color: '#888' }}>{student.progress}% progreso</div>
-                  <div style={{ fontSize: '12px', color: '#888' }}>{student.totalClasses} clases</div>
-                </div>
+                <span className="dashboard-card__item-subtitle">{student.progress}%</span>
               </div>
-              <div style={{ 
-                width: '100%', 
-                height: '4px', 
-                backgroundColor: '#e0e0e0', 
-                borderRadius: '2px'
-              }}>
-                <div style={{ 
-                  width: `${student.progress}%`, 
-                  height: '100%', 
-                  backgroundColor: student.progress > 70 ? 'var(--primary)' : student.progress > 40 ? 'var(--warning)' : 'var(--error)',
-                  borderRadius: '2px'
-                }}></div>
+              <div className="dashboard-card__item-subtitle">{student.level}</div>
+              <div className="progress-bar">
+                <div 
+                  className={`progress-bar__fill ${
+                    student.progress > 70 ? 'progress-bar__fill--success' : 
+                    student.progress > 40 ? 'progress-bar__fill--warning' : 'progress-bar__fill--error'
+                  }`}
+                  style={{ width: `${student.progress}%` }}
+                ></div>
               </div>
-              <div style={{ fontSize: '11px', color: '#888', marginTop: '5px' }}>
-                Última clase: {student.lastClass}
+              <div className="progress-text">
+                {student.totalClasses} clases • Última: {student.lastClass}
               </div>
             </div>
           ))}
-          <div style={{ textAlign: 'center', marginTop: '10px' }}>
-            <button style={{
-              background: 'transparent',
-              color: 'var(--primary)',
-              border: '1px solid var(--primary)',
-              padding: '5px 15px',
-              borderRadius: '3px',
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}>
+          <div style={{ textAlign: 'center', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
+            <button className="cta-btn" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
               Ver todos los estudiantes ({mockStudents.length})
             </button>
           </div>
         </div>
 
         {/* Teacher Performance */}
-        <div className="dashboard-card" style={{
-          transition: 'all 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-5px)';
-          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        }}>
+        <div className="dashboard-card">
           <div className="dashboard-card__header">
             <FaStar className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mi Rendimiento</h4>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
-            <div style={{ textAlign: 'center', padding: '15px', background: '#f8f9fa', borderRadius: '5px' }}>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--primary)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="dashboard-card__item" style={{ textAlign: 'center', borderLeft: 'none', background: 'var(--bg-tertiary)' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>
                 {mockTeacherStats.todayClasses}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Clases Hoy</div>
+              <div className="dashboard-card__item-meta">Clases Hoy</div>
             </div>
-            <div style={{ textAlign: 'center', padding: '15px', background: '#f8f9fa', borderRadius: '5px' }}>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--primary)' }}>
+            <div className="dashboard-card__item" style={{ textAlign: 'center', borderLeft: 'none', background: 'var(--bg-tertiary)' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>
                 {mockTeacherStats.averageRating}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Calificación</div>
+              <div className="dashboard-card__item-meta">Calificación</div>
             </div>
           </div>
 
-          <div style={{ marginBottom: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span style={{ fontWeight: 'bold', color: '#333' }}>Estudiantes Activos</span>
-              <span style={{ fontSize: '14px', color: '#666' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div className="dashboard-card__item-header">
+              <span className="dashboard-card__item-title">Estudiantes Activos</span>
+              <span className="dashboard-card__item-subtitle">
                 {mockTeacherStats.activeStudents}/{mockTeacherStats.totalStudents}
               </span>
             </div>
-            <div style={{ 
-              width: '100%', 
-              height: '8px', 
-              backgroundColor: '#e0e0e0', 
-              borderRadius: '4px'
-            }}>
-              <div style={{ 
-                width: `${(mockTeacherStats.activeStudents / mockTeacherStats.totalStudents) * 100}%`, 
-                height: '100%', 
-                backgroundColor: 'var(--primary)',
-                borderRadius: '4px'
-              }}></div>
+            <div className="progress-bar">
+              <div 
+                className="progress-bar__fill progress-bar__fill--success"
+                style={{ width: `${(mockTeacherStats.activeStudents / mockTeacherStats.totalStudents) * 100}%` }}
+              ></div>
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', padding: '10px', background: 'var(--primary-light)', borderRadius: '5px', color: 'white' }}>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary)' }}>
-              <FaDollarSign style={{ marginRight: '5px' }} />
+          <div className="dashboard-card__item" style={{ textAlign: 'center', borderLeft: 'none', background: 'var(--primary)', color: 'white' }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+              <FaDollarSign style={{ marginRight: '0.5rem' }} />
               ${mockTeacherStats.monthlyEarnings.toLocaleString()}
             </div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}>Ganancias este mes</div>
+            <div style={{ fontSize: '0.8rem', opacity: '0.9' }}>Ganancias este mes</div>
           </div>
         </div>
       </div>
