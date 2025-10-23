@@ -62,6 +62,10 @@ app.use('/api', crudRoutes);
 const languageRoutes = require('./routes/languages');
 app.use('/api/languages', languageRoutes);
 
+// Rutas para gestion financiera
+const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
+app.use('/api/concept-categories', conceptCategoryRoutes);
+
 //middleware para cuando no encontramos ruta (solo GET y POST seguros)
 app.get('*', (req, res) => {
   res.status(404).json({
