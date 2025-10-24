@@ -29,7 +29,7 @@ const generateToken = (userId) => {
 
 // Function to validate registration permissions
 const validateRegistrationPermissions = (role, authHeader) => {
-
+  // Solo admins pueden registrar profesores y otros admins
   if (role === 'profesor' || role === 'admin') {
     if (!authHeader) {
       return {
@@ -730,13 +730,6 @@ const deactivateUser = async (req, res) => {
 
   } catch (error) {
     console.error('Error en deactivateUser:', error);
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de usuario inválido',
-        code: 'INVALID_ID'
-      });
-    }
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -791,13 +784,6 @@ const reactivateUser = async (req, res) => {
 
   } catch (error) {
     console.error('Error en reactivateUser:', error);
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de usuario inválido',
-        code: 'INVALID_ID'
-      });
-    }
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -870,13 +856,6 @@ const deleteUser = async (req, res) => {
 
   } catch (error) {
     console.error('Error en deleteUser:', error);
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de usuario inválido',
-        code: 'INVALID_ID'
-      });
-    }
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

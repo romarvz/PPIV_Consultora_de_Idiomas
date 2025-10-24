@@ -119,13 +119,6 @@ const getStudentById = async (req, res) => {
 
   } catch (error) {
     console.error('Error en getStudentById:', error);
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de estudiante inválido',
-        code: 'INVALID_ID'
-      });
-    }
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -202,31 +195,11 @@ const updateStudent = async (req, res) => {
   } catch (error) {
     console.error('Error en updateStudent:', error);
     
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de estudiante inválido',
-        code: 'INVALID_ID'
-      });
-    }
-    
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
         message: 'Ya existe un usuario con este email',
         code: 'DUPLICATE_EMAIL'
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => ({
-        field: err.path,
-        message: err.message
-      }));
-      return res.status(400).json({
-        success: false,
-        message: 'Errores de validación',
-        errors: validationErrors
       });
     }
 

@@ -137,13 +137,6 @@ const getTeacherById = async (req, res) => {
 
   } catch (error) {
     console.error('Error en getTeacherById:', error);
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de profesor inválido',
-        code: 'INVALID_ID'
-      });
-    }
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -211,31 +204,11 @@ const updateTeacher = async (req, res) => {
   } catch (error) {
     console.error('Error en updateTeacher:', error);
     
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de profesor inválido',
-        code: 'INVALID_ID'
-      });
-    }
-    
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
         message: 'Ya existe un usuario con este email',
         code: 'DUPLICATE_EMAIL'
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => ({
-        field: err.path,
-        message: err.message
-      }));
-      return res.status(400).json({
-        success: false,
-        message: 'Errores de validación',
-        errors: validationErrors
       });
     }
 
