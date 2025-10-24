@@ -57,8 +57,10 @@ app.use('/api/auth', authRoutes);
 // Rutas específicas para estudiantes y profesores
 const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
+const dashboardRoutes = require('./routes/dashboard')
 app.use('/api/students', studentRoutes);
 app.use('/api/teachers', teacherRoutes);
+app.use('/api/dashboard', dashboardRoutes)
 
 // Rutas para gestión de idiomas
 const languageRoutes = require('./routes/languages');
