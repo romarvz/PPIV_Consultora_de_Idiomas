@@ -59,9 +59,9 @@ const Login = () => {
           }}>
             <strong> Información importante:</strong>
             <ul style={{ marginTop: '10px', paddingLeft: '20px' }}>
-              <li><strong>Estudiantes y Profesores:</strong> En tu primer login, usa tu DNI como contraseña</li>
+              <li><strong>Estudiantes y Profesores:</strong> Para loguearte usa tu DNI como contraseña</li>
               <li><strong>Administradores:</strong> Usa la contraseña que te fue asignada</li>
-              <li>Después del primer login, deberás cambiar tu contraseña</li>
+              
             </ul>
           </div>
           
