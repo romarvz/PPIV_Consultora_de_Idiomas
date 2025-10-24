@@ -6,6 +6,9 @@ const Admin = require('./Admin');
 const Language = require('./Language');
 const Empresa = require('./Empresa');
 const AuditoriaLog = require('./AuditoriaLog');
+const PerfilEstudiante = require('./PerfilEstudiante');
+const ReporteAcademico = require('./ReporteAcademico');
+const ReporteFinanciero = require('./ReporteFinanciero');
 
 module.exports = {
   BaseUser,
@@ -15,6 +18,9 @@ module.exports = {
   Language,
   Empresa,
   AuditoriaLog,
+  PerfilEstudiante,
+  ReporteAcademico,
+  ReporteFinanciero,
   //function helper
   getUserModel: (role) => {
     switch(role) {

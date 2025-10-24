@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 const mongoose = require('mongoose');
+const perfilesRoutes = require('./routes/perfiles');
 
 // Función principal para iniciar la aplicación
 const startServer = async () => {
@@ -53,6 +54,7 @@ app.get('/', (req, res) => {
 // Rutas de autenticación
 const authRoutes = require('./routes/authNew');
 app.use('/api/auth', authRoutes);
+app.use('/api/perfiles', perfilesRoutes);
 
 // Rutas específicas para estudiantes y profesores
 const studentRoutes = require('./routes/studentRoutes');
@@ -117,3 +119,6 @@ app.listen(PORT, () => {
 
 // Iniciar la aplicación
 startServer();
+
+// TEMPORARY: Comment out until authentication is ready
+// app.use('/api/perfiles', perfilesRoutes);
