@@ -3,7 +3,6 @@ const Factura = require('../models/factura.model');
 //const Curso = require('../models/curso.model');
 //const Clase = require('../models/clase.model');
 //const BaseUser = require('../models/BaseUser.model');
-const facturaService = require('../services/factura.service');
 
 const facturaService = {};
 
@@ -41,7 +40,6 @@ facturaService.generarNumeroFactura = async () => {
     //4) llamar a this.generarNumeroFactura() para obtener el número correlativo
     //5) crear y guardar la factura en la base de datos
     console.log('Generando factura mensual para estudiante:', estudianteId, 'Periodo:', periodo);
-
 
 };
 

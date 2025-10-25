@@ -12,6 +12,8 @@ const contadorSchema = new Schema({
     }
 });
 
-module.exports = mongoose.model('Contador', contadorSchema);
+const Contador = mongoose.model('Contador', contadorSchema);
+
 module.exports = Contador;
+
     

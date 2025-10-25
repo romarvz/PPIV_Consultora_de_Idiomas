@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const facturaCtrl = require('../controllers/facturas.controller');
-const { authenticateToken, requireAdmin} = require('../middlewares/auth.middleware');
+const { authenticateToken, requireAdmin} = require('../middleware/authMiddlewareNew');
 
 // Ruta para crear una nueva factura
 
