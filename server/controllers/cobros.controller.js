@@ -38,8 +38,9 @@ cobroCtrl.createCobro = async (req, res) => {
             fechaCobro: fechaCobro || Date.now(),
             notas
         });
-        await newCobro.save();
 
+        const cobrosPrevios = await Cobro.find({ factura: factura });
+        const totalCobrado = cobrosPrevios.reduce((sum, cobro) => sum + cobro.monto, 0);
         //actualizar el estado de la factura 
         if (totalCobrado >= facturaDB.total){
             facturaDB.estado = 'Cobrada';
@@ -47,6 +48,7 @@ cobroCtrl.createCobro = async (req, res) => {
             facturaDB.estado = 'Cobro Parcial';
         }
         await facturaDB.save();
+        await newCobro.save();
 
         res.status(201).json({ message: 'Cobro registrado exitosamente', cobro: newCobro });
     } catch (error) {
