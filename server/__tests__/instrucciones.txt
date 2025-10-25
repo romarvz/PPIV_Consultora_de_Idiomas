@@ -1,0 +1,5 @@
+# Instalar dependencias 
+npm install --save-dev jest supertest
+
+# Ejecutar tests
+npm test
