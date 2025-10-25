@@ -160,21 +160,22 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
         }).join(', ')
         
         // Crear mensaje de éxito
-        const message = ` ¡PROFESOR REGISTRADO CORRECTAMENTE! 
+        const message = `PROFESOR REGISTRADO CORRECTAMENTE
 
- Email: ${formData.email}
- Nombre: ${formData.firstName} ${formData.lastName}
- DNI: ${formData.dni}
- Especialidades: ${especialidadesNombres}
- Tarifa: $${formData.tarifaPorHora}/hora
-🔑 Contraseña temporal: ${tempPassword}
+Email: ${formData.email}
+Nombre: ${formData.firstName} ${formData.lastName}
+DNI: ${formData.dni}
+Especialidades: ${especialidadesNombres}
+Tarifa: $${formData.tarifaPorHora}/hora
 
-⚠️ IMPORTANTE:
-• El profesor debe usar su DNI como contraseña inicial
-• Deberá cambiar la contraseña en su primer login
-• Guarda esta información de forma segura
+Usuario: ${formData.email}
+Contraseña: ${tempPassword}
 
- El registro se completó exitosamente`
+IMPORTANTE:
+• El profesor debe usar su correo electrónico como usuario
+• Su contraseña es su DNI
+
+El registro se completó exitosamente`
 
         // Mostrar mensaje de éxito
         setSuccessMessage(message)

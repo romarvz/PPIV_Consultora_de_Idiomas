@@ -6,10 +6,12 @@ import {
   FaUserCheck,
   FaUserTimes,
   FaGraduationCap,
-  FaEye
+  FaEye,
+  FaUserPlus
 } from 'react-icons/fa';
 import api from '../services/api';
 import { mockStudents } from '../services/mockData';
+import RegisterStudent from './RegisterStudent';
 
 const StudentsManagement = ({ onBack }) => {
   const [students, setStudents] = useState([]);
@@ -34,6 +36,7 @@ const StudentsManagement = ({ onBack }) => {
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     fetchStudents();
@@ -44,53 +47,29 @@ const StudentsManagement = ({ onBack }) => {
     try {
       setLoading(true);
       
-      // Use mock data and apply filters
-      let filteredStudents = [...mockStudents];
+      const queryParams = new URLSearchParams({
+        page: pagination.page,
+        limit: pagination.limit,
+        ...(filters.search && { search: filters.search }),
+        ...(filters.status && { status: filters.status }),
+        ...(filters.nivel && { nivel: filters.nivel }),
+        ...(filters.condicion && { condicion: filters.condicion })
+      });
       
-      // Apply search filter
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        filteredStudents = filteredStudents.filter(student => 
-          student.firstName.toLowerCase().includes(searchTerm) ||
-          student.lastName.toLowerCase().includes(searchTerm) ||
-          student.email.toLowerCase().includes(searchTerm)
-        );
+      const response = await api.get(`/students?${queryParams}`);
+      
+      if (response.data.success) {
+        setStudents(response.data.data.students);
+        setPagination(prev => ({
+          ...prev,
+          total: response.data.data.pagination.total,
+          pages: response.data.data.pagination.pages,
+          hasPrev: response.data.data.pagination.hasPrev,
+          hasNext: response.data.data.pagination.hasNext
+        }));
+      } else {
+        setError('Error al cargar estudiantes');
       }
-      
-      // Apply status filter
-      if (filters.status) {
-        if (filters.status === 'active') {
-          filteredStudents = filteredStudents.filter(student => student.isActive);
-        } else if (filters.status === 'inactive') {
-          filteredStudents = filteredStudents.filter(student => !student.isActive);
-        }
-      }
-      
-      // Apply nivel filter
-      if (filters.nivel) {
-        filteredStudents = filteredStudents.filter(student => student.nivel === filters.nivel);
-      }
-      
-      // Apply condicion filter
-      if (filters.condicion) {
-        filteredStudents = filteredStudents.filter(student => 
-          student.condicion === filters.condicion || student.estadoAcademico === filters.condicion
-        );
-      }
-      
-      // Apply pagination
-      const startIndex = (pagination.page - 1) * pagination.limit;
-      const endIndex = startIndex + pagination.limit;
-      const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
-      
-      setStudents(paginatedStudents);
-      setPagination(prev => ({
-        ...prev,
-        total: filteredStudents.length,
-        pages: Math.ceil(filteredStudents.length / pagination.limit),
-        hasPrev: pagination.page > 1,
-        hasNext: pagination.page < Math.ceil(filteredStudents.length / pagination.limit)
-      }));
     } catch (error) {
       setError('Error al cargar estudiantes');
       console.error('Error fetching students:', error);
@@ -101,17 +80,10 @@ const StudentsManagement = ({ onBack }) => {
 
   const fetchStats = async () => {
     try {
-      // Calculate stats from mock data
-      const total = mockStudents.length;
-      const active = mockStudents.filter(s => s.isActive).length;
-      const inactive = mockStudents.filter(s => !s.isActive).length;
-      const graduated = mockStudents.filter(s => s.condicion === 'graduado' || s.estadoAcademico === 'graduado').length;
-      
-      setStats({
-        overview: { total, active, inactive },
-        byLevel: [],
-        byCondition: [{ _id: 'graduado', count: graduated }]
-      });
+      const response = await api.get('/students/stats');
+      if (response.data.success) {
+        setStats(response.data.data);
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -133,7 +105,7 @@ const StudentsManagement = ({ onBack }) => {
   const handleDeactivate = async (studentId) => {
     if (window.confirm('¿Estás seguro de que quieres desactivar este estudiante?')) {
       try {
-        await api.delete(`/auth/students/${studentId}`);
+        await api.delete(`/students/${studentId}`);
         fetchStudents();
         fetchStats();
       } catch (error) {
@@ -145,7 +117,7 @@ const StudentsManagement = ({ onBack }) => {
   const handleReactivate = async (studentId) => {
     if (window.confirm('¿Estás seguro de que quieres reactivar este estudiante?')) {
       try {
-        await api.patch(`/auth/students/${studentId}/reactivate`);
+        await api.patch(`/students/${studentId}/reactivate`);
         fetchStudents();
         fetchStats();
       } catch (error) {
@@ -210,8 +182,29 @@ const StudentsManagement = ({ onBack }) => {
   return (
     <div className="students-management" style={{ padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
-      <div className="dashboard-section">
-        <h3 className="dashboard-section__title">Gestión de Estudiantes</h3>
+      <div className="dashboard-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h3 className="dashboard-section__title" style={{ margin: 0 }}>Gestión de Estudiantes</h3>
+        <button
+          onClick={() => setShowAddModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.5rem',
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <FaUserPlus />
+          Agregar Estudiante
+        </button>
       </div>
       
       {/* Estadísticas */}
@@ -384,13 +377,6 @@ const StudentsManagement = ({ onBack }) => {
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <button
                             onClick={() => handleEdit(student)}
-                            title="Ver detalles"
-                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#6c757d', color: 'white' }}
-                          >
-                            <FaEye />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(student)}
                             title="Editar"
                             style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#17a2b8', color: 'white' }}
                           >
@@ -481,6 +467,36 @@ const StudentsManagement = ({ onBack }) => {
           }}
         />
       )}
+
+      {/* Modal de Registro de Estudiante */}
+      {showAddModal && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0,0,0,0.5)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            zIndex: 10000
+          }}
+          onClick={() => setShowAddModal(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <RegisterStudent 
+              onSuccess={() => {
+                setShowAddModal(false);
+                fetchStudents();
+                fetchStats();
+              }}
+              onCancel={() => setShowAddModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -513,7 +529,7 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
     setError('');
 
     try {
-      await api.put(`/auth/students/${student._id}`, formData);
+      await api.put(`/students/${student._id}`, formData);
       onSave();
     } catch (error) {
       console.error('Error updating student:', error);
