@@ -24,13 +24,16 @@ facturaCtrl.createFactura = async (req, res) => {
         // Cálculos en factura
         const subtotal = itemFacturaSchema.reduce((acc, item) => 
             acc + (item.precioUnitario * item.cantidad), 0);
+
+        const total = subtotal;
+
         const numeroFacturaCorrelativo = await facturaService.generarNumeroFactura();
         const nuevaFactura = new Factura({
             estudiante,
             condicionFiscal,
             numeroFactura: numeroFacturaCorrelativo,
             fechaEmision: new Date(),
-            fechaVencimiento: fechaVencimiento || new Date(Date.now().toString().slice(0,10)),
+            fechaVencimiento: fechaVencimiento || new Date(),
             itemFacturaSchema,
             periodoFacturado,
             subtotal,

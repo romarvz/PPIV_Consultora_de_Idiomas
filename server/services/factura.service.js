@@ -25,7 +25,8 @@ facturaService.generarNumeroFactura = async () => {
         // 2. Formatea el número de factura.
         const numeroSecuencia = String(contador.secuencia).toString().padStart(8, '0'); // Rellena con ceros a la izquierda hasta 8 dígitos
         //TODO: crear servicio para el punto de venta
-        const numeroFormateado = `F-00001-${numeroSecuencia}`; // Formato final
+        const numeroFormateado = `F-00001-${numeroSecuencia}`; // Formato final de la factura
+        return numeroFormateado;
     }catch(error){
         throw new Error('Error al generar el número de factura: ' + error.message);
     }
