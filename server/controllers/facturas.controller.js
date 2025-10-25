@@ -1,4 +1,5 @@
 const Factura = require('../models/factura.model');
+const facturaService = require('../services/factura.service');
 
 const facturaCtrl = {};
 
@@ -23,12 +24,11 @@ facturaCtrl.createFactura = async (req, res) => {
         // Cálculos en factura
         const subtotal = itemFacturaSchema.reduce((acc, item) => 
             acc + (item.precioUnitario * item.cantidad), 0);
-        const numeroFacturaSimulado = `F-00001-{Date.now().toString().slice(-6) }`;
-
+        const numeroFacturaCorrelativo = await facturaService.generarNumeroFactura();
         const nuevaFactura = new Factura({
             estudiante,
             condicionFiscal,
-            numeroFactura: numeroFacturaSimulado,
+            numeroFactura: numeroFacturaCorrelativo,
             fechaEmision: new Date(),
             fechaVencimiento: fechaVencimiento || new Date(Date.now().toString().slice(0,10)),
             itemFacturaSchema,

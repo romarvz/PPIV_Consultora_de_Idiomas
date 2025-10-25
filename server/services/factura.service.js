@@ -3,6 +3,7 @@ const Factura = require('../models/factura.model');
 //const Curso = require('../models/curso.model');
 //const Clase = require('../models/clase.model');
 //const BaseUser = require('../models/BaseUser.model');
+const facturaService = require('../services/factura.service');
 
 const facturaService = {};
 
