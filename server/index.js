@@ -122,3 +122,11 @@ startServer();
 
 // TEMPORARY: Comment out until authentication is ready
 // app.use('/api/perfiles', perfilesRoutes);
+
+// Academic reports routes (commented until auth is ready)
+// const reportesAcademicosRoutes = require('./routes/reportes-academicos');
+// app.use('/api/reportes-academicos', reportesAcademicosRoutes);
+
+// Financial reports routes (commented until auth is ready)
+// const reportesFinancierosRoutes = require('./routes/reportes-financieros');
+// app.use('/api/reportes-financieros', reportesFinancierosRoutes);
