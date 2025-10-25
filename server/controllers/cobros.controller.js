@@ -3,7 +3,7 @@ const Factura = require('../models/factura.model');
 
 const cobroCtrl = {};
 
-//Crear un pago
+//Crear un cobro
 cobroCtrl.createCobro = async (req, res) => {
     try {
         const { 
@@ -11,7 +11,7 @@ cobroCtrl.createCobro = async (req, res) => {
             factura, 
             monto,
             metodoCobro,
-            fecha,
+            fechaCobro,
             notas} = req.body;
 
         const facturaDB = await Factura.findById(factura);
@@ -26,7 +26,7 @@ cobroCtrl.createCobro = async (req, res) => {
         }
 
         //TODO: Generar el servicio de numeracion correlativa de recibos
-        const numeroReciboSimulado = `R-00001-${Date.now().toString.slice(-6)}`; 
+        const numeroReciboSimulado = `R-00001-${Date.now().toString().slice(-6)}`; 
 
         //crear el recibo por el cobro
         const newCobro = new Cobro({
@@ -41,10 +41,10 @@ cobroCtrl.createCobro = async (req, res) => {
         await newCobro.save();
 
         //actualizar el estado de la factura 
-        if (totalPagado >= facturaDB.total){
-            facturaDB.estado = 'Pagada';
+        if (totalCobrado >= facturaDB.total){
+            facturaDB.estado = 'Cobrada';
         } else {
-            facturaDB.estado = 'Pago Parcial';
+            facturaDB.estado = 'Cobro Parcial';
         }
         await facturaDB.save();
 
