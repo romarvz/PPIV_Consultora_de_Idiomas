@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const categoryCtrl = require('../controllers/conceptCategory.controller');
-const { verifyToken, isAdmin } = require('../middleware/authMiddlewareNew');
+const { authenticateToken, requireAdmin } = require('../middleware/authMiddlewareNew');
 
 //Routes
-router.post('/', [verifyToken, isAdmin], categoryCtrl.createCategory);
-router.get('/', [verifyToken, isAdmin], categoryCtrl.getAllCategories);
-router.get('/:id', [verifyToken, isAdmin], categoryCtrl.getCategoryById);
-router.put('/:id', [verifyToken, isAdmin], categoryCtrl.updateCategory);
-router.delete('/:id', [verifyToken, isAdmin], categoryCtrl.deleteCategory);
+router.post('/', [authenticateToken, requireAdmin], categoryCtrl.createCategory);
+router.get('/', [authenticateToken, requireAdmin], categoryCtrl.getAllCategories);
+router.get('/:id', [authenticateToken, requireAdmin], categoryCtrl.getCategoryById);
+router.put('/:id', [authenticateToken, requireAdmin], categoryCtrl.updateCategory);
+router.delete('/:id', [authenticateToken, requireAdmin], categoryCtrl.deleteCategory);
 
 module.exports = router;    

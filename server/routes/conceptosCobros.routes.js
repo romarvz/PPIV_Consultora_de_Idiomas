@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const conceptCtrl = require('../controllers/conceptosCobros.controller');
-const { verifyToken, isAdmin } = require('../middleware/authMiddlewareNew');
+const { authenticateToken, requireAdmin } = require('../middleware/authMiddlewareNew');
 
-router.post('/', [verifyToken, isAdmin], conceptCtrl.createConcept);
-router.get('/', [verifyToken, isAdmin], conceptCtrl.getAllConcepts);
-router.get('/:id', [verifyToken, isAdmin], conceptCtrl.getConceptById);
-router.put('/:id', [verifyToken, isAdmin], conceptCtrl.updateConcept);
-router.delete('/:id', [verifyToken, isAdmin], conceptCtrl.deleteConcept);
+router.post('/', [authenticateToken, requireAdmin], conceptCtrl.createConcept);
+router.get('/', [authenticateToken, requireAdmin], conceptCtrl.getAllConcepts);
+router.get('/:id', [authenticateToken, requireAdmin], conceptCtrl.getConceptById);
+router.put('/:id', [authenticateToken, requireAdmin], conceptCtrl.updateConcept);
+router.delete('/:id', [authenticateToken, requireAdmin], conceptCtrl.deleteConcept);
 
 module.exports = router;

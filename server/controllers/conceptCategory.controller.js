@@ -1,5 +1,6 @@
 const ConceptCategory = require('../models/conceptCategory.model');
 const Concept = require('../models/concept.model');
+
 const categoryCtrl = {};
 
 //create new category
@@ -9,7 +10,7 @@ categoryCtrl.createCategory = async (req, res) => {
         const newCategory = new ConceptCategory({ name, description });
         await newCategory.save();
         res.status(201).json({message: 'Categoria de concepto creada con éxito.', category: newCategory});
-    }   catch(error){
+    }catch(error){
         res.status(500).json({message: 'Error al crear la categoria de concepto.', error: error.message});
     }
 };
@@ -20,7 +21,7 @@ categoryCtrl.getAllCategories = async (req, res) => {
     try{
         const categories = await ConceptCategory.find({active: true});
         res.status(200).json({data: categories});
-    }   catch(error){
+    }catch(error){
         res.status(500).json({message: 'Error al obtener las categorias de concepto.', error: error.message});
     }
 };
@@ -32,7 +33,7 @@ categoryCtrl.getCategoryById = async (req, res) => {
             return res.status(404).json({message: 'Categoria de concepto no encontrada.'});
         }
         res.status(200).json({data: category});
-    }   catch(error){
+    }catch(error){
         res.status(500).json({message: 'Error al obtener la categoria de concepto.', error: error.message});
     }
 }
@@ -46,7 +47,7 @@ categoryCtrl.updateCategory = async (req, res) => {
             return res.status(404).json({message: 'Categoria de concepto no encontrada.'});
         }
         res.status(200).json({message: 'Categoria de concepto actualizada con éxito.', data: categoryUpdated});
-    }  catch(error){
+    }catch(error){
         res.status(500).json({message: 'Error al actualizar la categoria de concepto.', error: error.message});
     }   
 };
