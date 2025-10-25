@@ -66,10 +66,12 @@ app.use('/api/languages', languageRoutes);
 const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
 const conceptosCobrosRoutes = require('./routes/conceptosCobros.routes');
 const cobrosRoutes = require('./routes/cobros.routes');
+const facturasRoutes = require('./routes/facturas.routes');
 
 app.use('/api/concept-categories', conceptCategoryRoutes);
 app.use('/api/conceptos-cobros', conceptosCobrosRoutes);
 app.use('/api/cobros', cobrosRoutes);
+app.use('/api/facturas', facturasRoutes);
 
 //middleware para cuando no encontramos ruta (solo GET y POST seguros)
 app.get('*', (req, res) => {
