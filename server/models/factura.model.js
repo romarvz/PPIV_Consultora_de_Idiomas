@@ -72,17 +72,12 @@ const facturaSchema = new Schema({
         required: true,
         min: 0
     },
-    impuestos: {
-        type: Number,
-        required: true,
-        min: 0
-    },
     total: {
-        type: Number,
-        required: true,
-        min: 0
+    type: Number,
+    required: true,
+    min: 0
     },
-    estadoPago: {
+    estadoCobro: {
         type: String,
         enum: ['Pendiente', 'Pagado', 'Vencido'],
         default: 'Pendiente'
