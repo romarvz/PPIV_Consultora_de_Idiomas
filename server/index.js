@@ -5,6 +5,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 const mongoose = require('mongoose');
 
+
 // Función principal para iniciar la aplicación
 const startServer = async () => {
   try {

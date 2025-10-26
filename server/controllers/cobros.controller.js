@@ -18,7 +18,7 @@ cobroCtrl.createCobro = async (req, res) => {
         if (!facturaDB) {
             res.status(404).json({ message: 'Factura no encontrada' });
         }
-        if (facturaDB.estado === 'Pagada' || facturaDB.estado === 'Anulada'){
+        if (facturaDB.estado === 'Cobrada' || facturaDB.estado === 'Anulada'){
             return res.status(400).json({ message: 'No se pueden registrar cobros para facturas pagadas o anuladas' });
         }
         if (facturaDB.estudiante.toString() !== estudiante) {
@@ -45,7 +45,7 @@ cobroCtrl.createCobro = async (req, res) => {
         if (totalCobrado >= facturaDB.total){
             facturaDB.estado = 'Cobrada';
         } else {
-            facturaDB.estado = 'Cobro Parcial';
+            facturaDB.estado = 'Cobrada Parcialmente';
         }
         await facturaDB.save();
         await newCobro.save();

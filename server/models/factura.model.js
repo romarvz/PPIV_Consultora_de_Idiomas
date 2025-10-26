@@ -77,9 +77,9 @@ const facturaSchema = new Schema({
     required: true,
     min: 0
     },
-    estadoCobro: {
+    estado: {
         type: String,
-        enum: ['Pendiente', 'Pagado', 'Vencido'],
+        enum: ['Pendiente', 'Cobrada', 'Cobrada Parcialmente', 'Vencida'],
         default: 'Pendiente'
     }},{
         timestamps: true
