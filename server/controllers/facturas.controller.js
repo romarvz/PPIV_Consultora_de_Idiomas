@@ -1,5 +1,6 @@
 const Factura = require('../models/factura.model');
 const facturaService = require('../services/factura.service');
+const constadorService = require('../services/contador.service');
 
 const facturaCtrl = {};
 
@@ -27,7 +28,7 @@ facturaCtrl.createFactura = async (req, res) => {
 
         const total = subtotal;
 
-        const numeroFacturaCorrelativo = await facturaService.generarNumeroFactura();
+        const numeroFacturaCorrelativo = await contadorService.obtenerSiguienteNumero('factura');
         const nuevaFactura = new Factura({
             estudiante,
             condicionFiscal,

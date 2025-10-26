@@ -1,5 +1,6 @@
 const Cobro = require('../models/cobros.model');
 const Factura = require('../models/factura.model');
+const condatorService = require('../services/contador.service');
 
 const cobroCtrl = {};
 
@@ -25,12 +26,29 @@ cobroCtrl.createCobro = async (req, res) => {
             return res.status(400).json({ message: 'La Factura no pertenece a este estudiante' });
         }
 
-        //TODO: Generar el servicio de numeracion correlativa de recibos
-        const numeroReciboSimulado = `R-00001-${Date.now().toString().slice(-6)}`; 
+        // Calcular cuánto se cobró previamente
+        const cobrosPrevios = await Cobro.find({ factura: factura });
+        const totalCobradoPrevio = cobrosPrevios.reduce((sum, cobro) => sum + cobro.monto, 0);
+
+        // Calcular cuánto sería el total con este nuevo cobro
+        const totalConNuevoCobro = totalCobradoPrevio + monto;
+
+        // Validar que no se exceda el total de la factura
+        if (totalConNuevoCobro > facturaDB.total) {
+            return res.status(400).json({ 
+                message: 'El monto del cobro excede el saldo pendiente de la factura',
+                totalFactura: facturaDB.total,
+                totalCobrado: totalCobradoPrevio,
+                saldoPendiente: facturaDB.total - totalCobradoPrevio,
+                montoIntentado: monto
+            });
+        }
+        //Generar numero de recibo consecutivo
+        const numeroRecibo = await condatorService.obtenerSiguienteNumero('recibo');
 
         //crear el recibo por el cobro
         const newCobro = new Cobro({
-            numeroRecibo: numeroReciboSimulado,
+            numeroRecibo: numeroRecibo,
             estudiante,
             factura,
             monto,
@@ -39,10 +57,8 @@ cobroCtrl.createCobro = async (req, res) => {
             notas
         });
 
-        const cobrosPrevios = await Cobro.find({ factura: factura });
-        const totalCobrado = cobrosPrevios.reduce((sum, cobro) => sum + cobro.monto, 0);
         //actualizar el estado de la factura 
-        if (totalCobrado >= facturaDB.total){
+       if (totalConNuevoCobro >= facturaDB.total){
             facturaDB.estado = 'Cobrada';
         } else {
             facturaDB.estado = 'Cobrada Parcialmente';
