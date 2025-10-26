@@ -31,10 +31,23 @@ class FacturaService {
 
         // 4. Calcular subtotal y total
         const subtotal = itemFacturaSchema.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
-        const total = subtotal; // Aquí puedes agregar lógica para impuestos o descuentos si aplica
+        const total = subtotal; 
 
         // 5. Generar número de factura
-        const numeroFactura = await contadorService.obtenerSiguienteNumero('factura');
+        const numeroSecuencial = await contadorService.obtenerSiguienteNumero('factura');
+        
+        // Extraer solo el número si viene con formato (ej: "F-00004")
+        let numeroLimpio = numeroSecuencial;
+        if (typeof numeroSecuencial === 'string') {
+            const match = numeroSecuencial.match(/\d+$/);
+            numeroLimpio = match ? match[0] : numeroSecuencial;
+        }
+        
+        // Formatear número de factura según condición fiscal
+        const puntoVenta = '00001';
+        const numeroFormateado = parseInt(numeroLimpio, 10).toString().padStart(8, '0');
+        const tipoFactura = (condicionFiscal === 'Consumidor Final') ? 'B' : 'A';
+        const numeroFactura = `FC ${tipoFactura} ${puntoVenta}-${numeroFormateado}`;
 
         // 6. Crear la factura
         const nuevaFactura = new Factura({
@@ -103,7 +116,21 @@ class FacturaService {
         const total = subtotal;
 
         // 4. Generar número de factura
-        const numeroFactura = await contadorService.obtenerSiguienteNumero('factura');
+        const numeroSecuencial = await contadorService.obtenerSiguienteNumero('factura');
+        
+        // Extraer solo el número si viene con formato (ej: "F-00004")
+        let numeroLimpio = numeroSecuencial;
+        if (typeof numeroSecuencial === 'string') {
+            const match = numeroSecuencial.match(/\d+$/);
+            numeroLimpio = match ? match[0] : numeroSecuencial;
+        }
+        
+        // Formatear número de factura según condición fiscal
+        const puntoVenta = '00001';
+        const numeroFormateado = parseInt(numeroLimpio, 10).toString().padStart(8, '0');
+        const condicionFiscal = estudianteDB.condicionFiscal || 'Consumidor Final';
+        const tipoFactura = (condicionFiscal === 'Consumidor Final') ? 'B' : 'A';
+        const numeroFactura = `FC ${tipoFactura} ${puntoVenta}-${numeroFormateado}`;
 
         // 5. Crear y guardar factura
         const nuevaFactura = new Factura({
@@ -125,6 +152,52 @@ class FacturaService {
         return {
             factura: nuevaFactura,
             mensaje: 'Factura mensual generada exitosamente'
+        };
+    }
+    /**
+     * Obtiene la deuda total de un estudiante
+     * @param {String} estudianteId
+     * @returns {Object} - { deudaTotal, facturasPendientes, facturasPagadas, detalle }
+     */
+    async obtenerDeudaEstudiante(estudianteId) {
+        // 1. Validar existencia del estudiante
+        const estudianteDB = await BaseUser.findById(estudianteId);
+        if (!estudianteDB) {
+            throw new Error('Estudiante no encontrado');
+        }
+
+        // 2. Obtener todas las facturas del estudiante
+        const todasFacturas = await Factura.find({ estudiante: estudianteId })
+            .sort({ fechaEmision: -1 });
+
+        // 3. Separar facturas por estado
+        const facturasPendientes = todasFacturas.filter(f => f.estado === 'Pendiente');
+        const facturasPagadas = todasFacturas.filter(f => f.estado === 'Pagada');
+
+        // 4. Calcular deuda total
+        const deudaTotal = facturasPendientes.reduce((acc, factura) => acc + factura.total, 0);
+
+        // 5. Retornar resultado
+        return {
+            deudaTotal,
+            cantidadFacturasPendientes: facturasPendientes.length,
+            cantidadFacturasPagadas: facturasPagadas.length,
+            detalle: {
+                pendientes: facturasPendientes.map(f => ({
+                    id: f._id,
+                    numeroFactura: f.numeroFactura,
+                    total: f.total,
+                    fechaEmision: f.fechaEmision,
+                    fechaVencimiento: f.fechaVencimiento,
+                    periodoFacturado: f.periodoFacturado
+                })),
+                pagadas: facturasPagadas.map(f => ({
+                    id: f._id,
+                    numeroFactura: f.numeroFactura,
+                    total: f.total,
+                    fechaPago: f.fechaPago
+                }))
+            }
         };
     }
 }

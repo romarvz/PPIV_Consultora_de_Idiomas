@@ -5,27 +5,33 @@ const contadorService = require('./contador.service');
 class CobroService {
     
     /**
-     * Registra un nuevo cobro y actualiza el estado de la factura
-     * @param {Object} datosCobroService - { estudiante, factura, monto, metodoCobro, fechaCobro, notas }
-     * @returns {Object} - { cobro, facturaActualizada, mensaje }
-     */
-    async registrarCobro(datosCobro) {
-        const { estudiante, factura, monto, metodoCobro, fechaCobro, notas } = datosCobro;
+ * Registra un nuevo cobro y actualiza el estado de la factura
+ * USANDO TRANSACCIONES para garantizar consistencia
+ */
+async registrarCobro(datosCobro) {
+    const { estudiante, factura, monto, metodoCobro, fechaCobro, notas } = datosCobro;
+
+    // Iniciar sesión de MongoDB
+    const session = await Cobro.startSession();
+    
+    try {
+        // Iniciar transacción
+        session.startTransaction();
 
         // 1. Validar monto
         if (!monto || monto <= 0) {
             throw new Error('El monto debe ser mayor a cero');
         }
 
-        // 2. Buscar factura
-        const facturaDB = await Factura.findById(factura);
+        // 2. Buscar factura (dentro de la transacción)
+        const facturaDB = await Factura.findById(factura).session(session);
         if (!facturaDB) {
             throw new Error('Factura no encontrada');
         }
 
         // 3. Validar estado de factura
         if (facturaDB.estado === 'Cobrada') {
-            throw new Error('No se pueden registrar cobros para facturas cobradas o anuladas');
+            throw new Error('No se pueden registrar cobros para facturas cobradas');
         }
 
         // 4. Validar que la factura pertenece al estudiante
@@ -34,7 +40,7 @@ class CobroService {
         }
 
         // 5. Calcular total cobrado ANTES del nuevo cobro
-        const cobrosPrevios = await Cobro.find({ factura });
+        const cobrosPrevios = await Cobro.find({ factura }).session(session);
         const totalCobradoPrevio = cobrosPrevios.reduce((sum, cobro) => sum + cobro.monto, 0);
 
         // 6. Validar que no exceda el total
@@ -52,7 +58,7 @@ class CobroService {
         // 7. Generar número de recibo
         const numeroRecibo = await contadorService.obtenerSiguienteNumero('recibo');
 
-        // 8. Crear el cobro
+        // 8. Crear el cobro (dentro de la transacción)
         const nuevoCobro = new Cobro({
             numeroRecibo,
             estudiante,
@@ -63,16 +69,19 @@ class CobroService {
             notas
         });
 
-        // 9. Guardar cobro
-        await nuevoCobro.save();
+        // 9. Guardar cobro (con sesión)
+        await nuevoCobro.save({ session });
 
-        // 10. Actualizar estado de factura
+        // 10. Actualizar estado de factura (con sesión)
         if (totalConNuevoCobro >= facturaDB.total) {
             facturaDB.estado = 'Cobrada';
         } else {
             facturaDB.estado = 'Cobrada Parcialmente';
         }
-        await facturaDB.save();
+        await facturaDB.save({ session });
+
+        // ✅ COMMIT: Si llegamos acá, todo salió bien
+        await session.commitTransaction();
 
         // 11. Retornar resultado
         return {
@@ -86,8 +95,17 @@ class CobroService {
             },
             mensaje: 'Cobro registrado exitosamente'
         };
-    }
 
+    } catch (error) {
+        // ❌ ROLLBACK: Si algo falló, revertir TODO
+        await session.abortTransaction();
+        throw error; // Re-lanzar el error para que el controller lo maneje
+        
+    } finally {
+        // Siempre cerrar la sesión
+        session.endSession();
+    }
+    }
     /**
      * Obtiene todos los cobros de un estudiante
      * @param {String} estudianteId 

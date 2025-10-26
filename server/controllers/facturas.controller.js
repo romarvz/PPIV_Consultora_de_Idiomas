@@ -45,4 +45,25 @@ facturaCtrl.getFacturasByEstudiante = async (req, res) => {
     }
 };
 
+/**
+ * Obtener deuda total de un estudiante
+ * GET /api/facturas/estudiante/:idEstudiante/deuda
+ */
+facturaCtrl.getDeudaEstudiante = async (req, res) => {
+    try {
+        const { idEstudiante } = req.params;
+        const deuda = await facturaService.obtenerDeudaEstudiante(idEstudiante);
+
+        res.status(200).json({
+            success: true,
+            data: deuda
+        });
+    } catch (error) {
+        res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = facturaCtrl;
