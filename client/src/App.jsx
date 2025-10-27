@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import TestMock from './components/TestMock'
+
 
 // Authentication provider and protected route component
 import { AuthProvider } from './hooks/useAuth.jsx'
@@ -24,16 +24,11 @@ import AdminDashboard from './pages/Dashboard/AdminDashboard'
 import StudentDashboard from './pages/Dashboard/StudentDashboard'
 import TeacherDashboard from './pages/Dashboard/TeacherDashboard'
 import CompanyDashboard from './pages/Dashboard/CompanyDashboard'
+import FinancialDashboard from './pages/Dashboard/FinancialDashboard'
 
 // Centralized route paths to avoid typos and make changes easier
 import { routes } from './utils/routes'
-import './styles/variables.css'; 
 import './App.css'
-import './styles/courseModals.css';
-import './styles/courseCards.css';
-import './styles/courseForm.css';
-import './styles/adminDashboard.css'; 
-import './styles/courseManagement.css';
 
 function App() {
   return (
@@ -58,9 +53,8 @@ function App() {
             {/* Authentication page */}
             <Route path={routes.LOGIN} element={<Login />} />
             
-            {/* Temporary test page to verify mock API functionality */}
-            <Route path="/test-mock" element={<TestMock />} />
-          {/** End of public routes **/}  
+
+          {/* End of public routes */}  
           </Route>
           
           {/* Protected dashboard pages WITHOUT layout (no header/footer) */}
@@ -93,6 +87,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin', 'empresa']}>
                 <CompanyDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path={routes.DASHBOARD.FINANCIAL} 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <FinancialDashboard />
               </ProtectedRoute>
             } 
           />

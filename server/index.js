@@ -5,6 +5,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 const mongoose = require('mongoose');
 
+
 // Función principal para iniciar la aplicación
 const startServer = async () => {
   try {
@@ -79,11 +80,26 @@ const startServer = async () => {
     const authRoutes = require('./routes/authNew');
     app.use('/api/auth', authRoutes);
 
-    const crudRoutes = require('./routes/crud');
+// Rutas específicas para estudiantes y profesores
+const studentRoutes = require('./routes/studentRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+app.use('/api/students', studentRoutes);
+app.use('/api/teachers', teacherRoutes);
+   const crudRoutes = require('./routes/crud');
     app.use('/api', crudRoutes);
-
     const languageRoutes = require('./routes/languages');
     app.use('/api/languages', languageRoutes);
+
+// Rutas para gestion financiera
+const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
+const conceptosCobrosRoutes = require('./routes/conceptosCobros.routes');
+const cobrosRoutes = require('./routes/cobros.routes');
+const facturasRoutes = require('./routes/facturas.routes');
+
+app.use('/api/concept-categories', conceptCategoryRoutes);
+app.use('/api/conceptos-cobros', conceptosCobrosRoutes);
+app.use('/api/cobros', cobrosRoutes);
+app.use('/api/facturas', facturasRoutes);
 
     // ============================================
     // RUTAS NUEVAS (Alexa - Cursos y Clases)

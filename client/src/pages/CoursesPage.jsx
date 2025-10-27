@@ -45,16 +45,22 @@ const CoursesPage = () => {
   }, []); // Este efecto se ejecuta solo una vez para cargar los datos
 
   useEffect(() => {
-    // Si no estamos cargando y hay un ancla en la URL...
-    if (!loading && location.hash) {
-      // Usamos un pequeño delay para asegurarnos de que el DOM esté 100% listo
-      setTimeout(() => {
-        const id = location.hash.replace('#', '');
-        const element = document.getElementById(id);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
+    if (!loading) {
+      if (location.hash) {
+        // Si hay un ancla, scroll a esa sección
+        setTimeout(() => {
+          const id = location.hash.replace('#', '');
+          const element = document.getElementById(id);
+          if (element) {
+            const headerHeight = 80; // Height of fixed header
+            const elementPosition = element.offsetTop - headerHeight - 20; // Extra 20px padding
+            window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        // Si no hay ancla ("Ver todos los cursos"), scroll al top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   }, [loading, location.hash]); // Se ejecuta cuando 'loading' o el ancla cambian
 
@@ -62,15 +68,24 @@ const CoursesPage = () => {
   const handleCloseModal = () => setSelectedCourse(null);
   const selectedTeacher = teachers.find(t => t._id === selectedCourse?.teacherId);
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '4rem' }}><h2>Cargando nuestra oferta...</h2></div>;
+  if (loading) return (
+    <div className="courses-page" style={{ textAlign: 'center', padding: '4rem' }}>
+      <h2>Cargando nuestra oferta...</h2>
+    </div>
+  );
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+    <div className="courses-page" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '3rem' }}>Nuestra Oferta Académica</h1>
       
-      {Object.entries(groupedCourses).map(([type, courses]) => (
+      {Object.entries(groupedCourses)
+        .sort(([a], [b]) => {
+          const order = ['Clase Individual', 'Curso Grupal', 'Curso Corporativo', 'Preparación para Certificación', 'Inmersión Cultural'];
+          return order.indexOf(a) - order.indexOf(b);
+        })
+        .map(([type, courses]) => (
         <section key={type} id={slugify(type)} style={{ marginBottom: '4rem' }}>
-          <h2 style={{ borderBottom: '2px solid var(--primary-color)', paddingBottom: '0.5rem', marginBottom: '2rem' }}>
+          <h2 style={{ paddingBottom: '0.5rem', marginBottom: '2rem' }}>
             {type}
           </h2>
           <div className="dashboard-grid">

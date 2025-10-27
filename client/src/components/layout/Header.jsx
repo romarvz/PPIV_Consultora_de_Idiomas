@@ -5,6 +5,7 @@ import { routes } from '../../utils/routes'
 // Navigation header that appears on every page
 const Header = ({ theme, toggleTheme }) => {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [serviciosDropdownOpen, setServiciosDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -64,10 +65,20 @@ const Header = ({ theme, toggleTheme }) => {
                 Nosotros
               </a>
             </li>
-            <li>
+            <li className="nav-dropdown" 
+                onMouseEnter={() => setServiciosDropdownOpen(true)}
+                onMouseLeave={() => setServiciosDropdownOpen(false)}>
               <a href="#servicios" onClick={(e) => { e.preventDefault(); handleSectionClick('servicios') }}>
                 Servicios
               </a>
+              <ul className={`dropdown-menu ${serviciosDropdownOpen ? 'show' : ''}`}>
+                <li><Link to="/cursos" onClick={handleNavClick}>Ver Todos los Cursos</Link></li>
+                <li><Link to="/cursos#clase-individual" onClick={handleNavClick}>Clases Individuales</Link></li>
+                <li><Link to="/cursos#curso-grupal" onClick={handleNavClick}>Clases Grupales</Link></li>
+                <li><Link to="/cursos#curso-corporativo" onClick={handleNavClick}>Cursos Corporativos</Link></li>
+                <li><Link to="/cursos#certificacion" onClick={handleNavClick}>Preparación Certificaciones</Link></li>
+                <li><Link to="/cursos#inmersion-cultural" onClick={handleNavClick}>Inmersión Cultural</Link></li>
+              </ul>
             </li>
             <li>
               <a href="#clientes" onClick={(e) => { e.preventDefault(); handleSectionClick('clientes') }}>

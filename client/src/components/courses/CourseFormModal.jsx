@@ -104,20 +104,52 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
                 <input type="radio" name="modality" value="Online" checked={formData.modality === 'Online'} onChange={handleChange} />
                 Online
               </label>
-              <label className="modal-form-label">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input type="radio" name="modality" value="Presencial" checked={formData.modality === 'Presencial'} onChange={handleChange} />
                 Presencial
               </label>
             </div>
           </fieldset>
 
-          <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Descripción" rows="3" className="form-input" />
-          <input name="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="URL de la Imagen" className="form-input" />
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>Descripción</label>
+            <textarea 
+              name="description" 
+              value={formData.description} 
+              onChange={handleChange} 
+              placeholder="Descripción del curso" 
+              rows="3"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                resize: 'vertical'
+              }}
+            />
+          </div>
           
-          <select name="teacherId" value={formData.teacherId} onChange={handleChange} className="form-input" required>
-            <option value="">Seleccionar Profesor</option>
-            {teachers.map(t => <option key={t._id} value={t._id}>{t.firstName} {t.lastName}</option>)}
-          </select>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#495057' }}>Profesor *</label>
+            <select 
+              name="teacherId" 
+              value={formData.teacherId} 
+              onChange={handleChange} 
+              required
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                height: '48px'
+              }}
+            >
+              <option value="">Seleccionar Profesor</option>
+              {teachers.map(t => <option key={t._id} value={t._id}>{t.firstName} {t.lastName}</option>)}
+            </select>
+          </div>
           
           <input name="scheduleText" value={formData.scheduleText} onChange={handleChange} placeholder="Horario (ej: Lunes y Miércoles 18hs)" className="form-input" />
           <div className="form-group-inline"> {/* Wrapper para el precio y moneda si fuera necesario, aunque el input es standalone */}

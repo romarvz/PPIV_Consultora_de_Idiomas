@@ -3,8 +3,8 @@ import React from 'react'
 // Reusable WhatsApp contact button that appears on all pages
 const WhatsAppButton = () => {
   // WhatsApp contact number and message
-  const phoneNumber = "5491123456789" // Replace with actual number
-  const message = "Hola! Me interesa conocer más sobre los cursos de idiomas."
+  const phoneNumber = "5491121836922" // Replace with actual number
+  const message = "Hola! Me interesa conocer más sobre los servicios que ofrecen."
 
   // Open WhatsApp chat with pre-filled message
   const openWhatsApp = () => {

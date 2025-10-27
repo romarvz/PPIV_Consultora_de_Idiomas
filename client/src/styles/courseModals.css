@@ -31,7 +31,7 @@
   cursor: pointer;
 }
 
-/* --- Estilos CourseDetailModal --- */
+/* ---  CourseDetailModal --- */
 
 .modal-title {
   margin-top: 0;
@@ -68,7 +68,7 @@
 }
 
 
-/* --- Estilos para CourseFormModal --- */
+/* ---  CourseFormModal --- */
 
 .modal-form {
   display: flex;
@@ -85,7 +85,7 @@
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
-  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
+  box-sizing: border-box; 
 }
 
 .modal-form-label {
@@ -108,5 +108,5 @@
 }
 
 .modal-form-submit:hover {
-  background-color: #218838; /* Mismo hover que el otro botón */
+  background-color: #218838; 
 }

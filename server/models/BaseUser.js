@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Schema base para todos los usuarios
+// Base Schema  for all users
 const baseUserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -41,7 +41,7 @@ const baseUserSchema = new mongoose.Schema({
     },
     trim: true,
     unique: true,
-    sparse: true // Permite que los admins no tengan DNI
+    sparse: true 
   },
   mustChangePassword: {
     type: Boolean,
@@ -67,17 +67,17 @@ const baseUserSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  discriminatorKey: 'role', // Campo que distingue los tipos
-  collection: 'users' // Todos van en la misma colección
+  discriminatorKey: 'role', 
+  collection: 'users' 
 });
 
-// Middleware para hash de password ANTES de guardar
+// Middleware for hashing password BEFORE saving
 baseUserSchema.pre('save', async function(next) {
-  // Solo hashear si el password fue modificado (o es nuevo)
+  // Only hash if the password was modified (or is new)
   if (!this.isModified('password')) return next();
   
   try {
-    // Hash del password con salt de 12 rounds
+    // Hash the password with a salt of 12 rounds
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
     next();
@@ -86,12 +86,12 @@ baseUserSchema.pre('save', async function(next) {
   }
 });
 
-// Método para comparar passwords
+// Method to compare passwords
 baseUserSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Método para obtener info pública del usuario (sin password)
+// MMethod to get public user info (without password)
 baseUserSchema.methods.toJSON = function() {
   const userObject = this.toObject();
   delete userObject.password;
@@ -99,12 +99,12 @@ baseUserSchema.methods.toJSON = function() {
   return userObject;
 };
 
-// Método para obtener el nombre completo
+// MMethod to get full name
 baseUserSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// Crear el modelo base solo si no existe
+// Create the base model only if it doesn't exist
 const BaseUser = mongoose.models.User || mongoose.model('User', baseUserSchema);
 
 module.exports = BaseUser;

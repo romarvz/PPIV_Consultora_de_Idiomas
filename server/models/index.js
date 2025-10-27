@@ -23,6 +23,8 @@ const EventoCalendario = require('./EventoCalendario');
 // const PerfilEstudiante = require('./PerfilEstudiante'); // Vero
 // const ReporteAcademico = require('./ReporteAcademico'); // Vero
 // const ReporteFinanciero = require('./ReporteFinanciero'); // Vero
+const Empresa = require('./Empresa');
+const AuditoriaLog = require('./AuditoriaLog');
 
 module.exports = {
   // Modelos base
@@ -52,7 +54,9 @@ module.exports = {
   // HELPERS(mantener)
   // ============================================
   
-  // Función helper para obtener el modelo correcto según el rol
+  Empresa,
+  AuditoriaLog,
+  //function helper
   getUserModel: (role) => {
     switch(role) {
       case 'estudiante':
@@ -68,12 +72,12 @@ module.exports = {
     }
   },
   
-  // Función para buscar cualquier usuario sin importar el tipo
+  // Function to find any user regardless of type
   findUserByEmail: async (email) => {
     return await BaseUser.findOne({ email });
   },
   
-  // Función para buscar usuario por ID sin importar el tipo
+  // Function to find user by ID regardless of type
   findUserById: async (id) => {
     return await BaseUser.findById(id);
   }
