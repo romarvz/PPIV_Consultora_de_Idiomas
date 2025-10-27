@@ -1,3 +1,8 @@
+// /client/src/pages/Dashboard/CourseManagementPage.jsx
+
+import React, { useState, useEffect } from 'react';
+import apiAdapter from '../../services/apiAdapter';
+import CourseFormModal from '../../components/courses/CourseFormModal';
 import CalendarView from '../../components/admin/CalendarView.jsx';
 import { FaCheckCircle, FaCalendarAlt, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 

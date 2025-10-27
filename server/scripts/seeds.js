@@ -1,5 +1,5 @@
 // scripts/seeds.js
-// Script para poblar la base de datos con datos de prueba
+// datos de prueba
 
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -13,9 +13,9 @@ const EventoCalendario = require('../models/EventoCalendario');
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ MongoDB conectado');
+    console.log(' MongoDB conectado');
   } catch (error) {
-    console.error('❌ Error conectando a MongoDB:', error);
+    console.error(' Error conectando a MongoDB:', error);
     process.exit(1);
   }
 };
@@ -28,15 +28,15 @@ const clearDB = async () => {
     await Inscripcion.deleteMany({});
     await Clase.deleteMany({});
     await EventoCalendario.deleteMany({});
-    console.log('🗑️  Base de datos limpiada');
+    console.log(' Base de datos limpia');
   } catch (error) {
-    console.error('❌ Error limpiando BD:', error);
+    console.error(' Error limpiando BD:', error);
   }
 };
 
 // Crear usuarios
 const createUsers = async () => {
-  console.log('\n👥 Creando usuarios...');
+  console.log('\n Creando usuarios...');
   
   // Admin
   const admin = await BaseUser.create({
@@ -47,7 +47,7 @@ const createUsers = async () => {
     role: 'admin',
     phone: '1234567890'
   });
-  console.log('✅ Admin creado');
+  console.log(' Admin creado');
 
   // Profesores
   const profesores = await BaseUser.create([
@@ -79,7 +79,7 @@ const createUsers = async () => {
       phone: '1122334477'
     }
   ]);
-  console.log(`✅ ${profesores.length} profesores creados`);
+  console.log(` ${profesores.length} profesores creados`);
 
   // Estudiantes
   const estudiantes = await BaseUser.create([
@@ -174,14 +174,14 @@ const createUsers = async () => {
       phone: '1155668877'
     }
   ]);
-  console.log(`✅ ${estudiantes.length} estudiantes creados`);
+  console.log(` ${estudiantes.length} estudiantes creados`);
 
   return { admin, profesores, estudiantes };
 };
 
 // Crear cursos
 const createCursos = async (profesores) => {
-  console.log('\n📚 Creando cursos...');
+  console.log('\n Creando cursos...');
 
   const ahora = new Date();
   const enUnMes = new Date(ahora.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -261,13 +261,13 @@ const createCursos = async (profesores) => {
     }
   ]);
 
-  console.log(`✅ ${cursos.length} cursos creados`);
+  console.log(` ${cursos.length} cursos creados`);
   return cursos;
 };
 
 // Crear inscripciones
 const createInscripciones = async (cursos, estudiantes) => {
-  console.log('\n📝 Creando inscripciones...');
+  console.log('\n Creando inscripciones...');
 
   const inscripciones = [];
 
@@ -304,13 +304,13 @@ const createInscripciones = async (cursos, estudiantes) => {
     inscripciones.push(inscripcion);
   }
 
-  console.log(`✅ ${inscripciones.length} inscripciones creadas`);
+  console.log(` ${inscripciones.length} inscripciones creadas`);
   return inscripciones;
 };
 
 // Crear clases
 const createClases = async (cursos) => {
-  console.log('\n🎓 Creando clases...');
+  console.log('\n Creando clases...');
 
   const clases = [];
   const ahora = new Date();
@@ -380,13 +380,13 @@ const createClases = async (cursos) => {
     clases.push(clase);
   }
 
-  console.log(`✅ ${clases.length} clases creadas`);
+  console.log(` ${clases.length} clases creadas`);
   return clases;
 };
 
 // Crear eventos de calendario
 const createEventos = async (clases, estudiantes) => {
-  console.log('\n📅 Creando eventos de calendario...');
+  console.log('\n Creando eventos de calendario...');
 
   let eventosCreados = 0;
 
@@ -415,12 +415,12 @@ const createEventos = async (clases, estudiantes) => {
     eventosCreados++;
   }
 
-  console.log(`✅ ${eventosCreados} eventos creados`);
+  console.log(` ${eventosCreados} eventos creados`);
 };
 
 // Función principal
 const seedDatabase = async () => {
-  console.log('🌱 Iniciando seeds...\n');
+  console.log(' Iniciando seeds...\n');
   console.log('='.repeat(50));
 
   await connectDB();
@@ -433,27 +433,27 @@ const seedDatabase = async () => {
   await createEventos(clases, estudiantes);
 
   console.log('\n' + '='.repeat(50));
-  console.log('✅ Seeds completados exitosamente!\n');
-  console.log('📊 Resumen:');
+  console.log(' Seeds completados exitosamente!\n');
+  console.log(' Resumen:');
   console.log(`   - 1 Admin`);
   console.log(`   - ${profesores.length} Profesores`);
   console.log(`   - ${estudiantes.length} Estudiantes`);
   console.log(`   - ${cursos.length} Cursos`);
   console.log(`   - ${inscripciones.length} Inscripciones`);
   console.log(`   - ${clases.length} Clases`);
-  console.log('\n🔑 Credenciales de acceso:');
+  console.log('\n Credenciales de acceso:');
   console.log('   Admin: admin@consultora.com / admin123');
   console.log('   Profesor: maria.garcia@consultora.com / profesor123');
   console.log('   Estudiante: carlos.rodriguez@email.com / estudiante123');
   console.log('='.repeat(50));
 
   await mongoose.connection.close();
-  console.log('\n👋 Conexión cerrada');
+  console.log('\n Conexión cerrada');
   process.exit(0);
 };
 
 // Ejecutar
 seedDatabase().catch(error => {
-  console.error('❌ Error en seeds:', error);
+  console.error(' Error en seeds:', error);
   process.exit(1);
 });
