@@ -8,7 +8,7 @@ const Empresa = require('./Empresa');
 const AuditoriaLog = require('./AuditoriaLog');
 const Curso = require('./Curso');
 const Inscripcion = require('./Inscripcion');
-const Clase = require('./Clase');
+const Clase = require('./clase');
 const EventoCalendario = require('./EventoCalendario');
 
 

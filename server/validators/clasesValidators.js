@@ -1,7 +1,7 @@
 // validators/clasesValidators.js
 const { body, param, query } = require('express-validator');
 const mongoose = require('mongoose');
-const Clase = require('../models/Clase');
+const Clase = require('../models/clase');
 
 const isValidObjectId = (value) => {
   return mongoose.Types.ObjectId.isValid(value);
