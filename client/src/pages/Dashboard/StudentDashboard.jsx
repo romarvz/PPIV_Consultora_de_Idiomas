@@ -1,10 +1,83 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
+import AuthNavbar from '../../components/common/AuthNavbar'
+import '../../styles/variables.css'
+import '../../styles/auth.css'
+import '../../styles/charts.css'
+import { 
+  FaCalendarAlt, 
+  FaChartLine, 
+  FaBookOpen,
+  FaClock,
+  FaCheckCircle,
+  FaDollarSign,
+  FaSignOutAlt,
+  FaUser
+} from 'react-icons/fa'
+
+
+// Mock data for student dashboard cards
+const mockClasses = [
+  { 
+    id: 1, 
+    subject: 'Inglés B2', 
+    date: '2025-10-13', 
+    time: '10:00 AM', 
+    teacher: 'Prof. Smith',
+    duration: '60 min'
+  },
+  { 
+    id: 2, 
+    subject: 'Francés A1', 
+    date: '2025-10-14', 
+    time: '2:00 PM', 
+    teacher: 'Prof. Dubois',
+    duration: '45 min'
+  },
+  { 
+    id: 3, 
+    subject: 'Alemán A2', 
+    date: '2025-10-15', 
+    time: '4:00 PM', 
+    teacher: 'Prof. Schmidt',
+    duration: '60 min'
+  }
+]
+
+const mockPayments = [
+  { 
+    id: 1, 
+    amount: 15000, 
+    date: '2025-10-01', 
+    status: 'paid', 
+    concept: 'Mensualidad Octubre - Inglés B2'
+  },
+  { 
+    id: 2, 
+    amount: 12000, 
+    date: '2025-10-01', 
+    status: 'paid', 
+    concept: 'Mensualidad Octubre - Francés A1'
+  },
+  { 
+    id: 3, 
+    amount: 14000, 
+    date: '2025-11-01', 
+    status: 'pending', 
+    concept: 'Mensualidad Noviembre - Alemán A2'
+  }
+]
 
 const StudentDashboard = () => {
+  console.log('StudentDashboard component rendering...')
+  
   const { user, logout, mustChangePassword } = useAuth()
-  const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
+  const [showPasswordChange, setShowPasswordChange] = useState(false) // Disabled for testing
+  
+  console.log('StudentDashboard - user:', user)
+  console.log('StudentDashboard - mustChangePassword:', mustChangePassword)
+  console.log('showPasswordChange (overridden):', showPasswordChange)
 
   const handleLogout = async () => {
     try {
@@ -20,91 +93,112 @@ const StudentDashboard = () => {
   }
 
   // Show forced password change if required
-  if (showPasswordChange) {
+  // Temporarily disabled for testing
+  if (false && showPasswordChange) {
     return <ForcePasswordChange onPasswordChanged={handlePasswordChanged} />
   }
 
+  console.log('Rendering main StudentDashboard content!')
+  
   return (
-    <section className="section">
-      <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h2 className="section-title">Panel del Estudiante</h2>
-          <button 
-            onClick={handleLogout}
-            style={{
-              background: '#dc3545',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Cerrar Sesión
-          </button>
-        </div>
-        
-        <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
-          <h3>Información Personal</h3>
-          <div style={{ 
-            background: '#f8f9fa', 
-            padding: '20px', 
-            borderRadius: '8px',
-            marginBottom: '20px'
-          }}>
-            <p><strong>Nombre:</strong> {user?.firstName} {user?.lastName}</p>
-            <p><strong>Email:</strong> {user?.email}</p>
-            <p><strong>DNI:</strong> {user?.dni}</p>
-            {user?.nivel && <p><strong>Nivel:</strong> {user.nivel.toUpperCase()}</p>}
-            {user?.estado && <p><strong>Estado:</strong> {user.estado}</p>}
-            {user?.phone && <p><strong>Teléfono:</strong> {user.phone}</p>}
+    <div className="dashboard-container">
+      {/* Header */}
+        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
+
+      {/* User Info */}
+      <div className="dashboard-info-card">
+        <h3 className="dashboard-info-card__title">Información Personal</h3>
+        <p className="dashboard-info-card__text"><strong>Email:</strong> {user?.email}</p>
+        <p className="dashboard-info-card__text"><strong>DNI:</strong> {user?.dni}</p>
+        {user?.nivel && <p className="dashboard-info-card__text"><strong>Nivel:</strong> {user.nivel.toUpperCase()}</p>}
+        {user?.estadoAcademico && <p className="dashboard-info-card__text"><strong>Estado:</strong> {user.estadoAcademico}</p>}
+      </div>
+
+      {/* Dashboard Cards */}
+      <div className="dashboard-cards-grid">
+        {/* Upcoming Classes */}
+        <div className="dashboard-card">
+          <div className="dashboard-card__header">
+            <FaCalendarAlt className="dashboard-card__icon" />
+            <h4 className="dashboard-card__title">Mis Próximas Clases</h4>
           </div>
+          {mockClasses.map((clase) => (
+            <div key={clase.id} className="dashboard-card__item dashboard-card__item--scheduled">
+              <div className="dashboard-card__item-title">
+                <FaBookOpen />
+                {clase.subject}
+              </div>
+              <div className="dashboard-card__item-subtitle">
+                <FaClock />
+                {clase.date} • {clase.time} • {clase.duration}
+              </div>
+              <div className="dashboard-card__item-meta">{clase.teacher}</div>
+            </div>
+          ))}
         </div>
 
-        <div style={{ textAlign: 'center' }}>
-          <p>¡Bienvenido/a {user?.firstName}!</p>
-          <p>Aquí podrás ver tus clases, progreso y materiales de estudio.</p>
-          
-          {/* Placeholder for future features */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginTop: '2rem'
-          }}>
-            <div style={{ 
-              background: 'white', 
-              padding: '20px', 
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <h4>Mis Clases</h4>
-              <p>Próximamente: Horarios y clases programadas</p>
+        {/* Payments */}
+        <div className="dashboard-card">
+          <div className="dashboard-card__header">
+            <FaDollarSign className="dashboard-card__icon" />
+            <h4 className="dashboard-card__title">Mis Pagos</h4>
+          </div>
+          {mockPayments.map((pago) => (
+            <div key={pago.id} className={`dashboard-card__item ${pago.status === 'paid' ? 'dashboard-card__item--completed' : 'dashboard-card__item--pending'}`}>
+              <div className="dashboard-card__item-header">
+                <span className="dashboard-card__item-title">
+                  <FaDollarSign />
+                  ${pago.amount.toLocaleString()}
+                </span>
+                <span className={`status-badge ${pago.status === 'paid' ? 'status-badge--paid' : 'status-badge--pending'}`}>
+                  {pago.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                </span>
+              </div>
+              <div className="dashboard-card__item-subtitle">{pago.concept}</div>
+              <div className="dashboard-card__item-meta">{pago.date}</div>
             </div>
-            
-            <div style={{ 
-              background: 'white', 
-              padding: '20px', 
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <h4>Mi Progreso</h4>
-              <p>Próximamente: Seguimiento de avance</p>
+          ))}
+        </div>
+
+        {/* Progress */}
+        <div className="dashboard-card">
+          <div className="dashboard-card__header">
+            <FaChartLine className="dashboard-card__icon" />
+            <h4 className="dashboard-card__title">Mi Progreso Académico</h4>
+          </div>
+          <div className="dashboard-card__item dashboard-card__item--completed">
+            <div className="dashboard-card__item-header">
+              <span className="dashboard-card__item-title">
+                <FaCheckCircle style={{ color: 'var(--success)' }} />
+                Inglés B2
+              </span>
+              <span className="dashboard-card__item-subtitle">85%</span>
             </div>
-            
-            <div style={{ 
-              background: 'white', 
-              padding: '20px', 
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <h4>Materiales</h4>
-              <p>Próximamente: Recursos de estudio</p>
+            <div className="progress-bar">
+              <div className="progress-bar__fill progress-bar__fill--success" style={{ width: '85%' }}></div>
+            </div>
+            <div className="progress-text">
+              12 de 14 lecciones completadas
+            </div>
+          </div>
+          <div className="dashboard-card__item dashboard-card__item--pending">
+            <div className="dashboard-card__item-header">
+              <span className="dashboard-card__item-title">
+                <FaClock style={{ color: 'var(--warning)' }} />
+                Francés A1
+              </span>
+              <span className="dashboard-card__item-subtitle">60%</span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-bar__fill progress-bar__fill--warning" style={{ width: '60%' }}></div>
+            </div>
+            <div className="progress-text">
+              6 de 10 lecciones completadas
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
 

@@ -24,7 +24,7 @@ const Services = () => {
           </div>
           <div className="service-card">
             <h3>Modalidad Online</h3>
-            <p>Clases virtuales con plataforma interactiva propia y recursos multimedia avanzados.</p>
+            <p>Clases virtuales con campus propio y recursos multimedia avanzados.</p>
           </div>
           <div className="service-card">
             <h3>Inmersión Cultural</h3>

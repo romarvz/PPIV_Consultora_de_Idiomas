@@ -1,35 +1,43 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
-import ForcChange from '../../components/common/ForcePasswordChange'
+import { useNavigate, useLocation } from 'react-router-dom'
+import ForcePasswordChange from '../../components/common/ForcePasswordChange'
+import '../../styles/variables.css'
+import '../../styles/auth.css'
+import '../../styles/charts.css'
 
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
-import AdminHeader from '../../components/common/AdminHeader'
+import ReportsDashboard from './ReportsDashboard'
+import AuthNavbar from '../../components/common/AuthNavbar'
+
+import CourseManagementPage from './CourseManagementPage';
+import SystemOverviewCharts from '../../components/charts/SystemOverviewCharts';
 import api from '../../services/api'
+import { routes } from '../../utils/routes'
 // React Icons - Updated for better UI
 import { 
-  FaUsers, 
-  FaGraduationCap, 
-  FaBookOpen, 
-  FaDollarSign,
   FaUserGraduate,
   FaChalkboardTeacher,
   FaCalendarAlt,
   FaCreditCard,
   FaChartLine,
   FaCog,
-  FaSignOutAlt,
-  FaTasks
+  FaBuilding
 } from 'react-icons/fa'
 
 const AdminDashboard = () => {
   const { user, logout, mustChangePassword } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
 
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [showTeachersManagement, setShowTeachersManagement] = useState(false)
+  const [showCourseManagement, setShowCourseManagement] = useState(false)
+  const [showReports, setShowReports] = useState(false)
   const [stats, setStats] = useState({
     totalStudents: 0,
     newStudents: 0,
@@ -46,6 +54,18 @@ const AdminDashboard = () => {
     cancelledClasses: 0
   })
   const [loading, setLoading] = useState(true)
+
+  // Reset management views when URL changes to main dashboard
+  useEffect(() => {
+    console.log('Current pathname:', location.pathname);
+    if (location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/') {
+      console.log('Resetting management views');
+      setShowStudentsManagement(false)
+      setShowTeachersManagement(false)
+      setShowCourseManagement(false)
+      setShowReports(false)
+    }
+  }, [location.pathname])
 
   // Fetch dashboard statistics
   useEffect(() => {
@@ -64,19 +84,17 @@ const AdminDashboard = () => {
     setShowPasswordChange(false)
   }
 
-
-
   const handleTeacherRegistered = () => {
     setShowRegisterTeacher(false)
-    // Refrescar estadísticas después del registro
+    // Refresh statistics after registration
     fetchStats()
   }
 
-  // Extraer la función fetchStats para poder reutilizarla
+  // Extract fetchStats function for reusability
   const fetchStats = async () => {
     try {
       setLoading(true)
-      // Obtener estudiantes, profesores y estadísticas de profesores
+      // Get students, teachers and teacher statistics
       const [studentsResponse, teachersResponse, teacherStatsResponse] = await Promise.all([
         api.get('/auth/students?limit=1000'),
         api.get('/auth/professors?limit=1000'),
@@ -105,30 +123,7 @@ const AdminDashboard = () => {
         const teacherSpecialties = specialtyStats.map(spec => spec._id)
         const uniqueSpecialties = specialtyStats.length
 
-        console.log('Calculated stats:', {
-          totalStudents: students.length,
-          newStudents,
-          activeStudents,
-          totalTeachers: teachers.length,
-          activeTeachers: teacherStats.overview.active,
-          uniqueSpecialties,
-          teacherSpecialties,
-          specialtyStats
-        })
 
-        // Debug: Let's see what student states we have
-        const studentStates = students.reduce((acc, student) => {
-          const state = student.estadoAcademico || 'sin_estado'
-          acc[state] = (acc[state] || 0) + 1
-          return acc
-        }, {})
-        
-        console.log('Student states breakdown:', studentStates)
-        console.log('Students created in last 30 days:', students.filter(s => new Date(s.createdAt) > thirtyDaysAgo).map(s => ({
-          name: s.firstName + ' ' + s.lastName,
-          createdAt: s.createdAt,
-          estado: s.estadoAcademico
-        })))
 
         setStats({
           totalStudents: students.length,
@@ -162,31 +157,10 @@ const AdminDashboard = () => {
   }
 
 
-
   // Show register teacher modal
   if (showRegisterTeacher) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.7)', // Fondo semitransparente normal
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999, // Z-index muy alto
-        padding: '20px'
-      }}>
-        <div style={{
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          width: '100%',
-          maxWidth: '800px',
-          position: 'relative',
-          zIndex: 10000 // Un z-index aún más alto que el overlay
-        }}>
+    return (<div className="modal-overlay dashboard-modal">
+        <div className="dashboard-modal__content">
           <RegisterTeacher
             onSuccess={handleTeacherRegistered}
             onCancel={() => setShowRegisterTeacher(false)}
@@ -196,352 +170,201 @@ const AdminDashboard = () => {
     )
   }
 
+  // Scroll to top when switching views
+  useEffect(() => {
+    if (showStudentsManagement || showTeachersManagement || showCourseManagement || showReports) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [showStudentsManagement, showTeachersManagement, showCourseManagement, showReports]);
+
   // Show students management
   if (showStudentsManagement) {
+    console.log('Rendering StudentsManagement component');
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'white',
-        zIndex: 9999,
-        overflow: 'auto'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 10000
-        }}>
-          <button
-            onClick={() => setShowStudentsManagement(false)}
-            style={{
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}
-          >
-            ← Volver al Dashboard
-          </button>
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowStudentsManagement(false)} />
+          <StudentsManagement onBack={() => setShowStudentsManagement(false)} />
         </div>
-        <StudentsManagement />
-      </div>
+      </section>
     )
   }
 
   // Show teachers management
   if (showTeachersManagement) {
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'white',
-        zIndex: 9999,
-        overflow: 'auto'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 10000
-        }}>
-          <button
-            onClick={() => setShowTeachersManagement(false)}
-            style={{
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}
-          >
-            ← Volver al Dashboard
-          </button>
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowTeachersManagement(false)} />
+          <TeachersManagement />
         </div>
-        <TeachersManagement />
-      </div>
+      </section>
+    )
+  }
+
+  // Show course management
+  if (showCourseManagement) {
+    return (
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowCourseManagement(false)} />
+          <CourseManagementPage />
+        </div>
+      </section>
+    )
+  }
+
+  // Show reports
+  if (showReports) {
+    return (
+      <section className="section visible">
+        <div className="container dashboard-container">
+          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} onBack={() => setShowReports(false)} />
+          <ReportsDashboard onClose={() => setShowReports(false)} />
+        </div>
+      </section>
     )
   }
 
   return (
     <section className="section visible">
-      <div className="container">
+      <div className="container dashboard-container">
         {/* Header */}
-        <AdminHeader user={user} onLogout={handleLogout} />
+        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
 
-        {/* KPI Cards */}
-        <div style={{ marginBottom: '3rem' }}>
-          <h3 style={{ 
-            color: 'var(--primary)', 
-            marginBottom: '1.5rem',
-            fontSize: '1.5rem',
-            fontWeight: '600'
-          }}>
-             Overview del Sistema
-          </h3>
-          
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <p>Cargando estadísticas...</p>
-            </div>
-          ) : (
-            <div className="services-grid" style={{ 
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '1.5rem'
-            }}>
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaUsers />
-                </div>
-                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
-                  {stats.totalStudents}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
-                  Total Estudiantes
-                </p>
-                <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
-                  <div>Activos: {stats.activeStudents}</div>
-                  <div>Inactivos: {stats.totalStudents - stats.activeStudents}</div>
-                </div>
-              </div>
-
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #e67e22, #d68910)',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaChalkboardTeacher />
-                </div>
-                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
-                  {stats.totalTeachers}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
-                  Total Profesores
-                </p>
-                <div style={{ opacity: 0.85, fontSize: '0.9rem', lineHeight: '1.4' }}>
-                  <div>Activos: {stats.activeTeachers}</div>
-                  <div>Especialidades: {stats.uniqueSpecialties}</div>
-                </div>
-              </div>
-
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #8e44ad, #9b59b6)',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaBookOpen />
-                </div>
-                <h3 style={{ color: 'white', fontSize: '2.5rem', margin: '0.5rem 0', fontWeight: '700' }}>
-                  {stats.uniqueSpecialties}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '1.1rem', fontWeight: '600' }}>
-                  Especialidades
-                </p>
-                <div style={{ opacity: 0.85, fontSize: '0.85rem', lineHeight: '1.4' }}>
-                  {stats.teacherSpecialties.length > 0 ? (
-                    <div>
-                      {stats.teacherSpecialties.slice(0, 3).join(', ')}
-                      {stats.teacherSpecialties.length > 3 && ` +${stats.teacherSpecialties.length - 3} más`}
-                    </div>
-                  ) : (
-                    'Especialidades variadas'
-                  )}
-                </div>
-              </div>
-
-              <div className="service-card" style={{ 
-                background: 'linear-gradient(135deg, #F5B800, #fd7e14)',
-                color: 'white',
-                border: 'none'
-              }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                  <FaDollarSign />
-                </div>
-                <h3 style={{ color: 'white', fontSize: '1.5rem', margin: '0.5rem 0' }}>
-                  ${stats.monthlyRevenue.toLocaleString()}
-                </h3>
-                <p style={{ margin: '0.5rem 0', opacity: 0.9 }}>Ingresos del Mes</p>
-                <small style={{ opacity: 0.8 }}>
-                  Pagos pendientes: {stats.pendingPayments.count}
-                </small>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* System Overview Charts */}
+        <SystemOverviewCharts stats={stats} loading={loading} />
 
         {/* Quick Actions */}
-        <div style={{ marginBottom: '3rem' }}>
-          <h3 style={{ 
-            color: 'var(--primary)', 
-            marginBottom: '1.5rem',
-            fontSize: '1.5rem',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <FaTasks /> Acciones Rápidas
-          </h3>
+        <div className="dashboard-section">
+          <h3 className="dashboard-section__title">Acciones Rápidas</h3>
           
-          <div className="services-grid" style={{ 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1.5rem'
-          }}>
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaUserGraduate />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Gestión de Estudiantes
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Ver, editar y gestionar información de estudiantes, estados académicos y progreso
+          <div className="quick-actions-grid">
+            {/* Student Management Card */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaUserGraduate /></div>
+              <h4 className="action-card__title">Gestión de Estudiantes</h4>
+              <p className="action-card__description">
+                Ver, editar y gestionar información de estudiantes, estados académicos y progreso.
               </p>
               <button 
-                className="cta-btn" 
-                style={{ 
-                  width: '100%',
-                  transform: 'none !important',
-                  transition: 'none !important'
-                }}
-                onClick={() => {
-                  console.log('Click en Gestionar Estudiantes')
-                  setShowStudentsManagement(true)
+                type="button"
+                className="cta-btn action-card__button" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Setting showStudentsManagement to true');
+                  setShowStudentsManagement(true);
                 }}
               >
-                Gestión de Estudiantes
+                Gestionar Estudiantes
               </button>
             </div>
             
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaChalkboardTeacher />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Gestión de Profesores
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Registrar profesores, gestionar especialidades, configurar horarios
+            {/* Teacher Management Card */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaChalkboardTeacher /></div>
+              <h4 className="action-card__title">Gestión de Profesores</h4>
+              <p className="action-card__description">
+                Registrar profesores, gestionar especialidades y configurar sus horarios disponibles.
+              </p>
+              <button className="cta-btn action-card__button" onClick={() => setShowTeachersManagement(true)}>
+                Gestionar Profesores
+              </button>
+            </div>
+            
+            {/* Course Management Card */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaCalendarAlt /></div>
+              <h4 className="action-card__title">Gestión de Cursos</h4>
+              <p className="action-card__description">
+                Crear y editar la oferta académica de la institución (cursos grupales, individuales, etc.).
+              </p>
+              <button className="cta-btn action-card__button" onClick={() => setShowCourseManagement(true)}>
+                Gestionar Cursos
+              </button>
+            </div>
+            
+            {/* Reports Card */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaChartLine /></div>
+              <h4 className="action-card__title">Reportes</h4>
+              <p className="action-card__description">
+                Estadísticas académicas, reportes financieros y exportación de datos importantes.
               </p>
               <button 
-                className="cta-btn" 
-                style={{ 
-                  width: '100%',
-                  transform: 'none !important',
-                  transition: 'none !important'
-                }}
-                onClick={() => {
-                  console.log('Click en Gestión de Profesores')
-                  setShowTeachersManagement(true)
-                }}
+                className="cta-btn action-card__button"
+                onClick={() => setShowReports(true)}
               >
-                Gestión de Profesores
-              </button>
-            </div>
-            
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaCalendarAlt />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Gestión de Clases
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Programar clases, asignar profesores, gestionar horarios
-              </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
-                Gestionar Clases
-              </button>
-            </div>
-            
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaCreditCard />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Pagos y Finanzas
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Gestionar pagos, generar facturas, revisar ingresos
-              </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
-                Ver Finanzas
-              </button>
-            </div>
-            
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaChartLine />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Reportes
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Estadísticas académicas, reportes financieros, exportaciones
-              </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
                 Ver Reportes
               </button>
             </div>
             
-            <div className="service-card">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
-                <FaCog />
-              </div>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
-                Configuración
-              </h4>
-              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                Configurar sistema, gestionar roles, ajustar parámetros
+            {/* Payments and Finance Card */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaCreditCard /></div>
+              <h4 className="action-card__title">Pagos y Finanzas</h4>
+              <p className="action-card__description">
+                Gestionar pagos, generar facturas, revisar los ingresos y controlar las deudas.
               </p>
-              <button className="cta-btn" style={{ width: '100%' }}>
+              <button className="cta-btn action-card__button" onClick={() => navigate(routes.DASHBOARD.FINANCIAL)}>
+                Ver Finanzas
+              </button>
+            </div>
+            
+            {/* Corporate Panel Card */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaBuilding /></div>
+              <h4 className="action-card__title">Panel Corporativo</h4>
+              <p className="action-card__description">
+                Vista empresarial, gestión de empleados, pagos corporativos
+              </p>
+              <button className="cta-btn action-card__button" onClick={() => navigate('/dashboard/company')}>
+                Ver Panel Corporativo
+              </button>
+            </div>
+            
+            {/* Configuration Card */}
+            <div className="service-card action-card">
+              <div className="action-card__icon"><FaCog /></div>
+              <h4 className="action-card__title">Configuración</h4>
+              <p className="action-card__description">
+                Configurar sistema, gestionar roles de usuario y ajustar parámetros generales.
+              </p>
+              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE')}>
                 Configurar Sistema
               </button>
             </div>
+
+
           </div>
         </div>
-
         {/* Admin Profile Info */}
-        <div className="service-card" style={{ marginBottom: '2rem' }}>
-          <h3 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
-            👤 Información Personal
+        <div className="service-card profile-info-card" style={{ marginBottom: '2rem' }}>
+          <h3 className="profile-info-card__title" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
+            Información Personal
           </h3>
-          <div style={{ 
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1rem',
-            textAlign: 'left'
-          }}>
-            <div>
-              <p><strong>Nombre:</strong> {user?.firstName} {user?.lastName}</p>
-              <p><strong>Email:</strong> {user?.email}</p>
+          <div className="profile-info-grid">
+            <div className="profile-info-item">
+              <span className="profile-label">Nombre:</span>
+              <span className="profile-value">{user?.firstName} {user?.lastName}</span>
             </div>
-            <div>
-              <p><strong>DNI:</strong> {user?.dni}</p>
-              <p><strong>Rol:</strong> Administrador</p>
+            <div className="profile-info-item">
+              <span className="profile-label">Email:</span>
+              <span className="profile-value">{user?.email}</span>
+            </div>
+            <div className="profile-info-item">
+              <span className="profile-label">DNI:</span>
+              <span className="profile-value">{user?.dni}</span>
+            </div>
+            <div className="profile-info-item">
+              <span className="profile-label">Rol:</span>
+              <span className="profile-value">Administrador</span>
             </div>
             {user?.phone && (
-              <div>
-                <p><strong>Teléfono:</strong> {user.phone}</p>
+              <div className="profile-info-item">
+                <span className="profile-label">Teléfono:</span>
+                <span className="profile-value">{user.phone}</span>
               </div>
             )}
           </div>

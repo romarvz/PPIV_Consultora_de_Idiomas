@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
+
 // Authentication provider and protected route component
 import { AuthProvider } from './hooks/useAuth.jsx'
 import ProtectedRoute from './components/common/ProtectedRoute'
@@ -12,6 +13,7 @@ import Layout from './components/layout/Layout'
 import Home from './pages/Home'
 import About from './pages/About'
 import Services from './pages/Services'
+import CoursesPage from './pages/CoursesPage'; 
 import Clients from './pages/Clients'
 import Demo from './pages/Demo'
 import Contact from './pages/Contact'
@@ -22,6 +24,7 @@ import AdminDashboard from './pages/Dashboard/AdminDashboard'
 import StudentDashboard from './pages/Dashboard/StudentDashboard'
 import TeacherDashboard from './pages/Dashboard/TeacherDashboard'
 import CompanyDashboard from './pages/Dashboard/CompanyDashboard'
+import FinancialDashboard from './pages/Dashboard/FinancialDashboard'
 
 // Centralized route paths to avoid typos and make changes easier
 import { routes } from './utils/routes'
@@ -42,12 +45,16 @@ function App() {
             {/* Public information pages */}
             <Route path={routes.ABOUT} element={<About />} />
             <Route path={routes.SERVICES} element={<Services />} />
+            <Route path={routes.COURSES} element={<CoursesPage />} />
             <Route path={routes.CLIENTS} element={<Clients />} />
             <Route path={routes.DEMO} element={<Demo />} />
             <Route path={routes.CONTACT} element={<Contact />} />
             
             {/* Authentication page */}
             <Route path={routes.LOGIN} element={<Login />} />
+            
+
+          {/* End of public routes */}  
           </Route>
           
           {/* Protected dashboard pages WITHOUT layout (no header/footer) */}
@@ -80,6 +87,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin', 'empresa']}>
                 <CompanyDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path={routes.DASHBOARD.FINANCIAL} 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <FinancialDashboard />
               </ProtectedRoute>
             } 
           />

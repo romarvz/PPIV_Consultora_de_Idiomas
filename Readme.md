@@ -249,20 +249,135 @@ Para documentación detallada de todos los endpoints, ejemplos de uso y casos de
 - [x] Estructura de proyecto con React Router
 - [x] Configuración de formularios con React Hook Form
 - [x] Cliente HTTP con Axios
+- [x] Sistema Mock para desarrollo independiente
 - [ ] Interfaz de login y autenticación
 - [ ] Dashboard administrativo
 - [ ] Gestión de estudiantes y profesores
 - [ ] Perfiles de usuario
+
+## Sistema Mock para Desarrollo Frontend
+
+### **Archivos del Sistema Mock**
+El sistema mock está compuesto por tres archivos principales que trabajan en conjunto:
+
+#### **1. mockData.js**
+Contiene datos estáticos de ejemplo incluyendo:
+- 10 estudiantes con perfiles detallados
+- 5 profesores con especialidades y horarios
+- 10 clases de ejemplo con diferentes estados
+- 10 registros de pagos
+- 5 idiomas soportados
+- 1 empresa de ejemplo
+
+#### **2. mockApi.js**
+Implementa una API simulada completa con:
+- Operaciones CRUD para clases y pagos
+- Generación de reportes (académicos, financieros)
+- Acceso a datos de empresas
+- Almacenamiento en sesión para persistencia de datos
+- Simulación de retardo de red
+
+#### **3. apiAdapter.js**
+Adaptador inteligente que:
+- Alterna entre mock y backend real usando la bandera USE_MOCK
+- Proporciona una interfaz de API consistente para todos los servicios
+- Maneja casos de error y formateo de datos
+- Facilita la transición al backend real
+
+### **Cómo Usar**
+
+```javascript
+// En tus componentes
+import apiAdapter from '../services/apiAdapter'
+
+// Ejemplo de uso
+const fetchClasses = async () => {
+  try {
+    const response = await apiAdapter.classes.getAll({
+      status: 'programada',
+      page: 1,
+      limit: 10
+    })
+    
+    if (response.data.success) {
+      setClasses(response.data.data.classes)
+    }
+  } catch (error) {
+    console.error('Error:', error)
+  }
+}
+```
+
+### **Cambiar entre Mock y Backend Real**
+
+#### **Modo Mock (desarrollo)**
+```javascript
+// En apiAdapter.js
+const USE_MOCK = true // Usa datos simulados
+```
+
+#### **Modo Real (producción)**
+```javascript
+// En apiAdapter.js
+const USE_MOCK = false // Usa backend real
+```
+
+### **Datos Mock Disponibles**
+
+#### **Estudiantes**
+- 10 estudiantes (IDs: mock-student-1 a mock-student-10)
+- Niveles: A1, A2, B1, B2, C1, C2
+- Estados: activo, inactivo, graduado
+
+#### **Profesores**
+- 5 profesores (IDs: mock-teacher-1 a mock-teacher-5)
+- Especialidades: Inglés, Francés, Alemán, Italiano, Portugués
+- Tarifas: $2400 - $3000/hora
+
+#### **Clases**
+- 10 clases con diferentes estados
+- Estados: programada, completada, cancelada
+- Fechas: Octubre 2025
+- Duraciones: 60-90 minutos
+
+#### **Pagos**
+- 10 registros de pagos
+- Estados: pagado, pendiente, vencido
+- Montos: $4000 - $7000
+- Métodos: transferencia, efectivo, tarjeta
+
+#### **Empresas**
+- 1 empresa de ejemplo (Tech Solutions SA)
+- 2 empleados asociados
+
+### **Utilidades**
+
+```javascript
+// Verificar si está usando mock
+const isMock = apiAdapter.utils.isUsingMock()
+
+// Resetear datos mock
+apiAdapter.utils.resetMockData()
+
+// Ver estado del almacenamiento
+const state = apiAdapter.utils.getStorageState()
+```
+
+### **Importante**
+- No modificar las funcionalidades existentes que ya usan api.js directamente
+- Usar apiAdapter solo para nuevas funcionalidades
+- Manejar errores con try/catch
+- Verificar response.data.success antes de usar los datos
+- Mostrar estados de carga y mensajes de error al usuario
+
+Este sistema permite desarrollar el frontend de forma independiente mientras el backend está en desarrollo, asegurando una integración sencilla posteriormente.
 
 ### **Fase 3: Funcionalidades Avanzadas** PENDIENTE
 - [ ] Sistema de clases y horarios
 - [ ] Gestión de pagos y facturación
 - [ ] Reportes y estadísticas
 - [ ] Notificaciones en tiempo real
-- [ ] Módulo de evaluaciones y progreso
-- `POST /api/auth/register/estudiante-admin` - Registro estudiante (solo admin)
-- `POST /api/auth/register/profesor` - Registro profesor (solo admin)
-- `POST /api/auth/register/admin` - Registro admin (solo admin)
+- [ ] Módulo de evaluaciones y progresoT /api/auth/register/admin` - Registro admin (solo admin)
 - `PUT /api/auth/change-password` - Cambio de contraseña
 - `GET /api/auth/users` - Lista usuarios (solo admin)
 - `GET /api/auth/profile` - Ver perfil propio
