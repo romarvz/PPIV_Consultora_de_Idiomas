@@ -11,7 +11,7 @@ const Language = require('./Language');
 // Modelos nuevos (Alexa - Cursos y Clases)
 const Curso = require('./Curso');
 const Inscripcion = require('./Inscripcion');
-const Clase = require('./Clase');
+const Clase = require('./clase');
 const EventoCalendario = require('./EventoCalendario');
 
 // Otros modelos futuros (Roma Ayelen, Vero)
