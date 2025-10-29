@@ -2,7 +2,7 @@ const axios = require('axios');
 
 const BASE_URL = 'http://localhost:5000/api/auth';
 
-
+// Función para hacer login y obtener token
 async function getAdminToken() {
   try {
     const response = await axios.post(`${BASE_URL}/login`, {
@@ -22,7 +22,7 @@ async function getAdminToken() {
   }
 }
 
-
+// Función para crear estudiante
 async function createStudent(token, studentData) {
   try {
     const response = await axios.post(`${BASE_URL}/register/estudiante-admin`, studentData, {
@@ -41,7 +41,7 @@ async function createStudent(token, studentData) {
   }
 }
 
-
+// Función para crear profesor
 async function createTeacher(token, teacherData) {
   try {
     const response = await axios.post(`${BASE_URL}/register/profesor`, teacherData, {
@@ -60,7 +60,7 @@ async function createTeacher(token, teacherData) {
   }
 }
 
-
+// Usuarios de prueba basados en la documentación
 const testStudents = [
   {
     email: "estudiante1@test.com",
@@ -112,23 +112,23 @@ const testTeachers = [
   }
 ];
 
-// Principal function
+// Función principal
 async function createTestUsers() {
   console.log(' Iniciando creación de usuarios de prueba...\n');
   
   try {
-    // 1. Get admin token
+    // 1. Obtener token de admin
     const adminToken = await getAdminToken();
     console.log('');
     
-    // 2. Create students
-    console.log(' Creando estudiantes...');
+    // 2. Crear estudiantes
+    console.log('📚 Creando estudiantes...');
     for (const student of testStudents) {
       await createStudent(adminToken, student);
     }
     console.log('');
     
-    // 3. Create teachers
+    // 3. Crear profesores
     console.log('Creando profesores...');
     for (const teacher of testTeachers) {
       await createTeacher(adminToken, teacher);
@@ -141,7 +141,7 @@ async function createTestUsers() {
     console.log('Email: admin@consultora.com');
     console.log('Password: Admin123!');
     
-    console.log('\n ESTUDIANTES (primer login con DNI):');
+    console.log('\n🎓 ESTUDIANTES (primer login con DNI):');
     testStudents.forEach(student => {
       console.log(`Email: ${student.email} | Password temporal: ${student.dni}`);
     });
@@ -158,5 +158,5 @@ async function createTestUsers() {
   }
 }
 
-//  script
+// Ejecutar script
 createTestUsers();

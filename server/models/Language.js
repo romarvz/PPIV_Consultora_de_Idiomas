@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Schema for Language documents
+// Schema para idiomas/especialidades
 const languageSchema = new mongoose.Schema({
   code: {
     type: String,
@@ -47,35 +47,35 @@ const languageSchema = new mongoose.Schema({
   collection: 'languages'
 });
 
-// optimizations
+// Índices para optimizar consultas
 languageSchema.index({ code: 1 });
 languageSchema.index({ isActive: 1 });
 languageSchema.index({ name: 1 });
 
-//static method to get all active languages
+// Método estático para obtener idiomas activos
 languageSchema.statics.getActiveLanguages = function() {
   return this.find({ isActive: true }).sort({ name: 1 });
 };
 
-// static method to find by code
+// Método estático para obtener por código
 languageSchema.statics.findByCode = function(code) {
   return this.findOne({ code: code.toLowerCase() });
 };
 
-// MMethod to toggle active status
+// Método de instancia para activar/desactivar
 languageSchema.methods.toggleActive = function() {
   this.isActive = !this.isActive;
   return this.save();
 };
 
-// Middleware pre-save for validations and transformations
+// Middleware pre-save para validaciones adicionales
 languageSchema.pre('save', function(next) {
-  
+  // Capitalizar la primera letra del nombre
   if (this.name) {
     this.name = this.name.charAt(0).toUpperCase() + this.name.slice(1).toLowerCase();
   }
   
-  // validations
+  // Validar que el código no contenga caracteres especiales
   if (this.code && !/^[a-z0-9]+$/.test(this.code)) {
     return next(new Error('El código solo puede contener letras minúsculas y números'));
   }
@@ -83,7 +83,7 @@ languageSchema.pre('save', function(next) {
   next();
 });
 
-// Méthod toJSON for API responses
+// Método toJSON personalizado para la respuesta de API
 languageSchema.methods.toJSON = function() {
   const language = this.toObject();
   return {

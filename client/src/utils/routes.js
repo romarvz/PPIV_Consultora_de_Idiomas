@@ -4,7 +4,6 @@ export const routes = {
   HOME: '/',
   ABOUT: '/about',
   SERVICES: '/services',
-  COURSES: '/cursos',
   CLIENTS: '/clients',
   DEMO: '/demo',
   CONTACT: '/contact',
@@ -13,8 +12,7 @@ export const routes = {
     ADMIN: '/dashboard/admin',
     STUDENT: '/dashboard/student',
     TEACHER: '/dashboard/teacher',
-    COMPANY: '/dashboard/company',
-    FINANCIAL: '/dashboard/admin/financial'
+    COMPANY: '/dashboard/company'
   }
 }
 
@@ -23,7 +21,6 @@ export const publicRoutes = [
   routes.HOME,
   routes.ABOUT,
   routes.SERVICES,
-  routes.COURSES,
   routes.CLIENTS,
   routes.DEMO,
   routes.CONTACT,
