@@ -4,13 +4,6 @@ const Estudiante = require('./Estudiante');
 const Profesor = require('./Profesor');
 const Admin = require('./Admin');
 const Language = require('./Language');
-const Empresa = require('./Empresa');
-const AuditoriaLog = require('./AuditoriaLog');
-const Curso = require('./Curso');
-const Inscripcion = require('./Inscripcion');
-const Clase = require('./clase');
-const EventoCalendario = require('./EventoCalendario');
-
 
 module.exports = {
   BaseUser,
@@ -18,15 +11,7 @@ module.exports = {
   Profesor,
   Admin,
   Language,
-  Empresa,
-  AuditoriaLog,
-  Curso,
-  Inscripcion,
-  Clase,
-  EventoCalendario,
-    
-  
-  //function helper
+  // Función helper para obtener el modelo correcto según el rol
   getUserModel: (role) => {
     switch(role) {
       case 'estudiante':
@@ -39,11 +24,11 @@ module.exports = {
         return BaseUser;
     }
   },
-  // Function to find any user regardless of type
+  // Función para buscar cualquier usuario sin importar el tipo
   findUserByEmail: async (email) => {
     return await BaseUser.findOne({ email });
   },
-  // Function to find user by ID regardless of type
+  // Función para buscar usuario por ID sin importar el tipo
   findUserById: async (id) => {
     return await BaseUser.findById(id);
   }

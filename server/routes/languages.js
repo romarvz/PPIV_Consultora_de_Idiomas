@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// Import language controllers
+// Importar controlador de idiomas
 const {
   getLanguages,
   getLanguageById,
@@ -13,16 +13,16 @@ const {
   getLanguageStats
 } = require('../controllers/languageController');
 
-// Import middlewares
+// Importar middlewares
 const { 
   authenticateToken, 
   requireAdmin 
 } = require('../middleware/authMiddlewareNew');
 
-
+// Importar validadores
 const { body, param } = require('express-validator');
 
-// ==================== validators ====================
+// ==================== VALIDADORES ====================
 
 const validateLanguageCreate = [
   body('code')
@@ -115,27 +115,27 @@ const validateCode = [
     .withMessage('Código debe contener solo letras minúsculas y números')
 ];
 
-// ==================== public routes ====================
+// ==================== RUTAS PÚBLICAS ====================
 
-
+// Obtener todos los idiomas (público para que profesores vean opciones)
 router.get('/', getLanguages);
 
-
+// Obtener idioma por código (público)
 router.get('/code/:code', validateCode, getLanguageByCode);
 
-
+// Obtener idioma por ID (público)
 router.get('/:id', validateId, getLanguageById);
 
-// ==================== private routes(ADMIN) ====================
+// ==================== RUTAS PRIVADAS (ADMIN) ====================
 
-// stats
+// Estadísticas de idiomas
 router.get('/admin/stats', 
   authenticateToken, 
   requireAdmin, 
   getLanguageStats
 );
 
-// create language
+// Crear nuevo idioma
 router.post('/', 
   authenticateToken, 
   requireAdmin, 
@@ -143,7 +143,7 @@ router.post('/',
   createLanguage
 );
 
-// update language
+// Actualizar idioma
 router.put('/:id', 
   authenticateToken, 
   requireAdmin, 
@@ -152,7 +152,7 @@ router.put('/:id',
   updateLanguage
 );
 
-// active/deactivate language
+// Activar/Desactivar idioma
 router.patch('/:id/toggle', 
   authenticateToken, 
   requireAdmin, 
@@ -160,7 +160,7 @@ router.patch('/:id/toggle',
   toggleLanguageStatus
 );
 
-//  (soft delete)
+// Eliminar idioma (soft delete)
 router.delete('/:id', 
   authenticateToken, 
   requireAdmin, 
@@ -168,8 +168,9 @@ router.delete('/:id',
   deleteLanguage
 );
 
-// ==================== utility routes ====================
+// ==================== RUTAS DE UTILIDAD ====================
 
+// Test de conectividad
 router.get('/test/ping', (req, res) => {
   res.json({
     success: true,

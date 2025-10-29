@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const BaseUser = require('./BaseUser');
 
-// Specific Schema for Students
+// Schema específico para estudiantes
 const estudianteSchema = new mongoose.Schema({
   nivel: {
     type: String,
@@ -15,7 +15,7 @@ const estudianteSchema = new mongoose.Schema({
   }
 });
 
-// Create the Estudiante model using discriminator
+// Crear el modelo Estudiante usando discriminator
 const Estudiante = BaseUser.discriminator('estudiante', estudianteSchema);
 
 module.exports = Estudiante;

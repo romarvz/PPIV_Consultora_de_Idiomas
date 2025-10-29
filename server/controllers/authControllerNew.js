@@ -2,7 +2,7 @@ const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const { BaseUser, Estudiante, Profesor, Admin, getUserModel, findUserByEmail, findUserById } = require('../models');
 
-// auxiliary function to handle validation errors
+// Función auxiliar para manejar errores de validación
 const handleValidationErrors = (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -18,7 +18,7 @@ const handleValidationErrors = (req, res) => {
   return null;
 };
 
-// Function to generate JWT token
+// Función para generar JWT token
 const generateToken = (userId) => {
   return jwt.sign(
     { id: userId },
@@ -27,7 +27,7 @@ const generateToken = (userId) => {
   );
 };
 
-// Function to validate registration permissions
+// Función para validar permisos de registro
 const validateRegistrationPermissions = (role, authHeader) => {
   // Solo admins pueden registrar profesores y otros admins
   if (role === 'profesor' || role === 'admin') {
@@ -42,10 +42,12 @@ const validateRegistrationPermissions = (role, authHeader) => {
   return { isValid: true };
 };
 
-//     Registro de usuario
+// @desc    Registrar usuario
+// @route   POST /api/auth/register
+// @access  Depends on role
 const register = async (req, res) => {
   try {
-    
+    // Validar errores
     const validationError = handleValidationErrors(req, res);
     if (validationError) return validationError;
 
@@ -57,7 +59,7 @@ const register = async (req, res) => {
       role = 'estudiante', 
       phone, 
       dni,
-     
+      // Campos específicos por rol
       nivel, 
       estadoAcademico,
       especialidades, 
@@ -66,7 +68,7 @@ const register = async (req, res) => {
       permisos
     } = req.body;
 
-  
+    // Verificar si el usuario ya existe
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
@@ -76,7 +78,7 @@ const register = async (req, res) => {
       });
     }
 
-   
+    // Verificar si el DNI ya existe (si se proporciona)
     if (dni) {
       const existingDni = await BaseUser.findOne({ dni });
       if (existingDni) {
@@ -88,7 +90,7 @@ const register = async (req, res) => {
       }
     }
 
-   
+    // Validar permisos de registro
     const permissionCheck = validateRegistrationPermissions(role, req.header('Authorization'));
     if (!permissionCheck.isValid) {
       return res.status(403).json({
@@ -98,10 +100,10 @@ const register = async (req, res) => {
       });
     }
 
-    
+    // Preparar datos base
     const baseUserData = {
       email,
-      password: password || dni, // for students, default password is dni
+      password: password || dni, // Para estudiantes/profesores, password inicial es DNI
       firstName,
       lastName,
       role,
@@ -109,7 +111,7 @@ const register = async (req, res) => {
       dni
     };
 
-    // Create user based on role
+    // Crear usuario según el rol
     let newUser;
     
     switch (role) {
@@ -145,10 +147,10 @@ const register = async (req, res) => {
         });
     }
 
-    // Save the user
+    // Guardar el usuario
     await newUser.save();
 
-    // Generate token
+    // Generar token
     const token = generateToken(newUser._id);
 
     res.status(201).json({
@@ -163,7 +165,7 @@ const register = async (req, res) => {
   } catch (error) {
     console.error('Error en register:', error);
     
-    
+    // Manejar errores específicos de MongoDB
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(400).json({
@@ -173,7 +175,7 @@ const register = async (req, res) => {
       });
     }
 
-    // errors of mongoose validation
+    // Manejar errores de validación de Mongoose
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => ({
         field: err.path,
@@ -195,7 +197,9 @@ const register = async (req, res) => {
   }
 };
 
-// Login of user
+// @desc    Login de usuario
+// @route   POST /api/auth/login
+// @access  Public
 const login = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -203,7 +207,7 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // find user by email
+    // Buscar usuario
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(401).json({
@@ -213,7 +217,7 @@ const login = async (req, res) => {
       });
     }
 
-    // Check if user is active
+    // Verificar si el usuario está activo
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -222,7 +226,7 @@ const login = async (req, res) => {
       });
     }
 
-    // Check password
+    // Verificar password
     const isPasswordCorrect = await user.comparePassword(password);
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -232,14 +236,14 @@ const login = async (req, res) => {
       });
     }
 
-    // Update last login
+    // Actualizar último login
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate token
+    // Generar token
     const token = generateToken(user._id);
 
-    // Check if must change password
+    // Verificar si debe cambiar contraseña
     if (user.mustChangePassword) {
       return res.json({
         success: true,
@@ -271,8 +275,9 @@ const login = async (req, res) => {
   }
 };
 
-//    get user profile
-
+// @desc    Obtener perfil del usuario
+// @route   GET /api/auth/profile
+// @access  Private
 const getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -303,7 +308,9 @@ const getProfile = async (req, res) => {
   }
 };
 
-// update user profile
+// @desc    Actualizar perfil del usuario
+// @route   PUT /api/auth/profile
+// @access  Private
 const updateProfile = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -321,7 +328,7 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    // Update allowed fields
+    // Actualizar campos permitidos
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (phone !== undefined) user.phone = phone;
@@ -346,8 +353,9 @@ const updateProfile = async (req, res) => {
   }
 };
 
-//    change password
-
+// @desc    Cambiar contraseña
+// @route   PUT /api/auth/change-password
+// @access  Private
 const changePassword = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -365,7 +373,7 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Check current password
+    // Verificar contraseña actual
     const isCurrentPasswordCorrect = await user.comparePassword(currentPassword);
     if (!isCurrentPasswordCorrect) {
       return res.status(400).json({
@@ -375,7 +383,7 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Update password
+    // Actualizar contraseña
     user.password = newPassword;
     user.mustChangePassword = false;
     await user.save();
@@ -395,8 +403,9 @@ const changePassword = async (req, res) => {
   }
 };
 
-//   Change password forced (for users who must change it)
-
+// @desc    Cambiar contraseña forzado (primera vez)
+// @route   PUT /api/auth/change-password-forced
+// @access  Private
 const changePasswordForced = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -414,7 +423,7 @@ const changePasswordForced = async (req, res) => {
       });
     }
 
-    // Check if must change password
+    // Verificar que realmente necesita cambiar contraseña
     if (!user.mustChangePassword) {
       return res.status(400).json({
         success: false,
@@ -423,7 +432,7 @@ const changePasswordForced = async (req, res) => {
       });
     }
 
-    // Update password
+    // Actualizar contraseña
     user.password = newPassword;
     user.mustChangePassword = false;
     await user.save();
@@ -443,11 +452,13 @@ const changePasswordForced = async (req, res) => {
   }
 };
 
-//  Logout
-
+// @desc    Logout
+// @route   POST /api/auth/logout
+// @access  Private
 const logout = async (req, res) => {
   try {
-    
+    // En una implementación real, aquí invalidarías el token
+    // Por ejemplo, agregándolo a una blacklist
     
     res.json({
       success: true,
@@ -464,28 +475,29 @@ const logout = async (req, res) => {
   }
 };
 
-// get students (for admin)
-
+// @desc    Obtener estudiantes
+// @route   GET /api/auth/students
+// @access  Private
 const getStudents = async (req, res) => {
   try {
     const { nivel, estadoAcademico, page = 1, limit = 10 } = req.query;
 
-   
+    // Construir filtros
     const filters = { role: 'estudiante' };
     if (nivel) filters.nivel = nivel;
     if (estadoAcademico) filters.estadoAcademico = estadoAcademico;
 
-    // Pagination
+    // Paginación
     const skip = (page - 1) * limit;
 
-    // find students
+    // Buscar estudiantes
     const students = await Estudiante.find(filters)
       .select('-password')
       .limit(limit * 1)
       .skip(skip)
       .sort({ createdAt: -1 });
 
-    // Count total
+    // Contar total
     const total = await Estudiante.countDocuments(filters);
 
     res.json({
@@ -511,30 +523,30 @@ const getStudents = async (req, res) => {
   }
 };
 
-// get professors (for admin)
-
-
+// @desc    Obtener profesores
+// @route   GET /api/auth/professors
+// @access  Private (Admin only)
 const getProfessors = async (req, res) => {
   try {
     const { especialidad, page = 1, limit = 10 } = req.query;
 
-    // construct filters
+    // Construir filtros
     const filters = { role: 'profesor' };
     if (especialidad) {
       filters.especialidades = { $in: [especialidad] };
     }
 
-    // Pagination
+    // Paginación
     const skip = (page - 1) * limit;
 
-    // find professors
+    // Buscar profesores
     const professors = await Profesor.find(filters)
       .select('-password')
       .limit(limit * 1)
       .skip(skip)
       .sort({ createdAt: -1 });
 
-    // Count total
+    // Contar total
     const total = await Profesor.countDocuments(filters);
 
     res.json({
@@ -560,7 +572,9 @@ const getProfessors = async (req, res) => {
   }
 };
 
-// update academic info (only for students)
+// @desc    Actualizar información académica (Solo estudiantes)
+// @route   PUT /api/auth/update-academic-info
+// @access  Private (Student)
 const updateAcademicInfo = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -569,7 +583,7 @@ const updateAcademicInfo = async (req, res) => {
     const userId = req.user.id;
     const { nivel, estadoAcademico } = req.body;
 
-    // find student
+    // Buscar estudiante
     const student = await Estudiante.findById(userId);
     if (!student) {
       return res.status(404).json({
@@ -579,7 +593,7 @@ const updateAcademicInfo = async (req, res) => {
       });
     }
 
-    // verify role
+    // Verificar que el usuario es estudiante
     if (student.role !== 'estudiante') {
       return res.status(403).json({
         success: false,
@@ -588,7 +602,7 @@ const updateAcademicInfo = async (req, res) => {
       });
     }
 
-    // Update fields
+    // Actualizar campos
     if (nivel) student.nivel = nivel;
     if (estadoAcademico) student.estadoAcademico = estadoAcademico;
 
@@ -612,8 +626,9 @@ const updateAcademicInfo = async (req, res) => {
   }
 };
 
-// update teaching info (only for professors)
-
+// @desc    Actualizar información de enseñanza (Solo profesores)
+// @route   PUT /api/auth/update-teaching-info
+// @access  Private (Professor)
 const updateTeachingInfo = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -622,7 +637,7 @@ const updateTeachingInfo = async (req, res) => {
     const userId = req.user.id;
     const { especialidades, tarifaPorHora, disponibilidad } = req.body;
 
-    // find professor
+    // Buscar profesor
     const professor = await Profesor.findById(userId);
     if (!professor) {
       return res.status(404).json({
@@ -632,7 +647,7 @@ const updateTeachingInfo = async (req, res) => {
       });
     }
 
-    // verify role
+    // Verificar que el usuario es profesor
     if (professor.role !== 'profesor') {
       return res.status(403).json({
         success: false,
@@ -641,7 +656,7 @@ const updateTeachingInfo = async (req, res) => {
       });
     }
 
-    // Update fields
+    // Actualizar campos
     if (especialidades) professor.especialidades = especialidades;
     if (tarifaPorHora !== undefined) professor.tarifaPorHora = tarifaPorHora;
     if (disponibilidad) professor.disponibilidad = disponibilidad;
@@ -666,13 +681,14 @@ const updateTeachingInfo = async (req, res) => {
   }
 };
 
-//  (soft delete)
-
+// @desc    Desactivar usuario (soft delete)
+// @route   PUT /api/auth/deactivate/:id
+// @access  Admin only
 const deactivateUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // veerify that is admin
+    // Verificar que es admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -681,7 +697,7 @@ const deactivateUser = async (req, res) => {
       });
     }
 
-    
+    // Buscar usuario
     const user = await findUserById(id);
     if (!user) {
       return res.status(404).json({
@@ -691,7 +707,7 @@ const deactivateUser = async (req, res) => {
       });
     }
 
-    // Validate that cannot deactivate self
+    // Validar que no puede desactivarse a sí mismo
     if (user._id.toString() === req.user.id) {
       return res.status(400).json({
         success: false,
@@ -700,7 +716,7 @@ const deactivateUser = async (req, res) => {
       });
     }
 
-    // Validate that only students and professors can be deactivated
+    // Validar que solo puede desactivar estudiantes y profesores
     if (user.role === 'admin') {
       return res.status(400).json({
         success: false,
@@ -709,7 +725,7 @@ const deactivateUser = async (req, res) => {
       });
     }
 
-    // deactivate user
+    // Desactivar usuario
     user.isActive = false;
     await user.save();
 
@@ -738,13 +754,14 @@ const deactivateUser = async (req, res) => {
   }
 };
 
-//     reactivate user (soft undelete)
-
+// @desc    Reactivar usuario
+// @route   PUT /api/auth/reactivate/:id
+// @access  Admin only
 const reactivateUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // verify that is admin
+    // Verificar que es admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -753,7 +770,7 @@ const reactivateUser = async (req, res) => {
       });
     }
 
-    
+    // Buscar usuario
     const user = await findUserById(id);
     if (!user) {
       return res.status(404).json({
@@ -763,7 +780,7 @@ const reactivateUser = async (req, res) => {
       });
     }
 
-    // Reactivate user
+    // Reactivar usuario
     user.isActive = true;
     await user.save();
 
@@ -792,12 +809,14 @@ const reactivateUser = async (req, res) => {
   }
 };
 
-// delete user (hard delete)
+// @desc    Eliminar usuario permanentemente (hard delete)
+// @route   DELETE /api/auth/delete/:id
+// @access  Admin only
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verify that is admin
+    // Verificar que es admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -806,7 +825,7 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Find user
+    // Buscar usuario
     const user = await findUserById(id);
     if (!user) {
       return res.status(404).json({
@@ -816,7 +835,7 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Validate that cannot delete self
+    // Validar que no puede eliminarse a sí mismo
     if (user._id.toString() === req.user.id) {
       return res.status(400).json({
         success: false,
@@ -825,7 +844,7 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Validate that only students and professors can be deleted
+    // Validar que solo puede eliminar estudiantes y profesores
     if (user.role === 'admin') {
       return res.status(400).json({
         success: false,
@@ -834,7 +853,7 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Save user information before deletion
+    // Guardar información del usuario antes de eliminar
     const deletedUserInfo = {
       _id: user._id,
       email: user.email,
@@ -843,7 +862,7 @@ const deleteUser = async (req, res) => {
       role: user.role
     };
 
-    // delete user
+    // Eliminar usuario permanentemente
     await BaseUser.findByIdAndDelete(id);
 
     res.json({
