@@ -1,4 +1,5 @@
 // models/Clase.js
+
 const mongoose = require('mongoose');
 
 // Subdocumento de asistencia
@@ -199,14 +200,14 @@ claseSchema.virtual('yaPaso').get(function() {
 // Middleware pre-save: validar que el profesor existe y es profesor
 claseSchema.pre('save', async function(next) {
   if (this.isModified('profesor')) {
-    const BaseUser = mongoose.model('BaseUser');
+    const BaseUser = mongoose.model('User');
     const profesor = await BaseUser.findById(this.profesor);
     
     if (!profesor) {
       return next(new Error('El profesor no existe'));
     }
     
-    if (profesor.role !== 'teacher') {
+    if (profesor.role !== 'profesor') {
       return next(new Error('El usuario asignado no es un profesor'));
     }
   }
