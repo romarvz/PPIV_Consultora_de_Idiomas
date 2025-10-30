@@ -85,14 +85,14 @@ inscripcionSchema.virtual('estaCompleta').get(function() {
 inscripcionSchema.pre('save', async function(next) {
   // Validar estudiante
   if (this.isNew || this.isModified('estudiante')) {
-    const BaseUser = mongoose.model('BaseUser');
+    const BaseUser = mongoose.model('User');
     const estudiante = await BaseUser.findById(this.estudiante);
     
     if (!estudiante) {
       return next(new Error('El estudiante no existe'));
     }
     
-    if (estudiante.role !== 'student') {
+    if (estudiante.role !== 'estudiante') {
       return next(new Error('El usuario no es un estudiante'));
     }
   }

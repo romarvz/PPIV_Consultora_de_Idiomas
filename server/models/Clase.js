@@ -1,5 +1,4 @@
 // models/Clase.js
-
 const mongoose = require('mongoose');
 
 // Subdocumento de asistencia

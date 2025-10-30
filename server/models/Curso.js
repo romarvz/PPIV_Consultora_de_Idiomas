@@ -126,14 +126,14 @@ cursoSchema.virtual('estaActivo').get(function() {
 // Middleware pre-save: validar que el profesor existe y tiene el rol correcto
 cursoSchema.pre('save', async function(next) {
   if (this.isModified('profesor')) {
-    const BaseUser = mongoose.model('BaseUser');
+    const BaseUser = mongoose.model('User');
     const profesor = await BaseUser.findById(this.profesor);
     
     if (!profesor) {
       return next(new Error('El profesor no existe'));
     }
     
-    if (profesor.role !== 'teacher') {
+    if (profesor.role !== 'profesor') {
       return next(new Error('El usuario asignado no es un profesor'));
     }
   }
@@ -143,10 +143,10 @@ cursoSchema.pre('save', async function(next) {
 // Middleware pre-save: validar que los estudiantes existen
 cursoSchema.pre('save', async function(next) {
   if (this.isModified('estudiantes') && this.estudiantes.length > 0) {
-    const BaseUser = mongoose.model('BaseUser');
+    const BaseUser = mongoose.model('User');
     const estudiantes = await BaseUser.find({
       _id: { $in: this.estudiantes },
-      role: 'student'
+      role: 'estudiante'
     });
     
     if (estudiantes.length !== this.estudiantes.length) {

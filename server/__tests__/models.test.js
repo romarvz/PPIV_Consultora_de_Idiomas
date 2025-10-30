@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const Curso = require('../models/Curso');
 const Inscripcion = require('../models/Inscripcion');
-const Clase = require('../models/clase');
+const Clase = require('../models/Clase');
 const EventoCalendario = require('../models/EventoCalendario');
 const BaseUser = require('../models/BaseUser');
 

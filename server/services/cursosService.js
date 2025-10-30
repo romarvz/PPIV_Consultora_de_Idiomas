@@ -26,7 +26,7 @@ exports.createCurso = async (cursoData) => {
     throw new Error('Profesor no encontrado');
   }
   
-  if (profesor.role !== 'teacher') {
+  if (profesor.role !== 'profesor') {
     throw new Error('El usuario especificado no es un profesor');
   }
   
