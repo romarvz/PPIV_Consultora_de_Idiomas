@@ -194,19 +194,90 @@ const TeachersManagement = ({ onBack }) => {
   }, []);
 
   const handleDelete = useCallback(async (teacherId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este profesor?')) {
+    if (window.confirm('¿Estás seguro de que quieres desactivar este profesor?')) {
       try {
         const response = await api.delete(`/teachers/${teacherId}`);
         if (response.data.success) {
-          // Recargar lista
+          // Resetear filtros y página
           setCurrentPage(1);
-          setSearchTerm(''); // Reset search to reload all
+          setSearchTerm('');
+          setFilterStatus('all');
+          
+          // Forzar recarga inmediata de la lista de profesores
+          setLoading(true);
+          const params = {
+            page: 1,
+            limit: itemsPerPage
+          };
+          
+          const teachersResponse = await api.get('/teachers', { params });
+          if (teachersResponse.data.success) {
+            setTeachers(teachersResponse.data.data.teachers || []);
+            setTotalPages(teachersResponse.data.data.totalPages || 1);
+            setTotalTeachers(teachersResponse.data.data.total || 0);
+          }
+          
+          // Recargar estadísticas también
+          const statsResponse = await api.get('/teachers/stats');
+          if (statsResponse.data.success) {
+            setStats({
+              total: statsResponse.data.data.overview.total || 0,
+              active: statsResponse.data.data.overview.active || 0,
+              inactive: statsResponse.data.data.overview.inactive || 0
+            });
+          }
+          
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error deleting teacher:', error);
+        setLoading(false);
       }
     }
-  }, []);
+  }, [itemsPerPage]);
+
+  const handleReactivate = useCallback(async (teacherId) => {
+    if (window.confirm('¿Estás seguro de que quieres reactivar este profesor?')) {
+      try {
+        const response = await api.patch(`/teachers/${teacherId}/reactivate`);
+        if (response.data.success) {
+          // Resetear filtros y página
+          setCurrentPage(1);
+          setSearchTerm('');
+          setFilterStatus('all');
+          
+          // Forzar recarga inmediata de la lista de profesores
+          setLoading(true);
+          const params = {
+            page: 1,
+            limit: itemsPerPage
+          };
+          
+          const teachersResponse = await api.get('/teachers', { params });
+          if (teachersResponse.data.success) {
+            setTeachers(teachersResponse.data.data.teachers || []);
+            setTotalPages(teachersResponse.data.data.totalPages || 1);
+            setTotalTeachers(teachersResponse.data.data.total || 0);
+          }
+          
+          // Recargar estadísticas también
+          const statsResponse = await api.get('/teachers/stats');
+          if (statsResponse.data.success) {
+            setStats({
+              total: statsResponse.data.data.overview.total || 0,
+              active: statsResponse.data.data.overview.active || 0,
+              inactive: statsResponse.data.data.overview.inactive || 0
+            });
+          }
+          
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error reactivating teacher:', error);
+        setLoading(false);
+      }
+    }
+  }, [itemsPerPage]);
 
   // Funciones para el modal de registro
   const handleNewTeacher = useCallback(() => {
@@ -315,22 +386,19 @@ const TeachersManagement = ({ onBack }) => {
           onSuccess('Profesor actualizado exitosamente. Los cambios se reflejan en la tabla.');
         }
         
-        // Refrescar estadísticas si cambió el estado
-        const oldTeacher = teachers.find(t => t._id === teacherData._id);
-        if (oldTeacher && oldTeacher.condicion !== transformedData.condicion) {
-          // Recargar stats
-          setTimeout(() => {
-            api.get('/teachers/stats').then(statsResponse => {
-              if (statsResponse.data.success) {
-                setStats({
-                  total: statsResponse.data.data.overview.total || 0,
-                  active: statsResponse.data.data.overview.active || 0,
-                  inactive: statsResponse.data.data.overview.inactive || 0
-                });
-              }
-            }).catch(() => {});
-          }, 500);
-        }
+        // Siempre refrescar estadísticas después de actualizar un profesor
+        // (puede haber cambios en estado activo/inactivo)
+        setTimeout(() => {
+          api.get('/teachers/stats').then(statsResponse => {
+            if (statsResponse.data.success) {
+              setStats({
+                total: statsResponse.data.data.overview.total || 0,
+                active: statsResponse.data.data.overview.active || 0,
+                inactive: statsResponse.data.data.overview.inactive || 0
+              });
+            }
+          }).catch(() => {});
+        }, 300);
       } else {
         const errorMsg = 'Error al actualizar el profesor: ' + (response.data.message || 'Error desconocido');
         setSuccessMessage(errorMsg);
@@ -701,7 +769,8 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     especialidades: teacher.especialidades ? 
       teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
     horarios: teacher.horarios || [],
-    condicion: teacher.condicion || 'activo'
+    condicion: teacher.condicion || 'activo',
+    isActive: teacher.isActive !== undefined ? teacher.isActive : (teacher.condicion === 'activo' || true)
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -716,7 +785,8 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
       especialidades: teacher.especialidades ? 
         teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
       horarios: teacher.horarios || [],
-      condicion: teacher.condicion || 'activo'
+      condicion: teacher.condicion || 'activo',
+      isActive: teacher.isActive !== undefined ? teacher.isActive : (teacher.condicion === 'activo' || true)
     });
   }, [teacher]);
 
@@ -977,7 +1047,15 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
               </label>
               <select
                 value={formData.condicion}
-                onChange={(e) => setFormData(prev => ({ ...prev, condicion: e.target.value }))}
+                onChange={(e) => {
+                  const newCondicion = e.target.value;
+                  const newIsActive = newCondicion === 'activo';
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    condicion: newCondicion,
+                    isActive: newIsActive 
+                  }));
+                }}
                 required
                 style={{
                   padding: '0.75rem',

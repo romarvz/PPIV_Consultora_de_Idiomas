@@ -49,6 +49,22 @@ const METODOS_PAGO = {
   MERCADOPAGO: 'mercadopago'
 }
 
+const DIAS_SEMANA = {
+  LUNES: 'lunes',
+  MARTES: 'martes',
+  MIERCOLES: 'miercoles',
+  JUEVES: 'jueves',
+  VIERNES: 'viernes',
+  SABADO: 'sabado',
+  DOMINGO: 'domingo'
+}
+
+const TIPOS_HORARIO = {
+  CLASE: 'clase',
+  DISPONIBILIDAD: 'disponibilidad',
+  BLOQUEADO: 'bloqueado'
+}
+
 const TIPOS_EVENTO_AUDITORIA = {
   LOGIN: 'login',
   LOGOUT: 'logout',
@@ -58,7 +74,11 @@ const TIPOS_EVENTO_AUDITORIA = {
   INSCRIPCION_CURSO: 'inscripcion_curso',
   PAGO_REGISTRADO: 'pago_registrado',
   CLASE_PROGRAMADA: 'clase_programada',
-  ASISTENCIA_REGISTRADA: 'asistencia_registrada'
+  ASISTENCIA_REGISTRADA: 'asistencia_registrada',
+  HORARIO_CREADO: 'horario_creado',
+  HORARIO_MODIFICADO: 'horario_modificado',
+  HORARIO_ELIMINADO: 'horario_eliminado',
+  HORARIO_ASIGNADO: 'horario_asignado'
 }
 
 module.exports = {
@@ -68,5 +88,7 @@ module.exports = {
   ESTADOS_CLASE,
   ESTADOS_PAGO,
   METODOS_PAGO,
-  TIPOS_EVENTO_AUDITORIA
+  TIPOS_EVENTO_AUDITORIA,
+  DIAS_SEMANA,
+  TIPOS_HORARIO
 }

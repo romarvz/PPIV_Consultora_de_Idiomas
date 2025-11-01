@@ -53,6 +53,12 @@ const cursoSchema = new mongoose.Schema({
     required: [true, 'El curso debe tener un profesor asignado']
   },
   
+  horario: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Horario',
+    required: [true, 'El horario del curso es obligatorio']
+  },
+  
   estudiantes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BaseUser'
