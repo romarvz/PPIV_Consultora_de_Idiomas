@@ -192,6 +192,19 @@ const apiAdapter = {
         return await mockApi.courses.delete(id);
       }
       return await api.delete(`/courses/${id}`);
+    },
+
+    /**
+     * Obtener horarios disponibles de un profesor para crear cursos
+     * @param {String} profesorId - ID del profesor
+     * @returns {Promise} Array de horarios disponibles
+     */
+    getAvailableSchedulesByTeacher: async (profesorId) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
+      }
+      // Llamar a la ruta real del backend
+      return await api.get(`/cursos/profesor/${profesorId}/horarios-disponibles`);
     }
   },
 

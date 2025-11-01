@@ -46,6 +46,16 @@ app.get('/', (req, res) => {
     status: 'active',
     endpoints: {
       auth: '/api/auth',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      horarios: '/api/horarios',
+      financial: {
+        conceptCategories: '/api/concept-categories',
+        conceptosCobros: '/api/conceptos-cobros',
+        cobros: '/api/cobros',
+        facturas: '/api/facturas'
+      },
       test: '/api/auth/test'
     }
   });
@@ -65,6 +75,14 @@ app.use('/api/teachers', teacherRoutes);
 const languageRoutes = require('./routes/languages');
 app.use('/api/languages', languageRoutes);
 
+// Rutas para gestión de horarios
+const horariosRoutes = require('./routes/horarios');
+app.use('/api/horarios', horariosRoutes);
+
+// Rutas para gestión de cursos
+const cursoRoutes = require('./routes/cursoRoutes');
+app.use('/api/cursos', cursoRoutes);
+
 // Rutas para gestion financiera
 const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
 const conceptosCobrosRoutes = require('./routes/conceptosCobros.routes');
@@ -83,6 +101,11 @@ app.get('*', (req, res) => {
     message: `Ruta ${req.originalUrl} no encontrada`,
     availableEndpoints: {
       auth: '/api/auth',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      horarios: '/api/horarios',
+      cursos: '/api/cursos',
       test: '/api/auth/test'
     }
   });
@@ -94,24 +117,19 @@ app.post('*', (req, res) => {
     message: `Ruta ${req.originalUrl} no encontrada`,
     availableEndpoints: {
       auth: '/api/auth',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      horarios: '/api/horarios',
+      cursos: '/api/cursos',
       test: '/api/auth/test'
     }
   });
 });
 
-// Middleware global para manejo de errores
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
-  
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Error interno del servidor',
-    ...(process.env.NODE_ENV === 'development' && { 
-      stack: err.stack,
-      error: err 
-    })
-  });
-});
+// Middleware global para manejo de errores (usando shared errorHandler)
+const { errorHandler } = require('./shared/middleware');
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(` Server running on port ${PORT}`);

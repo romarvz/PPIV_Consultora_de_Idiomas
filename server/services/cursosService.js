@@ -378,3 +378,138 @@ exports.getEstadisticasGenerales = async () => {
     porNivel: cursosPorNivel
   };
 };
+
+// ==================== FUNCIONES DE HORARIOS DISPONIBLES ====================
+
+/**
+ * Obtiene los horarios disponibles de un profesor
+ * (horarios que tiene asignados pero que no están ocupados por cursos activos)
+ * 
+ * @param {string} profesorId - ID del profesor
+ * @returns {Array} Array de horarios disponibles (objetos completos)
+ * @throws {Error} Si el profesor no existe o hay errores de BD
+ */
+exports.getHorariosDisponiblesProfesor = async (profesorId) => {
+  try {
+    // PASO 1: Obtener la disponibilidad TOTAL del profesor
+    const profesor = await BaseUser.findById(profesorId)
+      .populate('horariosPermitidos');
+
+    if (!profesor) {
+      throw new Error('Profesor no encontrado');
+    }
+
+    if (profesor.role !== 'profesor') {
+      throw new Error('El usuario no es un profesor');
+    }
+
+    // Si no tiene horarios asignados, retornar array vacío
+    if (!profesor.horariosPermitidos || profesor.horariosPermitidos.length === 0) {
+      return [];
+    }
+
+    const todosSusHorarios = profesor.horariosPermitidos;
+
+    // PASO 2: Obtener los IDs de horarios que YA tiene OCUPADOS
+    const cursosActivos = await Curso.find({
+      profesor: profesorId,
+      estado: { $in: ['planificado', 'activo'] } // Excluir 'completado' y 'cancelado'
+    }).select('horario');
+
+    // Extraer los IDs de horarios ocupados y convertir a Set de strings
+    const horariosOcupadosIds = new Set(
+      cursosActivos
+        .map(curso => curso.horario)
+        .filter(horarioId => horarioId) // Filtrar nulls/undefined
+        .map(horarioId => horarioId.toString())
+    );
+
+    // PASO 3: Filtrar la lista total - solo horarios NO ocupados
+    const horariosDisponibles = todosSusHorarios.filter(horario => {
+      return !horariosOcupadosIds.has(horario._id.toString());
+    });
+
+    return horariosDisponibles;
+
+  } catch (error) {
+    console.error('Error en getHorariosDisponiblesProfesor:', error);
+    throw new Error(`Error al obtener horarios disponibles: ${error.message}`);
+  }
+};
+
+/**
+ * Verifica si un profesor tiene disponible un horario específico
+ * 
+ * @param {string} profesorId - ID del profesor
+ * @param {string} horarioId - ID del horario a verificar
+ * @returns {boolean} true si está disponible, false si está ocupado
+ * @throws {Error} Si el profesor no existe o hay errores de BD
+ */
+exports.isHorarioDisponibleProfesor = async (profesorId, horarioId) => {
+  try {
+    const horariosDisponibles = await exports.getHorariosDisponiblesProfesor(profesorId);
+    
+    return horariosDisponibles.some(horario => 
+      horario._id.toString() === horarioId.toString()
+    );
+
+  } catch (error) {
+    console.error('Error en isHorarioDisponibleProfesor:', error);
+    throw new Error(`Error al verificar disponibilidad: ${error.message}`);
+  }
+};
+
+/**
+ * Obtiene resumen de disponibilidad de un profesor
+ * 
+ * @param {string} profesorId - ID del profesor
+ * @returns {Object} Resumen con estadísticas de horarios
+ * @throws {Error} Si el profesor no existe o hay errores de BD
+ */
+exports.getResumenDisponibilidadProfesor = async (profesorId) => {
+  try {
+    const profesor = await BaseUser.findById(profesorId)
+      .populate('horariosPermitidos');
+
+    if (!profesor) {
+      throw new Error('Profesor no encontrado');
+    }
+
+    if (profesor.role !== 'profesor') {
+      throw new Error('El usuario no es un profesor');
+    }
+
+    const totalHorarios = profesor.horariosPermitidos?.length || 0;
+    const horariosDisponibles = await exports.getHorariosDisponiblesProfesor(profesorId);
+    const horariosOcupados = totalHorarios - horariosDisponibles.length;
+
+    // Agrupar horarios disponibles por día
+    const disponiblesPorDia = {};
+    horariosDisponibles.forEach(horario => {
+      if (!disponiblesPorDia[horario.dia]) {
+        disponiblesPorDia[horario.dia] = [];
+      }
+      disponiblesPorDia[horario.dia].push({
+        _id: horario._id,
+        horaInicio: horario.horaInicio,
+        horaFin: horario.horaFin,
+        display: horario.display || `${horario.dia} ${horario.horaInicio} - ${horario.horaFin}`
+      });
+    });
+
+    return {
+      profesorId: profesor._id,
+      nombreProfesor: `${profesor.firstName} ${profesor.lastName}`,
+      totalHorarios,
+      horariosDisponibles: horariosDisponibles.length,
+      horariosOcupados,
+      porcentajeDisponibilidad: totalHorarios > 0 ? Math.round((horariosDisponibles.length / totalHorarios) * 100) : 0,
+      disponiblesPorDia,
+      ultimaActualizacion: new Date().toISOString()
+    };
+
+  } catch (error) {
+    console.error('Error en getResumenDisponibilidadProfesor:', error);
+    throw new Error(`Error al obtener resumen de disponibilidad: ${error.message}`);
+  }
+};
