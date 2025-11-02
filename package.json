@@ -7,5 +7,14 @@
   "devDependencies": {
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "seed": "node scripts/runSeeds.js",
+    "seed:empresa": "node seeds/empresaSeed.js"
   }
 }
