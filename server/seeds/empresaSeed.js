@@ -1,6 +1,7 @@
 /**
  * Initial seed data for Company
- * Creates the default company if * 
+ * Creates the default company if it doesn't exist
+ * 
  */
 
 const Empresa = require('../models/Empresa')
