@@ -5,7 +5,8 @@ const morgan = require('morgan');
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-// Main function to start the application
+
+// Función principal para iniciar la aplicación
 const startServer = async () => {
   try {
     // Connect directly to MongoDB
@@ -31,9 +32,31 @@ const startServer = async () => {
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true }));
 
-    // Development logging
-    if (process.env.NODE_ENV === 'development') {
-      app.use(morgan('dev'));
+// Logging en desarrollo
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+// Ruta de prueba principal
+app.get('/', (req, res) => {
+  res.json({ 
+    success: true,
+    message: 'Language Consultancy API v1.0',
+    version: '1.0.0',
+    status: 'active',
+    endpoints: {
+      auth: '/api/auth',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      horarios: '/api/horarios',
+      financial: {
+        conceptCategories: '/api/concept-categories',
+        conceptosCobros: '/api/conceptos-cobros',
+        cobros: '/api/cobros',
+        facturas: '/api/facturas'
+      },
+      test: '/api/auth/test'
     }
 
     // Main test route
@@ -62,29 +85,61 @@ const startServer = async () => {
     app.use('/api/students', studentRoutes);
     app.use('/api/teachers', teacherRoutes);
 
-    // ===== ROMINA'S ROUTES (Dashboard + Audit) =====
-    const dashboardRoutes = require('./routes/dashboard');
-    const auditoriaRoutes = require('./routes/auditoria');
-    app.use('/api/dashboard', dashboardRoutes);
-    app.use('/api/auditoria', auditoriaRoutes);
+// Rutas para gestión de horarios
+const horariosRoutes = require('./routes/horarios');
+app.use('/api/horarios', horariosRoutes);
 
-    // ===== LANGUAGE ROUTES =====
-    const languageRoutes = require('./routes/languages');
-    app.use('/api/languages', languageRoutes);
+// Rutas para gestión de cursos
+const cursoRoutes = require('./routes/cursoRoutes');
+app.use('/api/cursos', cursoRoutes);
 
-    // ===== ROUTES NOT FOUND (404) =====
-    app.get('*', (req, res) => {
-      res.status(404).json({
-        success: false,
-        message: `Route ${req.originalUrl} not found`,
-        availableEndpoints: {
-          auth: '/api/auth',
-          dashboard: '/api/dashboard',
-          auditoria: '/api/auditoria',
-          test: '/api/auth/test'
-        }
-      });
-    });
+// Rutas para gestion financiera
+const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
+const conceptosCobrosRoutes = require('./routes/conceptosCobros.routes');
+const cobrosRoutes = require('./routes/cobros.routes');
+const facturasRoutes = require('./routes/facturas.routes');
+
+app.use('/api/concept-categories', conceptCategoryRoutes);
+app.use('/api/conceptos-cobros', conceptosCobrosRoutes);
+app.use('/api/cobros', cobrosRoutes);
+app.use('/api/facturas', facturasRoutes);
+
+//middleware para cuando no encontramos ruta (solo GET y POST seguros)
+app.get('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Ruta ${req.originalUrl} no encontrada`,
+    availableEndpoints: {
+      auth: '/api/auth',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      horarios: '/api/horarios',
+      cursos: '/api/cursos',
+      test: '/api/auth/test'
+    }
+  });
+});
+
+app.post('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Ruta ${req.originalUrl} no encontrada`,
+    availableEndpoints: {
+      auth: '/api/auth',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      horarios: '/api/horarios',
+      cursos: '/api/cursos',
+      test: '/api/auth/test'
+    }
+  });
+});
+
+// Middleware global para manejo de errores (usando shared errorHandler)
+const { errorHandler } = require('./shared/middleware');
+app.use(errorHandler);
 
     app.post('*', (req, res) => {
       res.status(404).json({

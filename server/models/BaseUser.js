@@ -64,7 +64,11 @@ const baseUserSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
-  }
+  },
+  horariosPermitidos: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Horario'
+  }]
 }, {
   timestamps: true,
   discriminatorKey: 'role', 

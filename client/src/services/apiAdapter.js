@@ -6,7 +6,7 @@ import mockApi from './mockApi' // Mock para demo
 // SWITCH PRINCIPAL - Cambiar aquí para alternar entre mock y real
 // true = Usa datos mock (para demo sin backend)
 // false = Usa backend real (cuando esté implementado)
-const USE_MOCK = true
+const USE_MOCK = false
 
 // Variable de entorno alternativa (opcional)
 // const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true
@@ -192,6 +192,19 @@ const apiAdapter = {
         return await mockApi.courses.delete(id);
       }
       return await api.delete(`/courses/${id}`);
+    },
+
+    /**
+     * Obtener horarios disponibles de un profesor para crear cursos
+     * @param {String} profesorId - ID del profesor
+     * @returns {Promise} Array de horarios disponibles
+     */
+    getAvailableSchedulesByTeacher: async (profesorId) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
+      }
+      // Llamar a la ruta real del backend
+      return await api.get(`/cursos/profesor/${profesorId}/horarios-disponibles`);
     }
   },
 
