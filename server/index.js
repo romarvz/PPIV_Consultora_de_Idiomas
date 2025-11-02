@@ -99,7 +99,7 @@ const startServer = async () => {
       });
     });
 
-    // ===== MIDDLEWARE DE ERROR GLOBAL (Romina - shared/middleware) =====
+    // ===== MIDDLEWARE DE ERROR GLOBAL (shared/middleware) =====
     const { errorHandler } = require('./shared/middleware');
     app.use(errorHandler);
 
