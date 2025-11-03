@@ -150,42 +150,109 @@ npm run preview   # Preview del build
 - **Emails:** Formato válido y único
 - **Contraseñas:** Mínimo 6 caracteres, mayúscula, minúscula, número
 
-### **Endpoints API Disponibles (Base URL: http://localhost:5000/api/auth)**
+### **Endpoints API Disponibles**
 
-#### **Autenticación**
+#### **Autenticación** (Base: `/api/auth`)
 - `POST /login` - Login universal para todos los roles
 - `POST /logout` - Cerrar sesión e invalidar token
 - `GET /verify-token` - Verificar validez del token actual
-
-#### **Registro (Solo Administradores)**
-- `POST /register/estudiante-admin` - Crear nuevo estudiante
-- `POST /register/profesor` - Crear nuevo profesor
-- `POST /register/admin` - Crear nuevo administrador
+- `POST /register/estudiante-admin` - Crear nuevo estudiante (admin)
+- `POST /register/profesor` - Crear nuevo profesor (admin)
+- `POST /register/admin` - Crear nuevo administrador (admin)
 - `POST /create-first-admin` - Crear primer admin del sistema
-
-#### **Gestión de Perfiles**
 - `GET /profile` - Ver perfil propio del usuario autenticado
 - `PUT /profile` - Actualizar información general del perfil
-- `PUT /update-academic-info` - Actualizar info académica (solo estudiantes)
-- `PUT /update-teaching-info` - Actualizar info profesional (solo profesores)
-
-#### **Gestión de Contraseñas**
-- `PUT /change-password` - Cambiar contraseña (usuario autenticado)
+- `PUT /update-academic-info` - Actualizar info académica (estudiantes)
+- `PUT /update-teaching-info` - Actualizar info profesional (profesores)
+- `PUT /change-password` - Cambiar contraseña
 - `PUT /change-password-forced` - Cambio forzado de contraseña
+- `GET /students` - Listar todos los estudiantes
+- `GET /professors` - Listar profesores
+- `PUT /deactivate/:id` - Desactivar usuario (admin)
+- `PUT /reactivate/:id` - Reactivar usuario (admin)
+- `DELETE /delete/:id` - Eliminar usuario permanentemente (admin)
 
-#### **Listados y Consultas**
-- `GET /students` - Listar todos los estudiantes (cualquier usuario autenticado)
-- `GET /professors` - Listar profesores (solo administradores)
-- `GET /professors?especialidad=ingles` - Filtrar profesores por especialidad
+#### **Estudiantes** (Base: `/api/students`)
+- `GET /` - Listar estudiantes con filtros y paginación
+- `GET /:id` - Obtener estudiante por ID
+- `PUT /:id` - Actualizar estudiante
+- `DELETE /:id` - Eliminar estudiante
 
-#### **Gestión de Usuarios (Solo Administradores)**
-- `PUT /deactivate/:id` - Desactivar usuario (soft delete)
-- `PUT /reactivate/:id` - Reactivar usuario desactivado
-- `DELETE /delete/:id` - Eliminar usuario permanentemente (hard delete)
+#### **Profesores** (Base: `/api/teachers`)
+- `GET /` - Listar profesores con filtros
+- `GET /:id` - Obtener profesor por ID
+- `PUT /:id` - Actualizar profesor
+- `DELETE /:id` - Eliminar profesor
 
-#### **Utilidades**
-- `GET /test` - Test de funcionamiento del servidor
-- `GET /db-test` - Test de conexión a base de datos
+#### **Horarios** (Base: `/api/horarios`)
+- `POST /` - Crear nuevo horario
+- `GET /` - Listar horarios con filtros
+- `GET /:id` - Obtener horario por ID
+- `PUT /:id` - Actualizar horario
+- `DELETE /:id` - Eliminar horario
+- `POST /asignar-profesor` - Asignar horario a profesor
+- `GET /disponibilidad` - Verificar disponibilidad
+- `GET /profesor/:profesorId` - Horarios de un profesor
+
+#### **Cursos** (Base: `/api/cursos`)
+- `POST /` - Crear curso
+- `GET /` - Listar cursos
+- `GET /:id` - Obtener curso por ID
+- `PUT /:id` - Actualizar curso
+- `DELETE /:id` - Eliminar curso
+- `POST /:id/inscribir` - Inscribir estudiante
+- `DELETE /:id/desinscribir/:estudianteId` - Desinscribir estudiante
+
+#### **Idiomas** (Base: `/api/languages`)
+- `POST /` - Crear idioma
+- `GET /` - Listar idiomas
+- `GET /:id` - Obtener idioma por ID
+- `PUT /:id` - Actualizar idioma
+- `DELETE /:id` - Eliminar idioma
+
+#### **Dashboard** (Base: `/api/dashboard`)
+- `GET /stats` - Estadísticas generales
+- `GET /recent-activity` - Actividad reciente
+- `GET /financial-summary` - Resumen financiero
+- `GET /academic-progress` - Progreso académico
+
+#### **Auditoría** (Base: `/api/auditoria`)
+- `GET /logs` - Obtener logs de auditoría
+- `GET /logs/:id` - Obtener log específico
+- `GET /user/:userId` - Logs de un usuario
+- `GET /action/:action` - Logs por tipo de acción
+
+#### **Sistema Financiero**
+
+**Cobros** (Base: `/api/cobros`)
+- `POST /` - Crear cobro
+- `GET /` - Listar cobros
+- `GET /:id` - Obtener cobro por ID
+- `PUT /:id` - Actualizar cobro
+- `DELETE /:id` - Eliminar cobro
+- `PUT /:id/estado` - Cambiar estado de cobro
+
+**Facturas** (Base: `/api/facturas`)
+- `POST /` - Crear factura
+- `GET /` - Listar facturas
+- `GET /:id` - Obtener factura por ID
+- `PUT /:id` - Actualizar factura
+- `DELETE /:id` - Anular factura
+- `GET /:id/pdf` - Generar PDF de factura
+
+**Conceptos de Cobro** (Base: `/api/conceptos-cobros`)
+- `POST /` - Crear concepto
+- `GET /` - Listar conceptos
+- `GET /:id` - Obtener concepto por ID
+- `PUT /:id` - Actualizar concepto
+- `DELETE /:id` - Eliminar concepto
+
+**Categorías de Conceptos** (Base: `/api/concept-categories`)
+- `POST /` - Crear categoría
+- `GET /` - Listar categorías
+- `GET /:id` - Obtener categoría por ID
+- `PUT /:id` - Actualizar categoría
+- `DELETE /:id` - Eliminar categoría
 
 ### **Ejemplos de Uso**
 
@@ -227,13 +294,16 @@ curl http://localhost:5000/api/auth/db-test
 ## Documentación Completa
 
 Para documentación detallada de todos los endpoints, ejemplos de uso y casos de prueba, consultar:
-- **docs/GUIA_COMPLETA_APIS_POR_ROL.md** - Guía completa con todos los endpoints
-- **docs/THUNDER_CLIENT_TESTS.md** - Guía de pruebas con Thunder Client
-- **docs/PRUEBAS_RAPIDAS_THUNDER.md** - Pruebas rápidas para testing
+- **server/docs/ARQUITECTURA_BACKEND.md** - Arquitectura completa del backend
+- **server/docs/GUIA_COMPLETA_APIS_POR_ROL.md** - Guía completa de APIs organizadas por rol
+- **server/docs/GUIA_INTEGRACION.md** - Guía de integración frontend-backend
+- **server/docs/GUIA_DASHBOARD.md** - Documentación del sistema de dashboard
+- **server/docs/pruebas_autenticacion.md** - Pruebas de autenticación
+- **server/models/README-Horario.md** - Documentación del modelo de horarios
 
 ## Roadmap de Desarrollo
 
-### **Fase 1: Backend API** COMPLETADA
+### **Fase 1: Backend API** COMPLETADA ✅
 - [x] Modelos discriminados con Mongoose
 - [x] Autenticación JWT con roles y permisos
 - [x] CRUD completo de usuarios por rol
@@ -243,17 +313,43 @@ Para documentación detallada de todos los endpoints, ejemplos de uso y casos de
 - [x] Gestión completa: desactivar, reactivar, eliminar usuarios
 - [x] Testing automatizado de todos los endpoints
 - [x] Documentación completa de APIs
+- [x] Sistema de horarios completo
+- [x] Gestión de cursos e inscripciones
+- [x] Sistema de idiomas (Languages)
+- [x] Módulo de auditoría y logs
+- [x] Dashboard con estadísticas
+- [x] Sistema financiero (cobros, facturas, conceptos)
+- [x] Calendario de eventos
+- [x] Seeds y migraciones automatizadas
 
-### **Fase 2: Frontend React** EN DESARROLLO
+### **Fase 2: Frontend React** EN DESARROLLO 🚧
 - [x] Configuración inicial de Vite + React
 - [x] Estructura de proyecto con React Router
-- [x] Configuración de formularios con React Hook Form
+- [x] Sistema de autenticación completo (useAuth hook)
 - [x] Cliente HTTP con Axios
 - [x] Sistema Mock para desarrollo independiente
-- [ ] Interfaz de login y autenticación
-- [ ] Dashboard administrativo
-- [ ] Gestión de estudiantes y profesores
-- [ ] Perfiles de usuario
+- [x] Guía de integración completa
+- [x] Interfaz de login y autenticación
+- [x] Rutas protegidas por rol
+- [x] Dashboard administrativo (AdminDashboard)
+- [x] Dashboard de estudiantes (StudentDashboard)
+- [x] Dashboard de profesores (TeacherDashboard)
+- [x] Dashboard de empresa (CompanyDashboard)
+- [x] Dashboard financiero (FinancialDashboard)
+- [x] Gestión de estudiantes (StudentsManagement)
+- [x] Gestión de profesores (TeachersManagement)
+- [x] Registro de estudiantes (RegisterStudent)
+- [x] Registro de profesores (RegisterTeacher)
+- [x] Gestión de cursos (CourseManagementPage)
+- [x] Sistema de horarios (ClassScheduler)
+- [x] Registro de pagos (PaymentRegistration)
+- [x] Componentes de gráficos (SystemOverviewCharts)
+- [x] Vista de calendario (CalendarView)
+- [x] Layout con Header y Footer
+- [x] Páginas públicas (Home, About, Services, Courses, Contact)
+- [ ] Integración completa con backend real
+- [ ] Sistema de notificaciones en tiempo real
+- [ ] Reportes avanzados con exportación
 
 ## Sistema Mock para Desarrollo Frontend
 
@@ -372,77 +468,19 @@ const state = apiAdapter.utils.getStorageState()
 
 Este sistema permite desarrollar el frontend de forma independiente mientras el backend está en desarrollo, asegurando una integración sencilla posteriormente.
 
-### **Fase 3: Funcionalidades Avanzadas** PENDIENTE
-- [ ] Sistema de clases y horarios
-- [ ] Gestión de pagos y facturación
-- [ ] Reportes y estadísticas
+### **Fase 3: Funcionalidades Avanzadas** EN PROGRESO 🔄
+- [x] Sistema de clases y horarios
+- [x] Gestión de pagos y facturación
+- [x] Reportes y estadísticas (Dashboard)
+- [x] Sistema de auditoría
 - [ ] Notificaciones en tiempo real
-- [ ] Módulo de evaluaciones y progresoT /api/auth/register/admin` - Registro admin (solo admin)
-- `PUT /api/auth/change-password` - Cambio de contraseña
-- `GET /api/auth/users` - Lista usuarios (solo admin)
-- `GET /api/auth/profile` - Ver perfil propio
-- `PUT /api/auth/update-academic-info` - Info académica (estudiantes)
-- `PUT /api/auth/update-professional-info` - Info profesional (profesores)
+- [ ] Módulo de evaluaciones y progreso
+- [ ] Sistema de calificaciones
+- [ ] Reportes avanzados en PDF
+- [ ] Integración con calendarios externos
+- [ ] Sistema de notificaciones por email
 
-### **Migración de Datos**
-- **11 usuarios migrados** exitosamente
-- **Backup automático** de seguridad
-- **Preservación de IDs** originales
-- **Campo discriminador** añadido automáticamente
-
-## Documentación
-
-### **Guía Completa de APIs**
-Ver `docs/GUIA_COMPLETA_APIS_POR_ROL.md` para:
-- Ejemplos completos de cada endpoint
-- Flujos de testing con Thunder Client
-- Validaciones y errores comunes
-- Casos de uso por rol
-
-### **Testing Rápido**
-```bash
-# Verificar servidor funcionando
-curl http://localhost:5000/api/auth/test
-
-# Login como admin
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"YourPassword"}'
-```
-
-## Roadmap de Desarrollo
-
-### **Fase 1: Backend API** COMPLETADA
-- [x] Modelos discriminados con Mongoose
-- [x] Autenticación JWT con roles
-- [x] CRUD completo de usuarios
-- [x] Migración de datos exitosa
-- [x] Validaciones específicas por rol
-- [x] Sistema de passwords con DNI
-- [x] Testing automatizado de endpoints
-
-### **Fase 2: Gestión Académica (Próxima)**
-- [ ] Modelo de Cursos y Clases
-- [ ] Sistema de inscripciones
-- [ ] Calendario de clases
-- [ ] Asignación profesor-estudiante
-- [ ] Control de asistencia
-- [ ] Evaluaciones y calificaciones
-
-### **Fase 3: Frontend Web**
-- [ ] Interfaz React/Vue.js
-- [ ] Dashboard diferenciado por roles
-- [ ] Gestión visual de clases
-- [ ] Sistema de reservas
-- [ ] Panel de administración
-
-### **Fase 4: Funcionalidades Avanzadas**
-- [ ] Sistema de pagos integrado
-- [ ] Notificaciones automáticas
-- [ ] Reportes y estadísticas
-- [ ] Integración con calendarios
-- [ ] Chat interno
-### **Fase 4: Optimización y Despliegue** PENDIENTE
+### **Fase 4: Optimización y Despliegue** PENDIENTE ⏳
 - [ ] Testing automatizado frontend
 - [ ] CI/CD pipeline
 - [ ] Despliegue en producción
@@ -457,64 +495,212 @@ curl -X POST http://localhost:5000/api/auth/login \
 ### **Backend (Implementado)**
 ```
 server/
-├── controllers/
-│   ├── authControllerNew.js    # Controlador principal (ACTIVO)
-│   └── authController.js       # Controlador legacy (BACKUP)
-├── models/                     # Modelos discriminados Mongoose
-│   ├── BaseUser.js            # Modelo base con discriminatorKey
-│   ├── Estudiante.js          # Modelo específico estudiante
-│   ├── Profesor.js            # Modelo específico profesor
-│   ├── Admin.js               # Modelo específico admin
+├── __tests__/                  # Tests automatizados
+│   ├── auditoria.test.js
+│   ├── dashboard.test.js
+│   └── models.test.js
+├── controllers/                # Controladores de lógica de negocio
+│   ├── authControllerNew.js   # Autenticación y usuarios
+│   ├── auditoriaController.js # Sistema de auditoría
+│   ├── cobros.controller.js   # Gestión de cobros
+│   ├── conceptCategory.controller.js
+│   ├── conceptosCobros.controller.js
+│   ├── cursoController.js     # Gestión de cursos
+│   ├── dashboardcontroller.js # Dashboard y estadísticas
+│   ├── facturas.controller.js # Sistema de facturación
+│   ├── horarioController.js   # Gestión de horarios
+│   ├── languageController.js  # Gestión de idiomas
+│   ├── studentController.js   # Gestión de estudiantes
+│   └── teacherController.js   # Gestión de profesores
+├── models/                     # Modelos de datos Mongoose
+│   ├── BaseUser.js            # Modelo base con discriminador
+│   ├── Estudiante.js          # Modelo estudiante
+│   ├── Profesor.js            # Modelo profesor
+│   ├── Admin.js               # Modelo administrador
+│   ├── Horario.js             # Modelo horarios
+│   ├── Curso.js               # Modelo cursos
+│   ├── Clase.js               # Modelo clases
+│   ├── Inscripcion.js         # Modelo inscripciones
+│   ├── Language.js            # Modelo idiomas
+│   ├── Empresa.js             # Modelo empresa
+│   ├── EventoCalendario.js    # Modelo eventos
+│   ├── AuditoriaLog.js        # Modelo logs de auditoría
+│   ├── cobros.model.js        # Modelo cobros
+│   ├── factura.model.js       # Modelo facturas
+│   ├── concept.model.js       # Modelo conceptos
+│   ├── conceptCategory.model.js
+│   ├── contador.model.js      # Contador de facturas
 │   └── index.js               # Exportaciones centralizadas
-├── routes/
-│   ├── authNew.js             # Rutas principales (ACTIVAS)
-│   └── auth.js                # Rutas legacy (BACKUP)
-├── middleware/
-│   ├── authMiddlewareNew.js   # Middleware principal (ACTIVO)
-│   └── authMiddleware.js      # Middleware legacy (BACKUP)
-├── validators/
-│   ├── authValidatorsNew.js   # Validaciones principales (ACTIVAS)
-│   └── authValidators.js      # Validaciones legacy (BACKUP)
-├── services/
-│   └── userService.js         # Servicios auxiliares
-├── helpers/
-│   └── authHelpers.js         # Funciones auxiliares
-├── scripts/
-│   ├── migrate-simple.js      # Script de migración ejecutado
-│   └── final-test.js          # Script de testing
-├── docs/
-│   └── pruebas_autenticacion.md # Documentación de pruebas
-└── index.js                   # Servidor principal
+├── routes/                     # Definición de rutas API
+│   ├── authNew.js             # Rutas autenticación
+│   ├── auditoria.js           # Rutas auditoría
+│   ├── cobros.routes.js       # Rutas cobros
+│   ├── conceptCategory.routes.js
+│   ├── conceptosCobros.routes.js
+│   ├── cursoRoutes.js         # Rutas cursos
+│   ├── dashboard.js           # Rutas dashboard
+│   ├── facturas.routes.js     # Rutas facturas
+│   ├── horarios.js            # Rutas horarios
+│   ├── languages.js           # Rutas idiomas
+│   ├── studentRoutes.js       # Rutas estudiantes
+│   └── teacherRoutes.js       # Rutas profesores
+├── middleware/                 # Middleware personalizado
+│   ├── authMiddlewareNew.js   # Autenticación y autorización
+│   └── financiero.validation.js # Validaciones financieras
+├── validators/                 # Validadores express-validator
+│   ├── authValidatorsNew.js   # Validaciones auth
+│   ├── clasesValidators.js    # Validaciones clases
+│   └── horarioValidators.js   # Validaciones horarios
+├── services/                   # Servicios de lógica de negocio
+│   ├── userService.js         # Servicios usuarios
+│   ├── auditoriaService.js    # Servicios auditoría
+│   ├── cobro.service.js       # Servicios cobros
+│   ├── conceptCategory.services.js
+│   ├── contador.service.js    # Servicios contador
+│   ├── cursosService.js       # Servicios cursos
+│   ├── dashboardService.js    # Servicios dashboard
+│   └── factura.service.js     # Servicios facturas
+├── shared/                     # Código compartido
+│   ├── helpers/               # Funciones auxiliares
+│   │   ├── index.js
+│   │   └── responseHandler.js
+│   ├── middleware/            # Middleware compartido
+│   │   ├── errorHandler.js
+│   │   ├── index.js
+│   │   └── paginationMiddleware.js
+│   └── utils/                 # Utilidades
+│       └── constants.js       # Constantes del sistema
+├── scripts/                    # Scripts de mantenimiento
+│   ├── migrate-simple.js      # Migración de datos
+│   ├── create-test-users.js   # Crear usuarios de prueba
+│   ├── runSeeds.js            # Ejecutar seeds
+│   └── seedLanguages.js       # Seed de idiomas
+├── seeds/                      # Seeds de datos iniciales
+│   └── empresaSeed.js         # Seed de empresa
+├── migrations/                 # Migraciones de base de datos
+│   └── migrateHorarios.js     # Migración de horarios
+├── docs/                       # Documentación
+│   ├── ARQUITECTURA_BACKEND.md
+│   ├── GUIA_COMPLETA_APIS_POR_ROL.md
+│   ├── GUIA_INTEGRACION.md
+│   ├── GUIA_DASHBOARD.md
+│   └── pruebas_autenticacion.md
+├── .env                        # Variables de entorno
+├── .env.example                # Ejemplo de variables
+├── package.json                # Dependencias
+└── index.js                    # Servidor principal                        # Variables de entorno
+├── .env.example                # Ejemplo de variables
+├── package.json                # Dependencias
+└── index.js                    # Servidor principal
 ```
 
-### **Frontend (En Desarrollo)**
+### **Frontend (Implementado)**
 ```
 client/
 ├── src/
 │   ├── components/            # Componentes React reutilizables
+│   │   ├── admin/             # Componentes de administración
+│   │   │   └── CalendarView.jsx
+│   │   ├── charts/            # Componentes de gráficos
+│   │   │   └── SystemOverviewCharts.jsx
+│   │   ├── common/            # Componentes comunes
+│   │   │   ├── AdminSectionHeader.jsx
+│   │   │   ├── AuthNavbar.jsx
+│   │   │   ├── ForcePasswordChange.jsx
+│   │   │   ├── Modal.jsx
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── ScrollButtons.jsx
+│   │   │   └── WhatsAppButton.jsx
+│   │   ├── courses/           # Componentes de cursos
+│   │   │   ├── CourseCard.jsx
+│   │   │   ├── CourseDetailModal.jsx
+│   │   │   └── CourseFormModal.jsx
+│   │   ├── layout/            # Layout principal
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Header.jsx
+│   │   │   └── Layout.jsx
+│   │   ├── ClassScheduler.jsx
+│   │   ├── PaymentRegistration.jsx
+│   │   ├── RegisterStudent.jsx
+│   │   ├── RegisterTeacher.jsx
+│   │   ├── StudentsManagement.jsx
+│   │   └── TeachersManagement.jsx
 │   ├── pages/                 # Páginas principales
+│   │   ├── Dashboard/         # Dashboards por rol
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── CompanyDashboard.jsx
+│   │   │   ├── CourseManagementPage.jsx
+│   │   │   ├── FinancialDashboard.jsx
+│   │   │   ├── ReportsDashboard.jsx
+│   │   │   ├── StudentDashboard.jsx
+│   │   │   └── TeacherDashboard.jsx
+│   │   ├── About.jsx
+│   │   ├── Clients.jsx
+│   │   ├── Contact.jsx
+│   │   ├── CoursesPage.jsx
+│   │   ├── Demo.jsx
+│   │   ├── Home.jsx
+│   │   ├── Login.jsx
+│   │   └── Services.jsx
 │   ├── hooks/                 # Custom hooks
-│   ├── utils/                 # Utilidades y helpers
-│   ├── services/              # Servicios API (Axios)
+│   │   ├── useAuth.jsx        # Hook de autenticación
+│   │   └── useTheme.js        # Hook de temas
+│   ├── services/              # Servicios API
+│   │   ├── api.js             # Cliente Axios
+│   │   ├── apiAdapter.js      # Adaptador mock/real
+│   │   ├── mockApi.js         # API simulada
+│   │   └── mockData.js        # Datos de prueba
+│   ├── styles/                # Estilos CSS
+│   │   ├── auth.css
+│   │   ├── charts.css
+│   │   ├── courseCards.css
+│   │   ├── courseForm.css
+│   │   ├── courseManagement.css
+│   │   ├── courseModals.css
+│   │   └── variables.css
+│   ├── utils/                 # Utilidades
+│   │   ├── formatting.js      # Formateo de datos
+│   │   └── routes.js          # Rutas centralizadas
+│   ├── assets/                # Assets estáticos
+│   │   └── images/            # Imágenes
 │   ├── App.jsx               # Componente principal
+│   ├── App.css               # Estilos globales
 │   └── main.jsx              # Punto de entrada
 ├── public/
 │   └── images/
-│       └── Logo.png          # Assets del proyecto
+│       └── Logo.png          # Logo del proyecto
+├── index.html                # HTML principal
 ├── package.json              # Dependencias React
-└── vite.config.js           # Configuración Vite
+├── vite.config.js           # Configuración Vite
+└── MANUAL_DEMO.md           # Manual de demostración
 ```
 
 ### **Base de Datos MongoDB (Implementada)**
-- **Colección única:** `users` con discriminador `__t`
-- **Tipos de documentos:**
-  - `__t: "estudiante"` - Documentos de estudiantes
-  - `__t: "profesor"` - Documentos de profesores  
-  - `__t: "admin"` - Documentos de administradores
-- **11 usuarios migrados** exitosamente del modelo legacy
+
+**Colecciones principales:**
+- **users** - Usuarios con discriminador `__t` (estudiante, profesor, admin)
+- **horarios** - Horarios de clases y disponibilidad
+- **cursos** - Cursos ofrecidos
+- **clases** - Clases programadas
+- **inscripciones** - Inscripciones de estudiantes
+- **languages** - Idiomas disponibles
+- **empresas** - Información de la empresa
+- **eventoscalendarios** - Eventos del calendario
+- **auditoriaslogs** - Logs de auditoría del sistema
+- **cobros** - Registros de cobros
+- **facturas** - Facturas generadas
+- **concepts** - Conceptos de cobro
+- **conceptcategories** - Categorías de conceptos
+- **contadores** - Contadores para numeración automática
+
+**Características:**
 - **Índices únicos** en email y DNI para integridad
-- **Ventajas:** Queries eficientes, integridad referencial
-- **Escalabilidad:** Preparado para millones de registros
+- **Modelos discriminados** para herencia de usuarios
+- **Relaciones** entre colecciones con referencias
+- **Validaciones** a nivel de esquema
+- **Timestamps** automáticos (createdAt, updatedAt)
+- **Soft delete** en usuarios
+- **Escalabilidad** preparada para millones de registros
 
 ### **Autenticación**
 - **JWT Tokens** con expiración configurable
@@ -525,17 +711,24 @@ client/
 ## Métricas del Proyecto
 
 ### **Estado Actual**
-- **11 usuarios** migrados exitosamente
-- **9 endpoints** API funcionales
-- **3 tipos** de usuario implementados
-- **100%** de cobertura en modelos base
-- **0 errores** en testing automatizado
+- **15+ modelos** de datos implementados
+- **60+ endpoints** API funcionales
+- **12 controladores** de lógica de negocio
+- **12 rutas** organizadas por módulo
+- **8 servicios** de lógica reutilizable
+- **3 tipos** de usuario con discriminadores
+- **Sistema completo** de auditoría
+- **Dashboard** con estadísticas en tiempo real
+- **Sistema financiero** completo (cobros, facturas, conceptos)
+- **Testing automatizado** con Jest
 
 ### **Líneas de Código**
-- **Backend:** ~2000 líneas
-- **Modelos:** ~500 líneas
-- **Testing:** ~800 líneas
-- **Documentación:** ~1500 líneas
+- **Backend:** ~8000+ líneas
+- **Modelos:** ~2000+ líneas
+- **Controladores:** ~2500+ líneas
+- **Servicios:** ~1500+ líneas
+- **Testing:** ~1000+ líneas
+- **Documentación:** ~3000+ líneas
 
 ## Para el Equipo de Desarrollo
 
@@ -561,11 +754,23 @@ cd server && npm run dev
 # Testing de migración
 node scripts/migrate-simple.js status
 
-# Verificar modelos
-node scripts/test-models.js
+# Crear usuarios de prueba
+node scripts/create-test-users.js
 
-# Testing completo de APIs
-node scripts/final-test.js
+# Ejecutar seeds
+node scripts/runSeeds.js
+
+# Seed de idiomas
+node scripts/seedLanguages.js
+
+# Migrar horarios
+node migrations/migrateHorarios.js
+
+# Testing automatizado
+npm test
+
+# Testing de horarios
+node test-horarios-completo.js
 ```
 
 ## Troubleshooting Común
