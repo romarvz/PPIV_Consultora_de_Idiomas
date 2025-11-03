@@ -770,8 +770,7 @@ Cliente ← { success: true, data: { profesor } }
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/consultora_idiomas
 
 # Autenticación
-JWT_SECRET=clave_secreta_muy_segura_cambiar_en_produccion
-
+JWT_SECRET=""
 # Servidor
 PORT=5000
 NODE_ENV=development
