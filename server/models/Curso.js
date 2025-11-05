@@ -52,7 +52,22 @@ const cursoSchema = new mongoose.Schema({
     ref: 'BaseUser',
     required: [true, 'El curso debe tener un profesor asignado']
   },
-  
+
+  // --- CAMPO NUEVO ---
+  horario: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Horario',
+    required: [true, 'El horario del curso es obligatorio']
+  },
+  // --- FIN CAMPO NUEVO ---
+
+  // --- CAMPO NUEVO (solicitado en el front) ---
+  imageUrl: {
+    type: String,
+    trim: true,
+  },
+  // --- FIN CAMPO NUEVO ---
+
   estudiantes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BaseUser'
@@ -104,6 +119,7 @@ const cursoSchema = new mongoose.Schema({
 cursoSchema.index({ profesor: 1, estado: 1 });
 cursoSchema.index({ idioma: 1, nivel: 1 });
 cursoSchema.index({ fechaInicio: 1, fechaFin: 1 });
+cursoSchema.index({ horario: 1 }); // <- Índice para el nuevo campo
 
 // Virtual para calcular el número de estudiantes inscritos
 cursoSchema.virtual('numeroEstudiantes').get(function() {
@@ -126,7 +142,8 @@ cursoSchema.virtual('estaActivo').get(function() {
 // Middleware pre-save: validar que el profesor existe y tiene el rol correcto
 cursoSchema.pre('save', async function(next) {
   if (this.isModified('profesor')) {
-    const BaseUser = mongoose.model('User');
+    // NOTA: Cambiado 'User' por 'BaseUser' para consistencia con tu service
+    const BaseUser = mongoose.model('BaseUser'); // O 'User' si 'BaseUser' no es el nombre registrado
     const profesor = await BaseUser.findById(this.profesor);
     
     if (!profesor) {
@@ -143,7 +160,7 @@ cursoSchema.pre('save', async function(next) {
 // Middleware pre-save: validar que los estudiantes existen
 cursoSchema.pre('save', async function(next) {
   if (this.isModified('estudiantes') && this.estudiantes.length > 0) {
-    const BaseUser = mongoose.model('User');
+    const BaseUser = mongoose.model('BaseUser'); // O 'User'
     const estudiantes = await BaseUser.find({
       _id: { $in: this.estudiantes },
       role: 'estudiante'
@@ -185,6 +202,7 @@ cursoSchema.statics.findByProfesor = function(profesorId, filtros = {}) {
   return this.find({ profesor: profesorId, ...filtros })
     .populate('profesor', 'firstName lastName email')
     .populate('estudiantes', 'firstName lastName email')
+    .populate('horario') // <- Populate al nuevo campo
     .sort({ fechaInicio: -1 });
 };
 
@@ -195,7 +213,8 @@ cursoSchema.statics.findActivos = function() {
     estado: 'activo',
     fechaInicio: { $lte: hoy },
     fechaFin: { $gte: hoy }
-  }).populate('profesor', 'firstName lastName');
+  }).populate('profesor', 'firstName lastName')
+    .populate('horario'); // <- Populate al nuevo campo
 };
 
 const Curso = mongoose.model('Curso', cursoSchema);

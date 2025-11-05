@@ -1,5 +1,5 @@
 // services/cursosService.js
-const { Curso, Inscripcion, BaseUser } = require('../models');
+const { Curso, Inscripcion, BaseUser, Horario } = require('../models');
 
 /**
  * Obtener curso por ID con información completa
@@ -7,7 +7,8 @@ const { Curso, Inscripcion, BaseUser } = require('../models');
 exports.getCursoById = async (cursoId) => {
   const curso = await Curso.findById(cursoId)
     .populate('profesor', 'firstName lastName email phone')
-    .populate('estudiantes', 'firstName lastName email');
+    .populate('estudiantes', 'firstName lastName email')
+    .populate('horario'); // <- Populate al nuevo campo
   
   if (!curso) {
     throw new Error('Curso no encontrado');
@@ -29,6 +30,11 @@ exports.createCurso = async (cursoData) => {
   if (profesor.role !== 'profesor') {
     throw new Error('El usuario especificado no es un profesor');
   }
+
+  // (Validación de horario vs profesor) - Opcional pero recomendado
+  // if (!profesor.horariosPermitidos.includes(cursoData.horario)) {
+  //   throw new Error('El profesor no tiene ese horario permitido');
+  // }
   
   // Crear el curso
   const curso = await Curso.create(cursoData);
@@ -109,6 +115,7 @@ exports.listarCursos = async (filtros = {}, paginacion = {}) => {
   // Ejecutar query
   const cursos = await Curso.find(query)
     .populate('profesor', 'firstName lastName email')
+    .populate('horario') // <- Populate al nuevo campo
     .skip(skip)
     .limit(limit)
     .sort({ fechaInicio: -1 });
@@ -134,6 +141,7 @@ exports.getCursosByProfesor = async (profesorId, filtros = {}) => {
   
   return await Curso.find(query)
     .populate('estudiantes', 'firstName lastName email')
+    .populate('horario') // <- Populate al nuevo campo
     .sort({ fechaInicio: -1 });
 };
 
@@ -173,12 +181,6 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
   if (inscripcionExistente) {
     throw new Error('El estudiante ya está inscrito en este curso');
   }
-  
-  // Verificar que no tenga deuda (esto lo hará Ayelen, por ahora solo estructura)
-  // const tieneDeuda = await pagosService.verificarDeuda(estudianteId);
-  // if (tieneDeuda) {
-  //   throw new Error('El estudiante tiene pagos pendientes');
-  // }
   
   // Crear inscripción
   const inscripcion = await Inscripcion.create({
@@ -264,6 +266,7 @@ exports.getCursosDisponibles = async (estudianteId) => {
     fechaInicio: { $gte: new Date() } // Solo cursos que no hayan empezado
   })
     .populate('profesor', 'firstName lastName')
+    .populate('horario') // <- Populate al nuevo campo
     .sort({ fechaInicio: 1 });
   
   return cursosDisponibles;
@@ -332,12 +335,12 @@ exports.getEstadisticasCurso = async (cursoId) => {
       nombre: curso.nombre,
       idioma: curso.idioma,
       nivel: curso.nivel,
-      estado: curso.estado
+      estado: curso.estado,
+      horario: curso.horario ? curso.horario.display : 'N/A' // <- Nuevo campo
     },
     inscripciones,
     capacidad: {
       inscritos: curso.numeroEstudiantes,
-      // capacidadMaxima: curso.capacidadMaxima || 'Sin límite'
     },
     finanzas: {
       costoTotal: curso.costoTotal,
@@ -377,4 +380,47 @@ exports.getEstadisticasGenerales = async () => {
     porIdioma: cursosPorIdioma,
     porNivel: cursosPorNivel
   };
+};
+
+
+// --- NUEVA FUNCIÓN ---
+/**
+ * Obtiene los horarios disponibles de un profesor, excluyendo los que ya tiene
+ * asignados en cursos activos o planificados.
+ */
+exports.getHorariosDisponiblesProfesor = async (profesorId) => {
+  try {
+    // 1. Obtener la disponibilidad TOTAL del profesor desde BaseUser
+    const profesor = await BaseUser.findById(profesorId)
+                                  .select('horariosPermitidos')
+                                  .populate('horariosPermitidos'); // Trae los objetos Horario
+    
+    if (!profesor) {
+      throw new Error('Profesor no encontrado');
+    }
+
+    const todosSusHorarios = profesor.horariosPermitidos; // Array de objetos Horario
+
+    // 2. Obtener los IDs de horarios que YA tiene OCUPADOS
+    const cursosDelProfesor = await Curso.find({
+      profesor: profesorId,
+      estado: { $in: ['planificado', 'activo'] } // Solo contamos cursos futuros o actuales
+    }).select('horario');
+    
+    // Mapeamos a un Set de strings para búsqueda rápida
+    const horariosOcupadosIds = new Set(
+      cursosDelProfesor.map(curso => curso.horario.toString())
+    );
+
+    // 3. Filtrar la lista total
+    const horariosDisponibles = todosSusHorarios.filter(horario => {
+      // Retorna solo los horarios que NO están en el Set de ocupados
+      return !horariosOcupadosIds.has(horario._id.toString());
+    });
+
+    return horariosDisponibles; // Devuelve el array de objetos Horario disponibles
+
+  } catch (error) {
+    throw new Error(`Error al obtener horarios: ${error.message}`);
+  }
 };

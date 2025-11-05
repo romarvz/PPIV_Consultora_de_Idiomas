@@ -1,4 +1,4 @@
-// Adaptador inteligente que alterna entre Mock y Backend Real
+// client/src/services/apiAdapter.js
 
 import api from './api' // Backend real existente
 import mockApi from './mockApi' // Mock para demo
@@ -13,8 +13,7 @@ const USE_MOCK = true
 
 /**
  * Adaptador inteligente que redirige peticiones según configuración
- * 
- * USO EN COMPONENTES:
+ * * USO EN COMPONENTES:
  * import apiAdapter from '../services/apiAdapter'
  * const response = await apiAdapter.classes.getAll()
  */
@@ -30,7 +29,8 @@ const apiAdapter = {
         return await mockApi.classes.getAll(params)
       }
       // Cuando implementemos el endpoint real:
-      return await api.get('/classes', { params })
+      // NOTA: Asegúrate de que tu backend real tenga una ruta '/api/classes'
+      return await api.get('/classes', { params }) 
     },
 
     /**
@@ -146,7 +146,8 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.courses.getAll(params);
       }
-      return await api.get('/courses', { params });
+      // NOTA: La ruta real es '/api/cursos' (plural en español)
+      return await api.get('/cursos/publico', { params });
     },
 
     /**
@@ -157,7 +158,7 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.courses.getById(id);
       }
-      return await api.get(`/courses/${id}`);
+      return await api.get(`/cursos/${id}`);
     },
 
     /**
@@ -168,7 +169,7 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.courses.create(courseData);
       }
-      return await api.post('/courses', courseData);
+      return await api.post('/cursos', courseData);
     },
 
     /**
@@ -180,7 +181,7 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.courses.update(id, courseData);
       }
-      return await api.put(`/courses/${id}`, courseData);
+      return await api.put(`/cursos/${id}`, courseData);
     },
 
     /**
@@ -191,8 +192,22 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.courses.delete(id);
       }
-      return await api.delete(`/courses/${id}`);
+      return await api.delete(`/cursos/${id}`);
+    },
+
+    // --- NUEVA FUNCIÓN ---
+    /**
+     * Obtener los horarios disponibles de un profesor específico
+     * @param {String} profesorId - ID del profesor
+     */
+    getAvailableSchedulesByTeacher: async (profesorId) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
+      }
+      // Esta es la ruta real que creamos en el backend
+      return await api.get(`/cursos/profesor/${profesorId}/horarios-disponibles`);
     }
+    // --- FIN NUEVA FUNCIÓN ---
   },
 
 

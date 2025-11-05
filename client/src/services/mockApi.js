@@ -1,4 +1,4 @@
-// API Mock completa para simular el backend
+// client/src/services/mockApi.js
 
 import { 
   mockStudents, 
@@ -524,7 +524,53 @@ export const mockApi = {
       saveStorage();
       
       return { data: { success: true, message: 'Curso eliminado exitosamente' } };
+    },
+
+    // --- NUEVA FUNCIÓN MOCK ---
+    /**
+     * Simula la obtención de horarios disponibles para un profesor.
+     * Transforma los datos de 'mockTeachers.horarios' al formato de 'Horario.js'.
+     * @param {String} profesorId - ID del profesor
+     */
+    getAvailableSchedulesByTeacher: async (profesorId) => {
+      await delay();
+      
+      const teacher = storage.teachers.find(t => t._id === profesorId);
+      
+      if (!teacher || !teacher.horarios) {
+        // Profesor no encontrado o no tiene horarios definidos en el mock
+        return { data: { success: true, data: [] } };
+      }
+
+      // 1. Transforma los horarios del mock al formato que espera el frontend
+      // (el formato que devuelve nuestro backend real, con _id y display)
+      let availableSchedules = teacher.horarios.map((h, index) => {
+        const diaCapitalizado = h.dia.charAt(0).toUpperCase() + h.dia.slice(1);
+        return {
+          _id: `mock-horario-${teacher._id}-${index}`, // ID único simulado
+          dia: h.dia,
+          horaInicio: h.horaInicio,
+          horaFin: h.horaFin,
+          display: `${diaCapitalizado} ${h.horaInicio} - ${h.horaFin}` // Simula el virtual
+        };
+      });
+
+      // 2. Simular que un horario está "ocupado"
+      // Para probar la lógica, quitamos aleatoriamente uno de los horarios si hay más de uno.
+      if (availableSchedules.length > 1) {
+        // Quita un horario al azar para simular que está ocupado
+        const randomIndex = Math.floor(Math.random() * availableSchedules.length);
+        availableSchedules.splice(randomIndex, 1);
+      }
+
+      return {
+        data: {
+          success: true,
+          data: availableSchedules
+        }
+      };
     }
+    // --- FIN NUEVA FUNCIÓN MOCK ---
   },
  
   
