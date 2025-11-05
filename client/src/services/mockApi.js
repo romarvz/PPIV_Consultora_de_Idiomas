@@ -524,6 +524,51 @@ export const mockApi = {
       saveStorage();
       
       return { data: { success: true, message: 'Curso eliminado exitosamente' } };
+    },
+
+    /**
+     * Obtener horarios disponibles de un profesor para crear cursos
+     * @param {String} profesorId - ID del profesor
+     * @returns {Promise} Horarios disponibles en formato del modelo Horario.js
+     */
+    getAvailableSchedulesByTeacher: async (profesorId) => {
+      await delay(); // Simular latencia de red
+      
+      // Buscar el profesor en el storage mock
+      const teacher = storage.teachers.find(t => t._id === profesorId);
+      
+      if (!teacher || !teacher.horarios) {
+        return { data: { success: true, data: { horarios: [], count: 0 } } };
+      }
+      
+      // Transformar los datos del mock al formato del modelo Horario.js
+      let availableSchedules = teacher.horarios.map((h, index) => {
+        const diaCapitalizado = h.dia.charAt(0).toUpperCase() + h.dia.slice(1);
+        return {
+          _id: `mock-horario-${teacher._id}-${index}`, // ID único simulado
+          dia: h.dia,
+          horaInicio: h.horaInicio,
+          horaFin: h.horaFin,
+          tipo: 'clase',
+          display: `${diaCapitalizado} ${h.horaInicio} - ${h.horaFin}`
+        };
+      });
+      
+      // Simular que un horario está "ocupado" (opcional, para testing)
+      if (availableSchedules.length > 1) {
+        availableSchedules.splice(0, 1); // Quita el primero para simular ocupación
+      }
+      
+      return { 
+        data: { 
+          success: true, 
+          data: { 
+            horarios: availableSchedules, 
+            count: availableSchedules.length 
+          },
+          message: `Horarios disponibles obtenidos: ${availableSchedules.length} encontrados`
+        } 
+      };
     }
   },
  
