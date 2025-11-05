@@ -1,10 +1,9 @@
-//const facturaService = require('../services/factura.service');
-const facturaService = require('../services/facturaBorrador.service');
+const facturaService = require('../services/factura.service');
 
 const facturaCtrl = {};
 
 /**
- * Crear una nueva factura
+ * Crear una nueva factura en BORRADOR (sin autorización)
  * POST /api/facturas
  */
 facturaCtrl.createFactura = async (req, res) => {
@@ -25,15 +24,14 @@ facturaCtrl.createFactura = async (req, res) => {
 };
 
 /**
- * Autorizar una factura para obtener cae o caea
- * PUT /api/facturas/id/autorizar
+ * Autorizar una factura en borrador (solicitar CAE)
+ * PUT /api/facturas/:id/autorizar
  */
-
 facturaCtrl.autorizarFactura = async (req, res) => {
     try {
         const { id } = req.params;
         const resultado = await facturaService.autorizarFactura(id);
-        
+
         res.status(200).json({
             success: true,
             message: resultado.mensaje,
@@ -45,6 +43,70 @@ facturaCtrl.autorizarFactura = async (req, res) => {
         });
     } catch (error) {
         res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Editar una factura en borrador
+ * PUT /api/facturas/:id
+ */
+facturaCtrl.editarFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resultado = await facturaService.editarFactura(id, req.body);
+
+        res.status(200).json({
+            success: true,
+            message: resultado.mensaje,
+            data: resultado.factura
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Eliminar una factura en borrador
+ * DELETE /api/facturas/:id
+ */
+facturaCtrl.eliminarFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resultado = await facturaService.eliminarFactura(id);
+
+        res.status(200).json({
+            success: true,
+            message: resultado.mensaje
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Obtener una factura por ID
+ * GET /api/facturas/:id
+ */
+facturaCtrl.getFacturaById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const factura = await facturaService.obtenerFacturaPorId(id);
+
+        res.status(200).json({
+            success: true,
+            data: factura
+        });
+    } catch (error) {
+        res.status(404).json({
             success: false,
             message: error.message
         });
@@ -88,6 +150,26 @@ facturaCtrl.getDeudaEstudiante = async (req, res) => {
         });
     } catch (error) {
         res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Verificar estado del servicio Arca (simulado)
+ * GET /api/facturas/arca/estado
+ */
+facturaCtrl.verificarEstadoArca = async (req, res) => {
+    try {
+        const estado = facturaService.verificarEstadoArca();
+
+        res.status(200).json({
+            success: true,
+            data: estado
+        });
+    } catch (error) {
+        res.status(500).json({
             success: false,
             message: error.message
         });

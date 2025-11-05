@@ -9,6 +9,11 @@ router.post('/',
     [authenticateToken, requireAdmin, validateCrearFactura], 
     facturaCtrl.createFactura);
 
+// Ruta para autorizar una factura
+router.put('/:id/autorizar', 
+    [authenticateToken, requireAdmin], 
+    facturaCtrl.autorizarFactura);
+
 // Ruta para obtener facturas de un estudiante
 router.get('/estudiante/:idEstudiante', 
     [authenticateToken, validateMongoId], 
