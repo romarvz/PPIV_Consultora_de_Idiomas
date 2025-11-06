@@ -72,6 +72,35 @@ const startServer = async () => {
     const languageRoutes = require('./routes/languages');
     app.use('/api/languages', languageRoutes);
 
+
+      // Rutas para gestion financiera
+    const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
+    const conceptosCobrosRoutes = require('./routes/conceptosCobros.routes');
+    const cobrosRoutes = require('./routes/cobros.routes');
+    const facturasRoutes = require('./routes/facturasBorrador.routes');
+
+    app.use('/api/concept-categories', conceptCategoryRoutes);
+    app.use('/api/conceptos-cobros', conceptosCobrosRoutes);
+    app.use('/api/cobros', cobrosRoutes);
+    app.use('/api/facturas', facturasRoutes);  
+
+      //middleware para cuando no encontramos ruta (solo GET y POST seguros)
+  app.get('*', (req, res) => {
+    res.status(404).json({
+      success: false,
+      message: `Ruta ${req.originalUrl} no encontrada`,
+      availableEndpoints: {
+        auth: '/api/auth',
+        students: '/api/students',
+        teachers: '/api/teachers',
+        languages: '/api/languages',
+        horarios: '/api/horarios',
+        cursos: '/api/cursos',
+        test: '/api/auth/test'
+      }
+    });
+  });
+  
     // ===== RUTAS NO ENCONTRADAS (404) =====
     app.get('*', (req, res) => {
       res.status(404).json({

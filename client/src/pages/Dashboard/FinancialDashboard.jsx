@@ -1,713 +1,712 @@
-import React, { useState, useEffect } from 'react'
-import { useAuth } from '../../hooks/useAuth.jsx'
-import AuthNavbar from '../../components/common/AuthNavbar'
-import { mockPayments as mockPaymentsData, mockPaymentMethods, mockTeachers } from '../../services/mockData'
+import { useState, useEffect } from 'react'
 import { 
-  FaSpinner,
-  FaPlus,
-  FaEdit,
-  FaTrash
-} from 'react-icons/fa'
-import '../../styles/variables.css'
-import '../../styles/auth.css'
-import '../../styles/charts.css'
+  Receipt, 
+  DollarSign, 
+  FileText, 
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Plus,
+  Search,
+  Filter,
+  Download
+} from 'lucide-react'
+import facturaAPI from '../services/facturaApi'
+import cobroAPI from '../services/cobroApi'
 
 const FinancialDashboard = () => {
-  const { user, logout } = useAuth()
+  const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState('charges')
-  const [charges, setCharges] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('Todos')
-  const [showChargeModal, setShowChargeModal] = useState(false)
-  const [chargeForm, setChargeForm] = useState({
-    studentName: '',
-    amount: '',
-    date: new Date().toISOString().slice(0, 10),
-    concept: '',
-    method: mockPaymentMethods?.[0] || 'Efectivo'
-  })
-  // Teachers payments (Pagos)
-  const [teacherPayments, setTeacherPayments] = useState([])
-  const [searchTeacher, setSearchTeacher] = useState('')
-  const [showTeacherPaymentModal, setShowTeacherPaymentModal] = useState(false)
-  const [teacherPaymentForm, setTeacherPaymentForm] = useState({
-    teacherId: '',
-    amount: '',
-    date: new Date().toISOString().slice(0, 10),
-    concept: '',
-    method: mockPaymentMethods?.[0] || 'Transferencia'
+  const [error, setError] = useState(null)
+  
+  // Estados para datos reales del backend
+  const [facturas, setFacturas] = useState([])
+  const [cobros, setCobros] = useState([])
+  const [estadisticas, setEstadisticas] = useState({
+    totalIngresos: 0,
+    facturasPendientes: 0,
+    cobrosMes: 0,
+    deudaTotal: 0
   })
 
-  // Initialize with mock data since backend will be developed later
+  // Estado para crear factura
+  const [mostrarFormFactura, setMostrarFormFactura] = useState(false)
+  const [facturaFormData, setFacturaFormData] = useState({
+    estudiante: '',
+    condicionFiscal: 'Consumidor Final',
+    periodoFacturado: '',
+    fechaVencimiento: '',
+    itemFacturaSchema: []
+  })
+
+  // Estado para registrar cobro
+  const [mostrarFormCobro, setMostrarFormCobro] = useState(false)
+  const [cobroFormData, setCobroFormData] = useState({
+    factura: '',
+    estudiante: '',
+    monto: 0,
+    metodoPago: 'Efectivo',
+    observaciones: ''
+  })
+
+  // Cargar datos iniciales
   useEffect(() => {
+    cargarDatosIniciales()
+  }, [])
+
+  const cargarDatosIniciales = async () => {
     setLoading(true)
-    // Simulate API call delay
-    setTimeout(() => setLoading(false), 500)
-  }, [])
-
-  const handleLogout = async () => {
+    setError(null)
+    
     try {
-      await logout()
-    } catch (error) {
-      console.error('Logout error:', error)
+      // TODO: Implementar cuando tengas endpoint para listar todas las facturas
+      // Por ahora, usaremos datos de ejemplo o un estudiante específico
+      
+      // Ejemplo: cargar facturas de un estudiante específico
+      // const resFacturas = await facturaAPI.obtenerFacturasPorEstudiante('ID_ESTUDIANTE')
+      // setFacturas(resFacturas.data)
+      
+      // Calcular estadísticas basadas en los datos reales
+      calcularEstadisticas()
+      
+    } catch (err) {
+      console.error('Error al cargar datos:', err)
+      setError(err.message || 'Error al cargar datos financieros')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS'
-    }).format(amount)
+  const calcularEstadisticas = () => {
+    // Calcular estadísticas basadas en facturas y cobros reales
+    const pendientes = facturas.filter(f => f.estado === 'Pendiente')
+    const totalDeuda = pendientes.reduce((sum, f) => sum + f.total, 0)
+    const cobrosDelMes = cobros.filter(c => {
+      const fecha = new Date(c.fechaCobro)
+      const hoy = new Date()
+      return fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()
+    })
+    const totalIngresos = cobrosDelMes.reduce((sum, c) => sum + c.monto, 0)
+
+    setEstadisticas({
+      totalIngresos,
+      facturasPendientes: pendientes.length,
+      cobrosMes: cobrosDelMes.length,
+      deudaTotal: totalDeuda
+    })
   }
 
-  // Initialize charges from mock data
-  useEffect(() => {
-    const mockCharges = (mockPaymentsData || []).map((p, idx) => ({
-      id: p._id || idx,
-      studentName: p.studentName,
-      amount: p.amount,
-      status: p.status,
-      date: p.date,
-      method: p.paymentMethod || '—',
-      concept: p.concept || '—'
-    }))
-    setCharges(mockCharges)
-  }, [])
+  // Función para crear factura en borrador
+  const handleCrearFactura = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
-  // initialize teacher payments from mock teachers
-  useEffect(() => {
-    const defaults = (mockTeachers || []).slice(0, 3).map((t, idx) => ({
-      id: `tp-${idx + 1}`,
-      teacherId: t._id,
-      teacherName: `${t.firstName} ${t.lastName}`,
-      concept: idx === 0 ? 'Adelanto Octubre 2025' : 'Pago de horas de Septiembre 2025',
-      amount: idx === 0 ? 25000 : idx === 1 ? 82000 : 75000,
-      date: idx === 0 ? '2025-10-15' : idx === 1 ? '2025-10-06' : '2025-10-05',
-      method: idx === 0 ? 'Efectivo' : 'Transferencia'
-    }))
-    if (defaults.length > 0 && teacherPayments.length === 0) {
-      setTeacherPayments(defaults)
-      setTeacherPaymentForm(fp => ({ ...fp, teacherId: defaults[0].teacherId }))
+    try {
+      const response = await facturaAPI.crearFactura(facturaFormData)
+      
+      if (response.success) {
+        alert(`Factura creada en borrador: ${response.data.numeroFactura}`)
+        setMostrarFormFactura(false)
+        cargarDatosIniciales()
+        
+        // Limpiar formulario
+        setFacturaFormData({
+          estudiante: '',
+          condicionFiscal: 'Consumidor Final',
+          periodoFacturado: '',
+          fechaVencimiento: '',
+          itemFacturaSchema: []
+        })
+      }
+    } catch (err) {
+      console.error('Error al crear factura:', err)
+      setError(err.message || 'Error al crear factura')
+    } finally {
+      setLoading(false)
     }
-  }, [])
+  }
 
-  if (loading) {
+  // Función para autorizar factura
+  const handleAutorizarFactura = async (facturaId) => {
+    if (!confirm('¿Desea autorizar esta factura? Una vez autorizada no podrá modificarla.')) {
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await facturaAPI.autorizarFactura(facturaId)
+      
+      if (response.success) {
+        alert(`Factura autorizada con CAE: ${response.data.cae}`)
+        cargarDatosIniciales()
+      }
+    } catch (err) {
+      console.error('Error al autorizar factura:', err)
+      setError(err.message || 'Error al autorizar factura')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Función para eliminar factura borrador
+  const handleEliminarFactura = async (facturaId) => {
+    if (!confirm('¿Está seguro de eliminar esta factura en borrador?')) {
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await facturaAPI.eliminarFactura(facturaId)
+      
+      if (response.success) {
+        alert('Factura eliminada exitosamente')
+        cargarDatosIniciales()
+      }
+    } catch (err) {
+      console.error('Error al eliminar factura:', err)
+      setError(err.message || 'Error al eliminar factura')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Función para registrar cobro
+  const handleRegistrarCobro = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await cobroAPI.registrarCobro(cobroFormData)
+      
+      if (response.success) {
+        alert('Cobro registrado exitosamente')
+        setMostrarFormCobro(false)
+        cargarDatosIniciales()
+        
+        // Limpiar formulario
+        setCobroFormData({
+          factura: '',
+          estudiante: '',
+          monto: 0,
+          metodoPago: 'Efectivo',
+          observaciones: ''
+        })
+      }
+    } catch (err) {
+      console.error('Error al registrar cobro:', err)
+      setError(err.message || 'Error al registrar cobro')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Obtener badge de estado de factura
+  const getEstadoBadge = (estado) => {
+    const badgeClasses = {
+      'Borrador': 'bg-gray-100 text-gray-800',
+      'Pendiente': 'bg-yellow-100 text-yellow-800',
+      'Cobrada': 'bg-green-100 text-green-800',
+      'Vencida': 'bg-red-100 text-red-800'
+    }
+
     return (
-      <section className="section visible">
-        <div className="container dashboard-container">
-          <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} />
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '4rem',
-            color: 'var(--text-secondary)'
-          }}>
-            <FaSpinner style={{ 
-              fontSize: '3rem', 
-              marginBottom: '1rem',
-              animation: 'spin 1s linear infinite'
-            }} />
-            <p>Cargando datos financieros...</p>
-          </div>
-        </div>
-      </section>
+      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badgeClasses[estado] || 'bg-gray-100 text-gray-800'}`}>
+        {estado}
+      </span>
     )
   }
 
-  const filteredCharges = charges.filter((c) => {
-    const matchesSearch = !searchTerm || (c.studentName || '').toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'Todos' || c.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
-
-  const handleOpenChargeModal = () => setShowChargeModal(true)
-  const handleCloseChargeModal = () => setShowChargeModal(false)
-
-  const handleRegisterCharge = (e) => {
-    e.preventDefault()
-    const newCharge = {
-      id: Date.now(),
-      studentName: chargeForm.studentName || '—',
-      amount: Number(chargeForm.amount) || 0,
-      status: 'pendiente',
-      date: chargeForm.date,
-      method: chargeForm.method,
-      concept: chargeForm.concept || '—'
-    }
-    setCharges([newCharge, ...charges])
-    setChargeForm({
-      studentName: '',
-      amount: '',
-      date: new Date().toISOString().slice(0, 10),
-      concept: '',
-      method: mockPaymentMethods?.[0] || 'Efectivo'
-    })
-    setShowChargeModal(false)
-  }
-
-  const handleDeleteCharge = (id) => {
-    if (window.confirm('¿Eliminar este cobro?')) {
-      setCharges(charges.filter(c => c.id !== id))
-    }
-  }
-
-  // Teacher payments handlers
-  const handleOpenTeacherPaymentModal = () => setShowTeacherPaymentModal(true)
-  const handleCloseTeacherPaymentModal = () => setShowTeacherPaymentModal(false)
-  const handleRegisterTeacherPayment = (e) => {
-    e.preventDefault()
-    const teacher = (mockTeachers || []).find(t => t._id === teacherPaymentForm.teacherId)
-    const newPayment = {
-      id: Date.now().toString(),
-      teacherId: teacherPaymentForm.teacherId,
-      teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : '—',
-      concept: teacherPaymentForm.concept || '—',
-      amount: Number(teacherPaymentForm.amount) || 0,
-      date: teacherPaymentForm.date,
-      method: teacherPaymentForm.method
-    }
-    setTeacherPayments([newPayment, ...teacherPayments])
-    setShowTeacherPaymentModal(false)
-    setTeacherPaymentForm({
-      teacherId: teacher ? teacher._id : '',
-      amount: '',
-      date: new Date().toISOString().slice(0, 10),
-      concept: '',
-      method: mockPaymentMethods?.[0] || 'Transferencia'
-    })
-  }
-  const handleDeleteTeacherPayment = (id) => {
-    if (window.confirm('¿Eliminar este pago?')) {
-      setTeacherPayments(teacherPayments.filter(p => p.id !== id))
-    }
-  }
-
-  // Common modal styles
-  const modalOverlayStyle = {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.4)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000
-  }
-  const modalContentStyle = {
-    width: 'min(95vw, 640px)',
-    background: 'var(--card-bg)',
-    borderRadius: '12px',
-    boxShadow: 'var(--shadow-lg)',
-    padding: '1.5rem'
-  }
-  const inputStyle = {
-    width: '100%',
-    padding: '0.75rem',
-    border: '1px solid var(--input-border)',
-    borderRadius: '6px',
-    background: 'var(--input-bg)',
-    color: 'var(--text-primary)'
-  }
-  const selectStyle = { ...inputStyle, height: '44px' }
-  const buttonStyle = {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.75rem',
-    marginTop: '1.25rem'
-  }
-
   return (
-    <section className="section visible">
-      <div className="container dashboard-container">
-        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} />
-
-        {/* Header */}
-        <div className="dashboard-section">
-          <h3 className="dashboard-section__title">Gestión Financiera</h3>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard Financiero</h1>
+          <p className="text-gray-500">Gestión de facturas y cobros</p>
         </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMostrarFormFactura(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            <Plus size={20} />
+            Nueva Factura
+          </button>
+          <button
+            onClick={() => setMostrarFormCobro(true)}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+          >
+            <DollarSign size={20} />
+            Registrar Cobro
+          </button>
+        </div>
+      </div>
 
-        {/* Tabs */}
-        <div style={{
-          background: 'var(--card-bg)',
-          borderRadius: '12px',
-          boxShadow: 'var(--shadow-md)',
-          overflow: 'hidden',
-          marginBottom: '2rem'
-        }}>
-          <div style={{ borderBottom: '1px solid var(--border-color)' }}>
-            <div style={{ display: 'flex' }}>
-              <button
-                onClick={() => setActiveTab('charges')}
-                style={{
-                  padding: '1rem 1.5rem',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  border: 'none',
-                  background: activeTab === 'charges' ? 'var(--primary)' : 'transparent',
-                  cursor: 'pointer',
-                  color: activeTab === 'charges' ? 'white' : 'var(--text-secondary)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Cobros
-              </button>
-              <button
-                onClick={() => setActiveTab('payments')}
-                style={{
-                  padding: '1rem 1.5rem',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  border: 'none',
-                  background: activeTab === 'payments' ? 'var(--primary)' : 'transparent',
-                  cursor: 'pointer',
-                  color: activeTab === 'payments' ? 'white' : 'var(--text-secondary)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Pagos
-              </button>
-              <button
-                onClick={() => setActiveTab('invoices')}
-                style={{
-                  padding: '1rem 1.5rem',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  border: 'none',
-                  background: activeTab === 'invoices' ? 'var(--primary)' : 'transparent',
-                  cursor: 'pointer',
-                  color: activeTab === 'invoices' ? 'white' : 'var(--text-secondary)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Facturación
-              </button>
-              <button
-                onClick={() => setActiveTab('reports')}
-                style={{
-                  padding: '1rem 1.5rem',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  border: 'none',
-                  background: activeTab === 'reports' ? 'var(--primary)' : 'transparent',
-                  cursor: 'pointer',
-                  color: activeTab === 'reports' ? 'white' : 'var(--text-secondary)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Reportes
-              </button>
+      {/* Mensajes de error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Cargando...</p>
+        </div>
+      )}
+
+      {/* Tarjetas de estadísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Ingresos del Mes</p>
+              <p className="text-2xl font-bold text-gray-900">
+                ${estadisticas.totalIngresos.toLocaleString()}
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-lg">
+              <TrendingUp className="text-green-600" size={24} />
             </div>
           </div>
+        </div>
 
-          <div style={{ padding: '1.5rem' }}>
-            {activeTab === 'charges' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Cobros</h4>
-                  <button 
-                    className="cta-btn"
-                    style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-                    onClick={handleOpenChargeModal}
-                  >
-                    <FaPlus style={{ marginRight: '0.5rem' }} />
-                    Registrar Nuevo Cobro
-                  </button>
-                </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Facturas Pendientes</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {estadisticas.facturasPendientes}
+              </p>
+            </div>
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <Clock className="text-yellow-600" size={24} />
+            </div>
+          </div>
+        </div>
 
-                {/* Filters */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '1rem',
-                  marginBottom: '1rem',
-                  padding: '1rem',
-                  background: 'var(--bg-secondary)',
-                  borderRadius: '8px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ color: 'var(--text-secondary)', minWidth: '160px' }}>Buscar por Estudiante:</span>
-                    <input
-                      type="text"
-                      placeholder="Nombre del estudiante..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '0.5rem',
-                        border: '1px solid var(--input-border)',
-                        borderRadius: '6px',
-                        background: 'var(--input-bg)',
-                        color: 'var(--text-primary)'
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ color: 'var(--text-secondary)', minWidth: '140px' }}>Filtrar por Estado:</span>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      style={{
-                        padding: '0.5rem',
-                        border: '1px solid var(--input-border)',
-                        borderRadius: '6px',
-                        background: 'var(--input-bg)',
-                        color: 'var(--text-primary)',
-                        minWidth: '160px'
-                      }}
-                    >
-                      <option value="Todos">Todos</option>
-                      <option value="pendiente">Pendiente</option>
-                      <option value="vencido">Vencido</option>
-                      <option value="pagado">Pagado</option>
-                    </select>
-                  </div>
-                </div>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
-                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Estudiante</th>
-                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Concepto</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Monto</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Método</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Fecha</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Estado</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredCharges.map((payment) => (
-                        <tr key={payment.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: '500' }}>
-                            {payment.studentName}
-                          </td>
-                          <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
-                            {payment.concept || '—'}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-primary)', fontWeight: '600' }}>
-                            {formatCurrency(payment.amount)}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                            {payment.method || '—'}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                            {payment.date}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center' }}>
-                            <span style={{
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '12px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              textTransform: 'uppercase',
-                              width: '90px',
-                              textAlign: 'center',
-                              display: 'inline-block',
-                              background: payment.status === 'pagado' ? 'var(--success-light)' : payment.status === 'pendiente' ? 'var(--warning-light)' : 'var(--error-light)',
-                              color: payment.status === 'pagado' ? 'var(--success-dark)' : payment.status === 'pendiente' ? 'var(--warning-dark)' : 'var(--error-dark)'
-                            }}>
-                              {payment.status === 'pagado' ? 'Pagado' : payment.status === 'pendiente' ? 'Pendiente' : 'Vencido'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center' }}>
-                            <button
-                              title="Editar"
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                color: 'var(--text-secondary)',
-                                marginRight: '0.5rem'
-                              }}
-                              onClick={() => alert('Edición de cobros en desarrollo.')}
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              title="Eliminar"
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                color: 'var(--error)'
-                              }}
-                              onClick={() => handleDeleteCharge(payment.id)}
-                            >
-                              <FaTrash />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Cobros del Mes</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {estadisticas.cobrosMes}
+              </p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Receipt className="text-blue-600" size={24} />
+            </div>
+          </div>
+        </div>
 
-                {/* Register Charge Modal */}
-                {showChargeModal && (
-                  <div style={modalOverlayStyle}>
-                    <div style={modalContentStyle}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Registrar Nuevo Cobro</h3>
-                        <button onClick={handleCloseChargeModal} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: 'var(--text-secondary)' }}>×</button>
-                      </div>
-                      <form onSubmit={handleRegisterCharge}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Estudiante</label>
-                            <input
-                              type="text"
-                              placeholder="Escriba para buscar un estudiante..."
-                              value={chargeForm.studentName}
-                              onChange={(e) => setChargeForm({ ...chargeForm, studentName: e.target.value })}
-                              style={inputStyle}
-                            />
-                          </div>
-                          <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Monto</label>
-                            <input
-                              type="number"
-                              placeholder="Ej: 15000"
-                              value={chargeForm.amount}
-                              onChange={(e) => setChargeForm({ ...chargeForm, amount: e.target.value })}
-                              style={inputStyle}
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha</label>
-                            <input
-                              type="date"
-                              value={chargeForm.date}
-                              onChange={(e) => setChargeForm({ ...chargeForm, date: e.target.value })}
-                              style={inputStyle}
-                              required
-                            />
-                          </div>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Concepto</label>
-                            <input
-                              type="text"
-                              placeholder="Ej: Cuota mensual, Matrícula, etc."
-                              value={chargeForm.concept}
-                              onChange={(e) => setChargeForm({ ...chargeForm, concept: e.target.value })}
-                              style={inputStyle}
-                            />
-                          </div>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Medio de Pago</label>
-                            <select
-                              value={chargeForm.method}
-                              onChange={(e) => setChargeForm({ ...chargeForm, method: e.target.value })}
-                              style={selectStyle}
-                            >
-                              {(mockPaymentMethods || ['Efectivo','Transferencia','Tarjeta','Mercado Pago']).map((m) => (
-                                <option key={m} value={m}>{m}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        <div style={buttonStyle}>
-                          <button type="button" onClick={handleCloseChargeModal} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.95rem' }}>Cancelar</button>
-                          <button type="submit" className="cta-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.95rem' }}>Registrar</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'payments' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Pagos a Profesores</h4>
-                  <button 
-                    className="cta-btn"
-                    style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-                    onClick={handleOpenTeacherPaymentModal}
-                  >
-                    <FaPlus style={{ marginRight: '0.5rem' }} />
-                    Registrar Nuevo Pago
-                  </button>
-                </div>
-                {/* Search */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr',
-                  gap: '1rem',
-                  marginBottom: '1rem',
-                  padding: '1rem',
-                  background: 'var(--bg-secondary)',
-                  borderRadius: '8px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ color: 'var(--text-secondary)', minWidth: '160px' }}>Buscar por Profesor:</span>
-                    <input
-                      type="text"
-                      placeholder="Nombre del profesor..."
-                      value={searchTeacher}
-                      onChange={(e) => setSearchTeacher(e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '0.5rem',
-                        border: '1px solid var(--input-border)',
-                        borderRadius: '6px',
-                        background: 'var(--input-bg)',
-                        color: 'var(--text-primary)'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
-                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Profesor</th>
-                        <th style={{ textAlign: 'left', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Concepto</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Monto</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Fecha de Pago</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Método</th>
-                        <th style={{ textAlign: 'center', padding: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teacherPayments
-                        .filter(p => !searchTeacher || (p.teacherName || '').toLowerCase().includes(searchTeacher.toLowerCase()))
-                        .map((p) => (
-                        <tr key={p.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: '500' }}>
-                            {p.teacherName}
-                          </td>
-                          <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
-                            {p.concept}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-primary)', fontWeight: '600' }}>
-                            {formatCurrency(p.amount)}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                            {p.date}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                            {p.method}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center' }}>
-                            <button
-                              title="Editar"
-                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '0.5rem' }}
-                              onClick={() => alert('Edición de pagos en desarrollo.')}
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              title="Eliminar"
-                              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--error)' }}
-                              onClick={() => handleDeleteTeacherPayment(p.id)}
-                            >
-                              <FaTrash />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Register Teacher Payment Modal */}
-                {showTeacherPaymentModal && (
-                  <div style={modalOverlayStyle}>
-                    <div style={modalContentStyle}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Registrar Pago a Profesor</h3>
-                        <button onClick={handleCloseTeacherPaymentModal} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: 'var(--text-secondary)' }}>×</button>
-                      </div>
-                      <form onSubmit={handleRegisterTeacherPayment}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Profesor</label>
-                            <select
-                              value={teacherPaymentForm.teacherId}
-                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, teacherId: e.target.value })}
-                              style={selectStyle}
-                            >
-                              {(mockTeachers || []).map(t => (
-                                <option key={t._id} value={t._id}>{t.firstName} {t.lastName}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Monto</label>
-                            <input
-                              type="number"
-                              placeholder="Ej: 25000"
-                              value={teacherPaymentForm.amount}
-                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, amount: e.target.value })}
-                              style={inputStyle}
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha de Pago</label>
-                            <input
-                              type="date"
-                              value={teacherPaymentForm.date}
-                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, date: e.target.value })}
-                              style={inputStyle}
-                              required
-                            />
-                          </div>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Concepto</label>
-                            <input
-                              type="text"
-                              placeholder="Ej: Pago de horas de Octubre"
-                              value={teacherPaymentForm.concept}
-                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, concept: e.target.value })}
-                              style={inputStyle}
-                            />
-                          </div>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Método de Pago</label>
-                            <select
-                              value={teacherPaymentForm.method}
-                              onChange={(e) => setTeacherPaymentForm({ ...teacherPaymentForm, method: e.target.value })}
-                              style={selectStyle}
-                            >
-                              {(mockPaymentMethods || ['Efectivo','Transferencia','Tarjeta','Mercado Pago']).map((m) => (
-                                <option key={m} value={m}>{m}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        <div style={buttonStyle}>
-                          <button type="button" onClick={handleCloseTeacherPaymentModal} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.95rem' }}>Cancelar</button>
-                          <button type="submit" className="cta-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.95rem' }}>Registrar Pago</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'invoices' && (
-              <div>
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Facturación</h4>
-                  <p>Sección en desarrollo. Próximamente podrás generar y gestionar comprobantes.</p>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'reports' && (
-              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Reportes</h4>
-                <p>Sección en desarrollo. Próximamente verás reportes financieros aquí.</p>
-              </div>
-            )}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Deuda Total</p>
+              <p className="text-2xl font-bold text-gray-900">
+                ${estadisticas.deudaTotal.toLocaleString()}
+              </p>
+            </div>
+            <div className="p-3 bg-red-100 rounded-lg">
+              <DollarSign className="text-red-600" size={24} />
+            </div>
           </div>
         </div>
       </div>
-    </section>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8 px-6" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'overview'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Resumen
+            </button>
+            <button
+              onClick={() => setActiveTab('facturas')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'facturas'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Facturas
+            </button>
+            <button
+              onClick={() => setActiveTab('cobros')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'cobros'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Cobros
+            </button>
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {/* Tab: Resumen */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900">Últimas Facturas</h3>
+              
+              {facturas.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No hay facturas registradas. Cree una nueva factura para comenzar.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Número
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Estudiante
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Fecha
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Monto
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Estado
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          CAE
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {facturas.slice(0, 5).map((factura) => (
+                        <tr key={factura._id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {factura.numeroFactura}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {factura.estudiante?.nombre} {factura.estudiante?.apellido}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(factura.fechaEmision).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${factura.total.toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {getEstadoBadge(factura.estado)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {factura.cae || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {factura.estado === 'Borrador' && (
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => handleAutorizarFactura(factura._id)}
+                                  className="text-blue-600 hover:text-blue-900"
+                                >
+                                  Autorizar
+                                </button>
+                                <button
+                                  onClick={() => handleEliminarFactura(factura._id)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab: Facturas */}
+          {activeTab === 'facturas' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Todas las Facturas</h3>
+                <div className="flex gap-2">
+                  <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <Filter size={16} />
+                    Filtrar
+                  </button>
+                  <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <Download size={16} />
+                    Exportar
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista completa de facturas - Similar al tab resumen pero con todas */}
+              <div className="text-center py-8 text-gray-500">
+                Implementación completa de listado de facturas...
+              </div>
+            </div>
+          )}
+
+          {/* Tab: Cobros */}
+          {activeTab === 'cobros' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Historial de Cobros</h3>
+              
+              {cobros.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No hay cobros registrados.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Fecha
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Estudiante
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Factura
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Método
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Monto
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {cobros.map((cobro) => (
+                        <tr key={cobro._id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(cobro.fechaCobro).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {cobro.estudiante?.nombre} {cobro.estudiante?.apellido}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {cobro.factura?.numeroFactura}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {cobro.metodoPago}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${cobro.monto.toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button className="text-blue-600 hover:text-blue-900">
+                              Ver detalle
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal: Crear Factura */}
+      {mostrarFormFactura && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Nueva Factura (Borrador)</h2>
+            <form onSubmit={handleCrearFactura} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ID Estudiante
+                </label>
+                <input
+                  type="text"
+                  value={facturaFormData.estudiante}
+                  onChange={(e) => setFacturaFormData({...facturaFormData, estudiante: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Condición Fiscal
+                </label>
+                <select
+                  value={facturaFormData.condicionFiscal}
+                  onChange={(e) => setFacturaFormData({...facturaFormData, condicionFiscal: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="Consumidor Final">Consumidor Final</option>
+                  <option value="Responsable Inscripto">Responsable Inscripto</option>
+                  <option value="Monotributista">Monotributista</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Período Facturado
+                </label>
+                <input
+                  type="text"
+                  placeholder="2025-11"
+                  value={facturaFormData.periodoFacturado}
+                  onChange={(e) => setFacturaFormData({...facturaFormData, periodoFacturado: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha Vencimiento
+                </label>
+                <input
+                  type="date"
+                  value={facturaFormData.fechaVencimiento}
+                  onChange={(e) => setFacturaFormData({...facturaFormData, fechaVencimiento: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  required
+                />
+              </div>
+
+              <div className="text-sm text-gray-500">
+                Nota: Los ítems de la factura se agregarán en una versión futura
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMostrarFormFactura(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={loading}
+                >
+                  {loading ? 'Creando...' : 'Crear Borrador'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Registrar Cobro */}
+      {mostrarFormCobro && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
+            <h2 className="text-xl font-bold mb-4">Registrar Cobro</h2>
+            <form onSubmit={handleRegistrarCobro} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ID Factura
+                </label>
+                <input
+                  type="text"
+                  value={cobroFormData.factura}
+                  onChange={(e) => setCobroFormData({...cobroFormData, factura: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Monto
+                </label>
+                <input
+                  type="number"
+                  value={cobroFormData.monto}
+                  onChange={(e) => setCobroFormData({...cobroFormData, monto: parseFloat(e.target.value)})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Método de Pago
+                </label>
+                <select
+                  value={cobroFormData.metodoPago}
+                  onChange={(e) => setCobroFormData({...cobroFormData, metodoPago: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Transferencia">Transferencia</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Observaciones
+                </label>
+                <textarea
+                  value={cobroFormData.observaciones}
+                  onChange={(e) => setCobroFormData({...cobroFormData, observaciones: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  rows="3"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMostrarFormCobro(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  disabled={loading}
+                >
+                  {loading ? 'Registrando...' : 'Registrar Cobro'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
