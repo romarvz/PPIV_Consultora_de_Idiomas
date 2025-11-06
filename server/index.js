@@ -47,6 +47,13 @@ const startServer = async () => {
           auth: '/api/auth',
           dashboard: '/api/dashboard',
           auditoria: '/api/auditoria',
+          students: '/api/students',
+          teachers: '/api/teachers',
+          languages: '/api/languages',
+          cobros: '/api/cobros',
+          facturas: '/api/facturas',
+          conceptos: '/api/conceptos-cobros',
+          categorias: '/api/concept-categories',
           test: '/api/auth/test'
         }
       });
@@ -62,7 +69,7 @@ const startServer = async () => {
     app.use('/api/students', studentRoutes);
     app.use('/api/teachers', teacherRoutes);
 
-    // ===== RUTAS DE ROMINA (Dashboard + Auditoría) =====
+    // ===== RUTAS DE (Dashboard + Auditoría) =====
     const dashboardRoutes = require('./routes/dashboard');
     const auditoriaRoutes = require('./routes/auditoria');
     app.use('/api/dashboard', dashboardRoutes);
@@ -72,6 +79,17 @@ const startServer = async () => {
     const languageRoutes = require('./routes/languages');
     app.use('/api/languages', languageRoutes);
 
+    // ===== RUTAS FINANCIERAS =====
+    const cobrosRoutes = require('./routes/cobros.routes');
+    const facturasRoutes = require('./routes/facturas.routes');
+    const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
+    const conceptosCobrosRoutes = require('./routes/conceptosCobros.routes');
+
+    app.use('/api/cobros', cobrosRoutes);
+    app.use('/api/facturas', facturasRoutes);
+    app.use('/api/concept-categories', conceptCategoryRoutes);
+    app.use('/api/conceptos-cobros', conceptosCobrosRoutes);
+    
     // ===== RUTAS NO ENCONTRADAS (404) =====
     app.get('*', (req, res) => {
       res.status(404).json({
@@ -81,6 +99,11 @@ const startServer = async () => {
           auth: '/api/auth',
           dashboard: '/api/dashboard',
           auditoria: '/api/auditoria',
+          students: '/api/students',
+          teachers: '/api/teachers',
+          languages: '/api/languages',
+          cobros: '/api/cobros',
+          facturas: '/api/facturas',
           test: '/api/auth/test'
         }
       });
@@ -94,6 +117,11 @@ const startServer = async () => {
           auth: '/api/auth',
           dashboard: '/api/dashboard',
           auditoria: '/api/auditoria',
+          students: '/api/students',
+          teachers: '/api/teachers',
+          languages: '/api/languages',
+          cobros: '/api/cobros',
+          facturas: '/api/facturas',
           test: '/api/auth/test'
         }
       });
@@ -111,6 +139,7 @@ const startServer = async () => {
       console.log(`Auth endpoints: http://localhost:${PORT}/api/auth`);
       console.log(`Dashboard endpoints: http://localhost:${PORT}/api/dashboard`);
       console.log(`Auditoría endpoints: http://localhost:${PORT}/api/auditoria`);
+      console.log(`Financial endpoints: http://localhost:${PORT}/api/cobros`);
     });
 
   } catch (error) {
