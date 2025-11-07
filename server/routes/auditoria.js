@@ -7,12 +7,12 @@
 const express = require('express')
 const router = express.Router()
 const auditoriaController = require('../controllers/auditoriaController')
-const { authMiddleware, checkRole } = require('../middleware/authMiddlewareNew')
+const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew')
 const { paginationMiddleware } = require('../shared/middleware')
 
 // All routes below require authentication and admin role
-router.use(authMiddleware)
-router.use(checkRole(['admin']))
+router.use(authenticateToken)
+router.use(requireRole(['admin']))
 
 // GET /api/auditoria - Obtain logs with pagination and filters
 router.get('/', paginationMiddleware, auditoriaController.obtenerLogs)

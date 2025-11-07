@@ -2,13 +2,22 @@
 const { Curso, Inscripcion, BaseUser, Horario } = require('../models');
 
 /**
- * Obtener curso por ID con información completa
+ * Get course by ID with complete information
  */
 exports.getCursoById = async (cursoId) => {
   const curso = await Curso.findById(cursoId)
     .populate('profesor', 'firstName lastName email phone')
     .populate('estudiantes', 'firstName lastName email')
-    .populate('horario'); // <- Populate al nuevo campo
+    .populate({
+      path: 'horario',
+      select: 'dia horaInicio horaFin display',
+      options: { strictPopulate: false } // Allows populate even if field is null
+    })
+    .populate({
+      path: 'horarios',
+      select: 'dia horaInicio horaFin display',
+      options: { strictPopulate: false }
+    });
   
   if (!curso) {
     throw new Error('Curso no encontrado');
@@ -21,8 +30,10 @@ exports.getCursoById = async (cursoId) => {
  * Crear nuevo curso
  */
 exports.createCurso = async (cursoData) => {
-  // Verificar que el profesor existe y es profesor
-  const profesor = await BaseUser.findById(cursoData.profesor);
+  // Verify that teacher exists and is a teacher
+  const profesor = await BaseUser.findById(cursoData.profesor)
+    .select('horariosPermitidos role')
+    .populate('horariosPermitidos'); // IMPORTANT: Populate to get complete objects
   if (!profesor) {
     throw new Error('Profesor no encontrado');
   }
@@ -31,15 +42,31 @@ exports.createCurso = async (cursoData) => {
     throw new Error('El usuario especificado no es un profesor');
   }
 
-  // (Validación de horario vs profesor) - Opcional pero recomendado
-  // if (!profesor.horariosPermitidos.includes(cursoData.horario)) {
-  //   throw new Error('El profesor no tiene ese horario permitido');
-  // }
+  // Schedule vs teacher validation - VERIFY THAT SCHEDULE IS IN ALLOWED ONES
+  if (cursoData.horario || (cursoData.horarios && cursoData.horarios.length > 0)) {
+    const horariosAValidar = cursoData.horarios && cursoData.horarios.length > 0 
+      ? cursoData.horarios 
+      : [cursoData.horario];
+    
+    const horariosPermitidosIds = (profesor.horariosPermitidos || []).map(h => 
+      h._id ? h._id.toString() : h.toString()
+    );
+    
+    // Validate that all selected schedules are in allowed ones
+    for (const horarioId of horariosAValidar) {
+      if (horarioId) {
+        const horarioIdStr = horarioId.toString();
+        if (!horariosPermitidosIds.includes(horarioIdStr)) {
+          throw new Error(`El profesor no tiene el horario ${horarioIdStr} permitido. Por favor seleccione solo horarios de la lista disponible.`);
+        }
+      }
+    }
+  }
   
-  // Crear el curso
+  // Create course
   const curso = await Curso.create(cursoData);
   
-  // Retornar con populate
+  // Return with populate
   return await this.getCursoById(curso._id);
 };
 
@@ -53,12 +80,53 @@ exports.updateCurso = async (cursoId, updateData) => {
     throw new Error('Curso no encontrado');
   }
   
-  // No permitir cambiar el profesor si ya tiene estudiantes inscritos
+  // Do not allow changing teacher if course already has enrolled students
   if (updateData.profesor && curso.estudiantes.length > 0) {
     throw new Error('No se puede cambiar el profesor de un curso con estudiantes inscritos');
   }
+
+  // If teacher or schedule is being changed, validate that schedule is allowed
+  if (updateData.profesor || updateData.horario) {
+    const profesorId = updateData.profesor || curso.profesor;
+    const horarioId = updateData.horario || curso.horario;
+    
+    const profesor = await BaseUser.findById(profesorId)
+      .select('horariosPermitidos role')
+      .populate('horariosPermitidos'); // IMPORTANT: Populate to get complete objects
+    
+    if (!profesor || profesor.role !== 'profesor') {
+      throw new Error('Profesor no válido');
+    }
+    
+    if (horarioId) {
+      const horariosPermitidosIds = (profesor.horariosPermitidos || []).map(h => 
+        h._id ? h._id.toString() : h.toString()
+      );
+      const horarioIdStr = horarioId.toString();
+      
+      if (!horariosPermitidosIds.includes(horarioIdStr)) {
+        throw new Error('El profesor no tiene ese horario permitido. Por favor seleccione un horario de la lista disponible.');
+      }
+    }
+    
+    // Also validate multiple schedules if they exist
+    if (updateData.horarios && Array.isArray(updateData.horarios) && updateData.horarios.length > 0) {
+      const horariosPermitidosIds = (profesor.horariosPermitidos || []).map(h => 
+        h._id ? h._id.toString() : h.toString()
+      );
+      
+      for (const horarioId of updateData.horarios) {
+        if (horarioId) {
+          const horarioIdStr = horarioId.toString();
+          if (!horariosPermitidosIds.includes(horarioIdStr)) {
+            throw new Error(`El profesor no tiene el horario ${horarioIdStr} permitido. Por favor seleccione solo horarios de la lista disponible.`);
+          }
+        }
+      }
+    }
+  }
   
-  // Actualizar campos
+  // Update fields
   Object.assign(curso, updateData);
   await curso.save();
   
@@ -75,7 +143,7 @@ exports.deleteCurso = async (cursoId) => {
     throw new Error('Curso no encontrado');
   }
   
-  // Verificar que no tenga inscripciones activas
+  // Verify that it has no active enrollments
   const inscripcionesActivas = await Inscripcion.countDocuments({
     curso: cursoId,
     estado: { $in: ['pendiente', 'confirmada'] }
@@ -85,7 +153,7 @@ exports.deleteCurso = async (cursoId) => {
     throw new Error('No se puede eliminar un curso con inscripciones activas');
   }
   
-  // Cambiar estado a cancelado
+  // Change status to cancelled
   curso.estado = 'cancelado';
   await curso.save();
   
@@ -96,41 +164,56 @@ exports.deleteCurso = async (cursoId) => {
  * Listar cursos con filtros y paginación
  */
 exports.listarCursos = async (filtros = {}, paginacion = {}) => {
-  const { page = 1, limit = 10 } = paginacion;
-  const skip = (page - 1) * limit;
-  
-  // Construir query
-  const query = {};
-  
-  if (filtros.idioma) query.idioma = filtros.idioma;
-  if (filtros.nivel) query.nivel = filtros.nivel;
-  if (filtros.estado) query.estado = filtros.estado;
-  if (filtros.profesor) query.profesor = filtros.profesor;
-  
-  // Búsqueda por texto en nombre
-  if (filtros.search) {
-    query.nombre = { $regex: filtros.search, $options: 'i' };
-  }
-  
-  // Ejecutar query
-  const cursos = await Curso.find(query)
-    .populate('profesor', 'firstName lastName email')
-    .populate('horario') // <- Populate al nuevo campo
-    .skip(skip)
-    .limit(limit)
-    .sort({ fechaInicio: -1 });
-  
-  const total = await Curso.countDocuments(query);
-  
-  return {
-    cursos,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
+  try {
+    const { page = 1, limit = 10 } = paginacion;
+    const skip = (page - 1) * limit;
+    
+    // Build query
+    const query = {};
+    
+    if (filtros.idioma) query.idioma = filtros.idioma;
+    if (filtros.nivel) query.nivel = filtros.nivel;
+    if (filtros.estado) query.estado = filtros.estado;
+    if (filtros.profesor) query.profesor = filtros.profesor;
+    
+    // Text search in name
+    if (filtros.search) {
+      query.nombre = { $regex: filtros.search, $options: 'i' };
     }
-  };
+    
+    // Execute query
+    const cursos = await Curso.find(query)
+      .populate('profesor', 'firstName lastName email')
+      .populate({
+        path: 'horario',
+        select: 'dia horaInicio horaFin display',
+        options: { strictPopulate: false } // Allows populate even if field is null
+      })
+      .populate({
+        path: 'horarios',
+        select: 'dia horaInicio horaFin display',
+        options: { strictPopulate: false }
+      })
+      .skip(skip)
+      .limit(limit)
+      .sort({ fechaInicio: -1 });
+    
+    const total = await Curso.countDocuments(query);
+    
+    return {
+      cursos,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    };
+  } catch (error) {
+    console.error('Error en cursosService.listarCursos:', error);
+    console.error('Stack:', error.stack);
+    throw error;
+  }
 };
 
 /**
@@ -141,7 +224,11 @@ exports.getCursosByProfesor = async (profesorId, filtros = {}) => {
   
   return await Curso.find(query)
     .populate('estudiantes', 'firstName lastName email')
-    .populate('horario') // <- Populate al nuevo campo
+    .populate({
+      path: 'horario',
+      select: 'dia horaInicio horaFin display',
+      options: { strictPopulate: false }
+    })
     .sort({ fechaInicio: -1 });
 };
 
@@ -166,7 +253,7 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
     throw new Error('No se puede inscribir a un curso cancelado o completado');
   }
   
-  // Verificar que el estudiante existe
+  // Verify that student exists
   const estudiante = await BaseUser.findById(estudianteId);
   if (!estudiante) {
     throw new Error('Estudiante no encontrado');
@@ -176,20 +263,20 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
     throw new Error('El usuario especificado no es un estudiante');
   }
   
-  // Verificar que no esté ya inscrito
+  // Verify that student is not already enrolled
   const inscripcionExistente = await Inscripcion.verificarInscripcion(estudianteId, cursoId);
   if (inscripcionExistente) {
     throw new Error('El estudiante ya está inscrito en este curso');
   }
   
-  // Crear inscripción
+  // Create enrollment
   const inscripcion = await Inscripcion.create({
     estudiante: estudianteId,
     curso: cursoId,
-    estado: 'confirmada' // O 'pendiente' si espera pago
+    estado: 'confirmada' // Or 'pendiente' if waiting for payment
   });
   
-  // La inscripción automáticamente agregará al estudiante al curso (hook post-save)
+  // Enrollment will automatically add student to course (post-save hook)
   
   return inscripcion;
 };
@@ -208,7 +295,7 @@ exports.desinscribirEstudiante = async (cursoId, estudianteId) => {
     throw new Error('Inscripción no encontrada');
   }
   
-  // Cancelar inscripción
+  // Cancel enrollment
   await inscripcion.cancelar('Desinscripción solicitada por administrador');
   
   return inscripcion;
@@ -251,7 +338,7 @@ exports.calcularProgresoCurso = async (cursoId, estudianteId) => {
  * Obtener cursos disponibles para inscripción
  */
 exports.getCursosDisponibles = async (estudianteId) => {
-  // Obtener cursos en los que ya está inscrito
+  // Get courses student is already enrolled in
   const inscripciones = await Inscripcion.find({
     estudiante: estudianteId,
     estado: { $in: ['pendiente', 'confirmada'] }
@@ -259,14 +346,18 @@ exports.getCursosDisponibles = async (estudianteId) => {
   
   const cursosInscritos = inscripciones.map(ins => ins.curso);
   
-  // Obtener cursos activos o planificados que no esté inscrito
+  // Get active or planned courses that student is not enrolled in
   const cursosDisponibles = await Curso.find({
     _id: { $nin: cursosInscritos },
     estado: { $in: ['planificado', 'activo'] },
-    fechaInicio: { $gte: new Date() } // Solo cursos que no hayan empezado
+    fechaInicio: { $gte: new Date() } // Only courses that haven't started
   })
     .populate('profesor', 'firstName lastName')
-    .populate('horario') // <- Populate al nuevo campo
+    .populate({
+      path: 'horario',
+      select: 'dia horaInicio horaFin display',
+      options: { strictPopulate: false }
+    })
     .sort({ fechaInicio: 1 });
   
   return cursosDisponibles;
@@ -311,7 +402,7 @@ exports.cambiarEstadoCurso = async (cursoId, nuevoEstado) => {
     throw new Error('Curso no encontrado');
   }
   
-  // Validaciones según el cambio de estado
+  // Validations according to status change
   if (nuevoEstado === 'cancelado' && curso.estudiantes.length > 0) {
     throw new Error('No se puede cancelar un curso con estudiantes inscritos');
   }
@@ -336,7 +427,7 @@ exports.getEstadisticasCurso = async (cursoId) => {
       idioma: curso.idioma,
       nivel: curso.nivel,
       estado: curso.estado,
-      horario: curso.horario ? curso.horario.display : 'N/A' // <- Nuevo campo
+      horario: curso.horario ? curso.horario.display : 'N/A' // <- New field
     },
     inscripciones,
     capacidad: {
@@ -358,13 +449,13 @@ exports.getEstadisticasGenerales = async () => {
   const cursosPlanificados = await Curso.countDocuments({ estado: 'planificado' });
   const cursosCompletados = await Curso.countDocuments({ estado: 'completado' });
   
-  // Cursos por idioma
+  // Courses by language
   const cursosPorIdioma = await Curso.aggregate([
     { $group: { _id: '$idioma', count: { $sum: 1 } } },
     { $sort: { count: -1 } }
   ]);
   
-  // Cursos por nivel
+  // Courses by level
   const cursosPorNivel = await Curso.aggregate([
     { $group: { _id: '$nivel', count: { $sum: 1 } } },
     { $sort: { _id: 1 } }
@@ -383,44 +474,128 @@ exports.getEstadisticasGenerales = async () => {
 };
 
 
-// --- NUEVA FUNCIÓN ---
+// --- NEW FUNCTION ---
 /**
- * Obtiene los horarios disponibles de un profesor, excluyendo los que ya tiene
- * asignados en cursos activos o planificados.
+ * Gets available schedules for a teacher, excluding those already assigned
+ * to active or planned courses.
+ * @param {String} profesorId - Teacher ID
+ * @param {String} excludeCursoId - Course ID to exclude (optional, useful when editing)
  */
-exports.getHorariosDisponiblesProfesor = async (profesorId) => {
+exports.getHorariosDisponiblesProfesor = async (profesorId, excludeCursoId = null) => {
   try {
-    // 1. Obtener la disponibilidad TOTAL del profesor desde BaseUser
+    console.log(' getHorariosDisponiblesProfesor - Profesor ID:', profesorId);
+    if (excludeCursoId) {
+      console.log(' getHorariosDisponiblesProfesor - Excluyendo curso:', excludeCursoId);
+    }
+    
+    // 1. Get teacher's TOTAL availability from BaseUser
     const profesor = await BaseUser.findById(profesorId)
                                   .select('horariosPermitidos')
-                                  .populate('horariosPermitidos'); // Trae los objetos Horario
+                                  .populate('horariosPermitidos'); // Returns Horario objects
     
     if (!profesor) {
       throw new Error('Profesor no encontrado');
     }
 
-    const todosSusHorarios = profesor.horariosPermitidos; // Array de objetos Horario
-
-    // 2. Obtener los IDs de horarios que YA tiene OCUPADOS
-    const cursosDelProfesor = await Curso.find({
-      profesor: profesorId,
-      estado: { $in: ['planificado', 'activo'] } // Solo contamos cursos futuros o actuales
-    }).select('horario');
+    const todosSusHorarios = profesor.horariosPermitidos || []; // Array of Horario objects
     
-    // Mapeamos a un Set de strings para búsqueda rápida
-    const horariosOcupadosIds = new Set(
-      cursosDelProfesor.map(curso => curso.horario.toString())
-    );
+    console.log('Teacher allowed schedules (without populate):', profesor.horariosPermitidos?.map(h => typeof h === 'object' ? h._id : h));
+    console.log('Teacher allowed schedules (with populate):', todosSusHorarios.map(h => ({ id: h._id, dia: h.dia, hora: h.horaInicio })));
+    
+    // If teacher has no allowed schedules, return empty array
+    if (todosSusHorarios.length === 0) {
+      console.log('⚠️ Teacher has no allowed schedules configured');
+      return [];
+    }
 
-    // 3. Filtrar la lista total
-    const horariosDisponibles = todosSusHorarios.filter(horario => {
-      // Retorna solo los horarios que NO están en el Set de ocupados
-      return !horariosOcupadosIds.has(horario._id.toString());
+    // 2. Get IDs of schedules that are ALREADY OCCUPIED
+    // Search in both fields: horario (singular) and horarios (array)
+    // Exclude current course if editing
+    const queryCursos = {
+      profesor: profesorId,
+      estado: { $in: ['planificado', 'activo'] }, // Only count future or current courses
+      $or: [
+        { horario: { $exists: true, $ne: null } }, // Courses with singular schedule
+        { horarios: { $exists: true, $ne: [] } }   // Courses with schedules array
+      ]
+    };
+    
+    // Exclude current course if editing
+    if (excludeCursoId) {
+      queryCursos._id = { $ne: excludeCursoId };
+    }
+    
+    const cursosDelProfesor = await Curso.find(queryCursos).select('horario horarios');
+    
+    console.log(' Cursos del profesor con horarios ocupados:', cursosDelProfesor.map(c => ({
+      horario: c.horario,
+      horarios: c.horarios
+    })));
+    
+    // Map to Set of strings for fast lookup
+    // Include both singular schedule and schedules array
+    const horariosOcupadosIds = new Set();
+    
+    cursosDelProfesor.forEach(curso => {
+      // Add singular schedule if exists
+      if (curso.horario) {
+        horariosOcupadosIds.add(curso.horario.toString());
+      }
+      // Add all schedules from array if they exist
+      if (curso.horarios && Array.isArray(curso.horarios)) {
+        curso.horarios.forEach(h => {
+          if (h) {
+            horariosOcupadosIds.add(h.toString());
+          }
+        });
+      }
     });
 
-    return horariosDisponibles; // Devuelve el array de objetos Horario disponibles
+    console.log(' Horarios ocupados (Set):', Array.from(horariosOcupadosIds));
+    if (excludeCursoId) {
+      console.log(' Curso excluido de la búsqueda:', excludeCursoId);
+    }
+
+    // 3. Filter the total list - only return allowed schedules that are NOT occupied
+    // Sort by day of week (Monday to Sunday) and then by time
+    const ordenDias = {
+      'lunes': 1,
+      'martes': 2,
+      'miercoles': 3,
+      'jueves': 4,
+      'viernes': 5,
+      'sabado': 6,
+      'domingo': 7
+    };
+    
+    const horariosDisponibles = todosSusHorarios
+      .filter(horario => {
+        if (!horario || !horario._id) {
+          console.log(' Horario inválido encontrado:', horario);
+          return false;
+        }
+        const horarioIdStr = horario._id.toString();
+        const estaOcupado = horariosOcupadosIds.has(horarioIdStr);
+        console.log(`  - Horario ${horarioIdStr} (${horario.dia} ${horario.horaInicio}): ${estaOcupado ? 'OCUPADO' : 'DISPONIBLE'}`);
+        // Return only schedules that are NOT in the occupied Set
+        return !estaOcupado;
+      })
+      .sort((a, b) => {
+        // First sort by day of week
+        const diaA = ordenDias[a.dia] || 99;
+        const diaB = ordenDias[b.dia] || 99;
+        if (diaA !== diaB) return diaA - diaB;
+        // If same day, sort by start time
+        return a.horaInicio.localeCompare(b.horaInicio);
+      });
+
+    console.log('Final available schedules:', horariosDisponibles.map(h => ({ id: h._id, dia: h.dia, hora: h.horaInicio })));
+    console.log(`Total: ${horariosDisponibles.length} available schedules out of ${todosSusHorarios.length} allowed`);
+
+    return horariosDisponibles; // Returns array of available Horario objects
 
   } catch (error) {
+    console.error('❌ Error en getHorariosDisponiblesProfesor:', error);
     throw new Error(`Error al obtener horarios: ${error.message}`);
   }
 };

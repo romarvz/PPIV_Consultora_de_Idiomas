@@ -2,8 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const cursosController = require('../controllers/cursosController');
-const { authMiddleware, checkRole } = require('../middleware/authMiddleware');
-const { paginationMiddleware } = require('../shared/middleware/paginationMiddleware');
+const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew');
+const { paginationMiddleware } = require('../shared/middleware');
 const { validationResult } = require('express-validator');
 const {
   validarCreacionCurso,
@@ -11,25 +11,27 @@ const {
   validarInscripcion,
   validarObtenerPorId,
   validarFiltrosCursos
-} = require('../validators/cursosValidators');
+} = require('../validators/cursosValidator');
 
-// Middleware para manejar errores de validación
+// Middleware to handle validation errors
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.error('❌ Errores de validación:', errors.array());
     return res.status(400).json({
       success: false,
-      errors: errors.array()
+      errors: errors.array(),
+      message: errors.array().map(e => e.msg).join(', ')
     });
   }
   next();
 };
 
 // ============================================
-// RUTAS PÚBLICAS (sin autenticación)
+// PUBLIC ROUTES (no authentication required)
 // ============================================
 
-// Listar cursos disponibles (público)
+// List available courses (public)
 router.get(
   '/publico',
   validarFiltrosCursos,
@@ -38,7 +40,7 @@ router.get(
   cursosController.listarCursosPublicos
 );
 
-// Ver detalle de curso (público)
+// View course details (public)
 router.get(
   '/publico/:id',
   validarObtenerPorId,
@@ -47,16 +49,16 @@ router.get(
 );
 
 // ============================================
-// RUTAS PROTEGIDAS (requieren autenticación)
+// PROTECTED ROUTES (authentication required)
 // ============================================
 
-router.use(authMiddleware); // Todas las siguientes requieren estar autenticado
+router.use(authenticateToken); // All following routes require authentication
 
 // ============================================
-// RUTAS PARA TODOS LOS USUARIOS AUTENTICADOS
+// ROUTES FOR ALL AUTHENTICATED USERS
 // ============================================
 
-// Listar cursos (con filtros)
+// List courses (with filters)
 router.get(
   '/',
   validarFiltrosCursos,
@@ -65,7 +67,7 @@ router.get(
   cursosController.listarCursos
 );
 
-// Obtener curso por ID
+// Get course by ID
 router.get(
   '/:id',
   validarObtenerPorId,
@@ -73,7 +75,7 @@ router.get(
   cursosController.obtenerCursoPorId
 );
 
-// Obtener estudiantes de un curso
+// Get students from a course
 router.get(
   '/:id/estudiantes',
   validarObtenerPorId,
@@ -82,21 +84,21 @@ router.get(
 );
 
 // ============================================
-// RUTAS PARA ESTUDIANTES
+// ROUTES FOR STUDENTS
 // ============================================
 
-// Ver mis cursos (como estudiante)
+// View my courses (as student)
 router.get(
   '/estudiante/mis-cursos',
-  checkRole(['student']),
+  requireRole(['estudiante']),
   paginationMiddleware,
   cursosController.obtenerMisCursos
 );
 
-// Ver cursos disponibles para inscribirse
+// View available courses for enrollment
 router.get(
   '/estudiante/disponibles',
-  checkRole(['student']),
+  requireRole(['estudiante']),
   validarFiltrosCursos,
   handleValidationErrors,
   paginationMiddleware,
@@ -104,21 +106,21 @@ router.get(
 );
 
 // ============================================
-// RUTAS PARA PROFESORES
+// ROUTES FOR TEACHERS
 // ============================================
 
-// Obtener cursos del profesor autenticado
+// Get courses of authenticated teacher
 router.get(
   '/profesor/mis-cursos',
-  checkRole(['teacher']),
+  requireRole(['profesor']),
   paginationMiddleware,
   cursosController.obtenerCursosProfesor
 );
 
-// Obtener cursos de un profesor específico (admin/profesor)
+// Get courses of a specific teacher (admin/teacher)
 router.get(
   '/profesor/:profesorId',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarObtenerPorId,
   handleValidationErrors,
   paginationMiddleware,
@@ -126,81 +128,95 @@ router.get(
 );
 
 // ============================================
-// RUTAS PARA ADMIN Y PROFESORES
+// ROUTES FOR ADMIN AND TEACHERS
 // ============================================
 
-// Crear nuevo curso
+// Create new course
 router.post(
   '/',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarCreacionCurso,
   handleValidationErrors,
   cursosController.crearCurso
 );
 
-// Editar curso
+// Edit course
 router.put(
   '/:id',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarEdicionCurso,
   handleValidationErrors,
   cursosController.editarCurso
 );
 
-// Cambiar estado del curso
+// Change course status
 router.patch(
   '/:id/estado',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarObtenerPorId,
   handleValidationErrors,
   cursosController.cambiarEstadoCurso
 );
 
 // ============================================
-// RUTAS PARA ADMIN
+// ROUTES FOR ADMIN
 // ============================================
 
-// Eliminar curso (soft delete)
+// Delete course (soft delete)
 router.delete(
   '/:id',
-  checkRole(['admin']),
+  requireRole(['admin']),
   validarObtenerPorId,
   handleValidationErrors,
   cursosController.eliminarCurso
 );
 
-// Inscribir estudiante a curso (admin o profesor del curso)
+// Enroll student to course (admin or course teacher)
 router.post(
   '/:id/inscribir',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarInscripcion,
   handleValidationErrors,
   cursosController.inscribirEstudiante
 );
 
-// Desinscribir estudiante de curso
+// Unenroll student from course
 router.delete(
   '/:id/estudiantes/:estudianteId',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarObtenerPorId,
   handleValidationErrors,
   cursosController.desinscribirEstudiante
 );
 
-// Obtener estadísticas de un curso
+// Get statistics of a course
 router.get(
   '/:id/estadisticas',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarObtenerPorId,
   handleValidationErrors,
   cursosController.obtenerEstadisticasCurso
 );
 
-// Obtener estadísticas generales de cursos
+// Get general course statistics
 router.get(
   '/estadisticas/generales',
-  checkRole(['admin']),
+  requireRole(['admin']),
   cursosController.obtenerEstadisticasGenerales
+);
+
+// Get available schedules of a teacher
+router.get(
+  '/profesor/:profesorId/horarios-disponibles',
+  requireRole(['admin', 'profesor']),
+  cursosController.obtenerHorariosDisponiblesProfesor
+);
+
+// Get all available schedules (for form selection)
+router.get(
+  '/horarios/todos',
+  requireRole(['admin']),
+  cursosController.obtenerTodosLosHorarios
 );
 
 module.exports = router;

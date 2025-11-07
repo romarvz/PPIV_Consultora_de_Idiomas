@@ -2,8 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const clasesController = require('../controllers/clasesController');
-const { authMiddleware, checkRole } = require('../middleware/authMiddleware');
-const { paginationMiddleware } = require('../shared/middleware/paginationMiddleware');
+const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew');
+const { paginationMiddleware } = require('../shared/middleware');
 const { validationResult } = require('express-validator');
 const {
   validarCreacionClase,
@@ -33,7 +33,7 @@ const handleValidationErrors = (req, res, next) => {
 // TODAS LAS RUTAS REQUIEREN AUTENTICACIÓN
 // ============================================
 
-router.use(authMiddleware);
+router.use(authenticateToken);
 
 // ============================================
 // RUTAS PARA TODOS LOS USUARIOS AUTENTICADOS
@@ -69,7 +69,7 @@ router.get(
 // Obtener mis clases como estudiante
 router.get(
   '/estudiante/mis-clases',
-  checkRole(['student']),
+  requireRole(['estudiante']),
   validarFiltrosClases,
   handleValidationErrors,
   paginationMiddleware,
@@ -79,7 +79,7 @@ router.get(
 // Ver mi asistencia a clases
 router.get(
   '/estudiante/mi-asistencia',
-  checkRole(['student']),
+  requireRole(['estudiante']),
   clasesController.verMiAsistencia
 );
 
@@ -90,7 +90,7 @@ router.get(
 // Obtener mis clases como profesor
 router.get(
   '/profesor/mis-clases',
-  checkRole(['teacher']),
+  requireRole(['profesor']),
   validarFiltrosClases,
   handleValidationErrors,
   paginationMiddleware,
@@ -100,7 +100,7 @@ router.get(
 // Obtener clases de un profesor específico (admin)
 router.get(
   '/profesor/:profesorId/clases',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarFiltrosClases,
   handleValidationErrors,
   paginationMiddleware,
@@ -114,7 +114,7 @@ router.get(
 // Crear nueva clase (admin o profesor)
 router.post(
   '/',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarCreacionClase,
   handleValidationErrors,
   verificarDisponibilidadProfesor,
@@ -124,7 +124,7 @@ router.post(
 // Editar clase
 router.put(
   '/:id',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarEdicionClase,
   handleValidationErrors,
   verificarDisponibilidadProfesor,
@@ -134,7 +134,7 @@ router.put(
 // Eliminar clase (soft delete / cancelar)
 router.delete(
   '/:id',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarCancelacion,
   handleValidationErrors,
   clasesController.cancelarClase
@@ -147,7 +147,7 @@ router.delete(
 // Registrar asistencia de un estudiante (profesor del curso)
 router.put(
   '/:id/asistencia',
-  checkRole(['teacher', 'admin']),
+  requireRole(['profesor', 'admin']),
   validarRegistroAsistencia,
   handleValidationErrors,
   clasesController.registrarAsistencia
@@ -156,7 +156,7 @@ router.put(
 // Registrar asistencia múltiple (toda la clase de una vez)
 router.put(
   '/:id/asistencia/multiple',
-  checkRole(['teacher', 'admin']),
+  requireRole(['profesor', 'admin']),
   validarRegistroAsistenciaMultiple,
   handleValidationErrors,
   clasesController.registrarAsistenciaMultiple
@@ -173,7 +173,7 @@ router.get(
 // Obtener estadísticas de asistencia de un estudiante en un curso
 router.get(
   '/asistencia/estudiante/:estudianteId/curso/:cursoId',
-  checkRole(['teacher', 'admin', 'student']),
+  requireRole(['profesor', 'admin', 'estudiante']),
   clasesController.obtenerEstadisticasAsistencia
 );
 
@@ -184,7 +184,7 @@ router.get(
 // Completar clase (marca como completada y actualiza progreso)
 router.patch(
   '/:id/completar',
-  checkRole(['teacher', 'admin']),
+  requireRole(['profesor', 'admin']),
   validarObtenerPorId,
   handleValidationErrors,
   clasesController.completarClase
@@ -193,7 +193,7 @@ router.patch(
 // Cambiar estado de clase
 router.patch(
   '/:id/estado',
-  checkRole(['teacher', 'admin']),
+  requireRole(['profesor', 'admin']),
   validarObtenerPorId,
   handleValidationErrors,
   clasesController.cambiarEstadoClase
@@ -212,7 +212,7 @@ router.get(
 // Obtener calendario de un usuario específico (admin)
 router.get(
   '/calendario/usuario/:usuarioId',
-  checkRole(['admin']),
+  requireRole(['admin']),
   validarCalendario,
   handleValidationErrors,
   clasesController.obtenerCalendarioUsuario
@@ -231,7 +231,7 @@ router.post(
 // Obtener estadísticas de clases de un curso
 router.get(
   '/curso/:cursoId/estadisticas',
-  checkRole(['admin', 'teacher']),
+  requireRole(['admin', 'profesor']),
   validarObtenerPorId,
   handleValidationErrors,
   clasesController.obtenerEstadisticasCurso
@@ -240,7 +240,7 @@ router.get(
 // Obtener estadísticas generales de clases
 router.get(
   '/estadisticas/generales',
-  checkRole(['admin']),
+  requireRole(['admin']),
   clasesController.obtenerEstadisticasGenerales
 );
 

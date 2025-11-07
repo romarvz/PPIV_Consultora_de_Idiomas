@@ -199,7 +199,7 @@ claseSchema.virtual('yaPaso').get(function() {
 // Middleware pre-save: validar que el profesor existe y es profesor
 claseSchema.pre('save', async function(next) {
   if (this.isModified('profesor')) {
-    const BaseUser = mongoose.model('User');
+    const BaseUser = mongoose.model('BaseUser');
     const profesor = await BaseUser.findById(this.profesor);
     
     if (!profesor) {

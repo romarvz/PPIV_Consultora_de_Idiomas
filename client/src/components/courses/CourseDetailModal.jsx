@@ -3,7 +3,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// NOTA: Asumo que 'teacher' se pasa como un objeto poblado
 const CourseDetailModal = ({ course, onClose, teacher }) => {
   const navigate = useNavigate();
 
@@ -11,26 +10,27 @@ const CourseDetailModal = ({ course, onClose, teacher }) => {
 
   const handleInscribeClick = () => {
     onClose(); // Cerramos el modal
+
     // Navegar a la ruta raíz con el ancla #contacto
     navigate('/#contacto');
   };
 
-  // --- Lógica de datos corregida ---
+  // --- Lógica de datos  ---
   
-  // 1. Mostrar el texto del horario desde el objeto 'horario' poblado
+  // 1. Mostrar el texto del horario
+  // 'horario' viene poblado)
   const scheduleDisplay = course.horario 
-    ? course.horario.display 
-    : (course.scheduleText || 'Horario a confirmar'); // Fallback por si acaso
+    ? course.horario.display // Si horario está poblado
+    : (course.scheduleText || 'Horario a confirmar'); // Fallback
 
-  // 2. Usar 'costoTotal' (virtual del backend) o 'tarifa' en lugar de 'price'
-  // El backend calcula costoTotal = duracionTotal * tarifa
+  // 2. Usar 'costoTotal' (virtual) o 'tarifa'
   const priceDisplay = course.costoTotal 
     ? course.costoTotal.toLocaleString('es-AR') 
     : course.tarifa.toLocaleString('es-AR');
     
   const currencyDisplay = course.costoTotal ? 'ARS (Total)' : 'ARS (por hora)';
   
-  // --- Fin lógica corregida ---
+  // --- Fin lógica ---
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -40,15 +40,14 @@ const CourseDetailModal = ({ course, onClose, teacher }) => {
         <p className="modal-description">{course.description}</p>
         
         <div className="modal-details">
+          {/* El 'teacher' que se recibió como prop */}
           <p><strong>Profesor:</strong> {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'A confirmar'}</p>
           
-          {/* --- CAMBIO AQUÍ --- */}
           <p><strong>Horarios:</strong> {scheduleDisplay}</p>
           
-          {/* --- CAMBIO AQUÍ --- */}
           <p><strong>Valor:</strong> ${priceDisplay} {currencyDisplay}</p>
           
-          {/* Otros detalles que podrías querer agregar desde tu modelo */}
+          {/* Otros detalles del modelo */}
           <p><strong>Nivel:</strong> {course.nivel}</p>
           <p><strong>Duración:</strong> {course.duracionTotal} horas</p>
 

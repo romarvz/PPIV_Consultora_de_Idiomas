@@ -115,6 +115,6 @@ baseUserSchema.virtual('fullName').get(function() {
 });
 
 // Create the base model only if it doesn't exist
-const BaseUser = mongoose.models.User || mongoose.model('User', baseUserSchema);
+const BaseUser = mongoose.models.BaseUser || mongoose.model('BaseUser', baseUserSchema);
 
 module.exports = BaseUser;

@@ -6,7 +6,7 @@ import mockApi from './mockApi' // Mock para demo
 // SWITCH PRINCIPAL - Cambiar aquí para alternar entre mock y real
 // true = Usa datos mock (para demo sin backend)
 // false = Usa backend real (cuando esté implementado)
-const USE_MOCK = true
+const USE_MOCK = false
 
 // Variable de entorno alternativa (opcional)
 // const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true
@@ -18,65 +18,68 @@ const USE_MOCK = true
  * const response = await apiAdapter.classes.getAll()
  */
 const apiAdapter = {
-  // ==================== CLASES ====================
-  classes: {
-    /**
-     * Obtener todas las clases con filtros opcionales
-     * @param {Object} params - Filtros: teacherId, studentId, status, date, page, limit
-     */
-    getAll: async (params = {}) => {
-      if (USE_MOCK) {
-        return await mockApi.classes.getAll(params)
-      }
-      // Cuando implementemos el endpoint real:
-      // NOTA: Asegúrate de que tu backend real tenga una ruta '/api/classes'
-      return await api.get('/classes', { params }) 
-    },
+  // ==================== CLASES (MODIFICADO) ====================
+  classes: {
+    /**
+     * Obtener todas las clases con filtros opcionales
+     * @param {Object} params - Filtros: teacherId, studentId, status, date, page, limit
+     */
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getAll(params)
+      }
+      // CAMBIO: Ruta en español
+      return await api.get('/clases', { params })
+    },
 
-    /**
-     * Crear nueva clase
-     * @param {Object} classData - { studentId, teacherId, subject, date, time, duration }
-     */
-    create: async (classData) => {
-      if (USE_MOCK) {
-        return await mockApi.classes.create(classData)
-      }
-      return await api.post('/classes', classData)
-    },
+    /**
+     * Crear nueva clase
+     * @param {Object} classData - { studentId, teacherId, subject, date, time, duration }
+     */
+    create: async (classData) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.create(classData)
+      }
+      // CAMBIO: Ruta en español
+      return await api.post('/clases', classData)
+    },
 
-    /**
-     * Actualizar clase existente
-     * @param {String} id - ID de la clase
-     * @param {Object} classData - Datos a actualizar
-     */
-    update: async (id, classData) => {
-      if (USE_MOCK) {
-        return await mockApi.classes.update(id, classData)
-      }
-      return await api.put(`/classes/${id}`, classData)
-    },
+    /**
+     * Actualizar clase existente
+     * @param {String} id - ID de la clase
+     * @param {Object} classData - Datos a actualizar
+     */
+    update: async (id, classData) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.update(id, classData)
+      }
+      // CAMBIO: Ruta en español
+      return await api.put(`/clases/${id}`, classData)
+    },
 
-    /**
-     * Eliminar clase
-     * @param {String} id - ID de la clase
-     */
-    delete: async (id) => {
-      if (USE_MOCK) {
-        return await mockApi.classes.delete(id)
-      }
-      return await api.delete(`/classes/${id}`)
-    },
+    /**
+     * Eliminar clase
+     * @param {String} id - ID de la clase
+     */
+    delete: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.delete(id)
+      }
+      // CAMBIO: Ruta en español
+      return await api.delete(`/clases/${id}`)
+    },
 
-    /**
-     * Obtener estadísticas de clases
-     */
-    getStats: async () => {
-      if (USE_MOCK) {
-        return await mockApi.classes.getStats()
-      }
-      return await api.get('/classes/stats')
-    }
-  },
+    /**
+     * Obtener estadísticas de clases
+     */
+    getStats: async () => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getStats()
+      }
+      // CAMBIO: Ruta en español
+      return await api.get('/clases/stats')
+    }
+ },
 
   // ==================== PAGOS ====================
   payments: {
@@ -136,78 +139,170 @@ const apiAdapter = {
     }
   },
 
- // ==================== CURSOS (PLANTILLAS) - NUEVA SECCIÓN ====================
-  courses: {
+// ==================== CURSOS (MODIFICADO) ====================
+  courses: {
+    /**
+     * Obtener todos los cursos.
+     * @param {Object} params - { activeOnly: Boolean }
+     */
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll(params);
+      }
+      // CAMBIO: Ruta en español
+      return await api.get('/cursos', { params });
+    },
+
+    /**
+     * Obtener un curso por ID
+     * @param {String} id - ID del curso
+     */
+    getById: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getById(id);
+      }
+      // CAMBIO: Ruta en español
+      return await api.get(`/cursos/${id}`);
+    },
+
+    /**
+     * Crear un nuevo curso
+     * @param {Object} courseData - Datos del curso a crear
+     */
+    create: async (courseData) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.create(courseData);
+      }
+      // CAMBIO: Ruta en español
+      return await api.post('/cursos', courseData);
+    },
+
+    /**
+     * Actualizar un curso
+     * @param {String} id - ID del curso
+     * @param {Object} courseData - Datos a actualizar
+     */
+    update: async (id, courseData) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.update(id, courseData);
+      }
+      // CAMBIO: Ruta en español
+      return await api.put(`/cursos/${id}`, courseData);
+    },
+
+    /**
+     * Eliminar un curso
+     * @param {String} id - ID del curso
+     */
+    delete: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.delete(id);
+      }
+      // CAMBIO: Ruta en español
+      return await api.delete(`/cursos/${id}`);
+    },
+
     /**
-     * Obtener todos los cursos.
-     * @param {Object} params - { activeOnly: Boolean }
+     * Obtener horarios disponibles de un profesor para crear cursos
+     * @param {String} profesorId - ID del profesor
+     * @param {String} excludeCursoId - ID del curso a excluir (opcional, útil al editar)
+     * @returns {Promise} Array de horarios disponibles
      */
+    getAvailableSchedulesByTeacher: async (profesorId, excludeCursoId = null) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
+      }
+      // Construir URL con query param si se está excluyendo un curso
+      let url = `/cursos/profesor/${profesorId}/horarios-disponibles`;
+      if (excludeCursoId) {
+        url += `?excludeCursoId=${excludeCursoId}`;
+      }
+      return await api.get(url);
+    }
+  },
+
+  // ==================== PROFESORES  ====================
+  /**
+   *  `CoursesPage.jsx` necesita esta sección para cargar profesores reales.
+   */
+  teachers: {
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.teachers.getAll(params); 
+      }
+      // Apunta a la ruta real de profesores 
+      const response = await api.get('/teachers', { params });
+      // Normalizar respuesta para que data.data contenga el array directamente
+      if (response.data.success && response.data.data && response.data.data.teachers) {
+        return {
+          ...response,
+          data: {
+            ...response.data,
+            data: response.data.data.teachers
+          }
+        };
+      }
+      return response;
+    }
+  },
+
+  // ==================== ALIASES EN ESPAÑOL (para compatibilidad) ====================
+  cursos: {
     getAll: async (params = {}) => {
       if (USE_MOCK) {
         return await mockApi.courses.getAll(params);
       }
-      // NOTA: La ruta real es '/api/cursos' (plural en español)
-      return await api.get('/cursos/publico', { params });
+      return await api.get('/cursos', { params });
     },
-
-    /**
-     * Obtener un curso por ID
-     * @param {String} id - ID del curso
-     */
     getById: async (id) => {
       if (USE_MOCK) {
         return await mockApi.courses.getById(id);
       }
       return await api.get(`/cursos/${id}`);
     },
-
-    /**
-     * Crear un nuevo curso
-     * @param {Object} courseData - Datos del curso a crear
-     */
     create: async (courseData) => {
       if (USE_MOCK) {
         return await mockApi.courses.create(courseData);
       }
       return await api.post('/cursos', courseData);
     },
-
-    /**
-     * Actualizar un curso
-     * @param {String} id - ID del curso
-     * @param {Object} courseData - Datos a actualizar
-     */
     update: async (id, courseData) => {
       if (USE_MOCK) {
         return await mockApi.courses.update(id, courseData);
       }
       return await api.put(`/cursos/${id}`, courseData);
     },
-
-    /**
-     * Eliminar un curso
-     * @param {String} id - ID del curso
-     */
     delete: async (id) => {
       if (USE_MOCK) {
         return await mockApi.courses.delete(id);
       }
       return await api.delete(`/cursos/${id}`);
     },
-
-    // --- NUEVA FUNCIÓN ---
-    /**
-     * Obtener los horarios disponibles de un profesor específico
-     * @param {String} profesorId - ID del profesor
-     */
     getAvailableSchedulesByTeacher: async (profesorId) => {
       if (USE_MOCK) {
         return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
       }
-      // Esta es la ruta real que creamos en el backend
       return await api.get(`/cursos/profesor/${profesorId}/horarios-disponibles`);
     }
-    // --- FIN NUEVA FUNCIÓN ---
+  },
+  profesores: {
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.teachers.getAll(params);
+      }
+      const response = await api.get('/teachers', { params });
+      // Normalizar respuesta para que data.data contenga el array directamente
+      if (response.data.success && response.data.data && response.data.data.teachers) {
+        return {
+          ...response,
+          data: {
+            ...response.data,
+            data: response.data.data.teachers
+          }
+        };
+      }
+      return response;
+    }
   },
 
 

@@ -15,7 +15,7 @@ exports.listarCursos = async (req, res) => {
       search: req.query.search
     };
     
-    const paginacion = req.pagination; // Del middleware
+    const paginacion = req.pagination || { page: 1, limit: 10 }; // From middleware or default values
     
     const resultado = await cursosService.listarCursos(filtros, paginacion);
     
@@ -41,11 +41,11 @@ exports.listarCursosPublicos = async (req, res) => {
     const filtros = {
       idioma: req.query.idioma,
       nivel: req.query.nivel,
-      estado: 'activo', // Solo mostrar cursos activos públicamente
+      estado: 'activo', // Only show active courses publicly
       search: req.query.search
     };
     
-    const resultado = await cursosService.listarCursos(filtros, req.pagination);
+    const resultado = await cursosService.listarCursos(filtros, req.pagination || { page: 1, limit: 10 });
     
     return res.status(200).json({
       success: true,
@@ -68,7 +68,7 @@ exports.verCursoPublico = async (req, res) => {
   try {
     const curso = await cursosService.getCursoById(req.params.id);
     
-    // Solo mostrar si está activo
+    // Only show if active
     if (curso.estado !== 'activo') {
       return res.status(404).json({
         success: false,
@@ -135,6 +135,17 @@ exports.crearCurso = async (req, res) => {
  */
 exports.editarCurso = async (req, res) => {
   try {
+    // Validate that ID exists
+    if (!req.params.id) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID de curso requerido'
+      });
+    }
+    
+    console.log('Editando curso:', req.params.id);
+    console.log('Datos recibidos:', JSON.stringify(req.body, null, 2));
+    
     const curso = await cursosService.updateCurso(req.params.id, req.body);
     
     return res.status(200).json({
@@ -143,9 +154,12 @@ exports.editarCurso = async (req, res) => {
       data: curso
     });
   } catch (error) {
+    console.error('Error en editarCurso:', error);
+    console.error('Stack:', error.stack);
     return res.status(400).json({
       success: false,
-      error: error.message
+      error: error.message || 'Error al actualizar el curso',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
@@ -271,7 +285,7 @@ exports.obtenerEstudiantesCurso = async (req, res) => {
  */
 exports.obtenerCursosProfesor = async (req, res) => {
   try {
-    const profesorId = req.user._id; // Del middleware de autenticación
+    const profesorId = req.user._id; // From authentication middleware
     const cursos = await cursosService.getCursosByProfesor(profesorId);
     
     return res.status(200).json({
@@ -388,15 +402,23 @@ exports.obtenerEstadisticasGenerales = async (req, res) => {
   }
 };
 
-// --- NUEVA FUNCIÓN ---
+// --- NEW FUNCTION ---
 /**
- * Obtener horarios disponibles de un profesor específico
+ * Get available schedules for a specific teacher
  * GET /api/cursos/profesor/:profesorId/horarios-disponibles
+ * Query params: excludeCursoId (optional) - Course ID to exclude when calculating availability
  */
 exports.obtenerHorariosDisponiblesProfesor = async (req, res) => {
   try {
     const { profesorId } = req.params;
-    const horarios = await cursosService.getHorariosDisponiblesProfesor(profesorId);
+    const { excludeCursoId } = req.query; // Get from query string if exists
+    
+    console.log('obtenerHorariosDisponiblesProfesor - Profesor:', profesorId, 'Excluir curso:', excludeCursoId);
+    
+    const horarios = await cursosService.getHorariosDisponiblesProfesor(
+      profesorId, 
+      excludeCursoId || null
+    );
     
     return res.status(200).json({
       success: true,
@@ -404,9 +426,50 @@ exports.obtenerHorariosDisponiblesProfesor = async (req, res) => {
     });
 
   } catch (error) {
-    // Es mejor un 404 si el profesor no se encuentra, o 500 si es error general
-    // El service ya lanza error, así que un 400 o 404 es apropiado
+    // 404 is better if teacher not found, or 500 for general error
+    // Service already throws error, so 400 or 404 is appropriate
     return res.status(404).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all available schedules (for form selection)
+ * GET /api/cursos/horarios/todos
+ */
+exports.obtenerTodosLosHorarios = async (req, res) => {
+  try {
+    const { Horario } = require('../models');
+    
+    // Sort by day of week (Monday to Sunday) and then by time
+    const ordenDias = {
+      'lunes': 1,
+      'martes': 2,
+      'miercoles': 3,
+      'jueves': 4,
+      'viernes': 5,
+      'sabado': 6,
+      'domingo': 7
+    };
+    
+    const horarios = await Horario.find();
+    
+    // Sort manually because MongoDB alphabetical sort doesn't work well for days
+    const horariosOrdenados = horarios.sort((a, b) => {
+      const diaA = ordenDias[a.dia] || 99;
+      const diaB = ordenDias[b.dia] || 99;
+      if (diaA !== diaB) return diaA - diaB;
+      return a.horaInicio.localeCompare(b.horaInicio);
+    });
+    
+    return res.status(200).json({
+      success: true,
+      data: horariosOrdenados
+    });
+  } catch (error) {
+    return res.status(500).json({
       success: false,
       error: error.message
     });

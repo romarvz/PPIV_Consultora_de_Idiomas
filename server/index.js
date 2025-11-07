@@ -14,6 +14,9 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB connected successfully');
 
+    // Cargar todos los modelos ANTES de las rutas para asegurar que estén registrados
+    require('./models'); // Esto carga todos los modelos y los registra en mongoose
+
     const app = express();
     const PORT = process.env.PORT || 5000;
 
@@ -46,6 +49,17 @@ app.get('/', (req, res) => {
     status: 'active',
     endpoints: {
       auth: '/api/auth',
+      dashboard: '/api/dashboard',
+      auditoria: '/api/auditoria',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      cursos: '/api/cursos',
+      clases: '/api/clases',
+      cobros: '/api/cobros',
+      facturas: '/api/facturas',
+      conceptos: '/api/conceptos-cobros',
+      categorias: '/api/concept-categories',
       test: '/api/auth/test'
     }
   });
@@ -65,7 +79,19 @@ app.use('/api/teachers', teacherRoutes);
 const languageRoutes = require('./routes/languages');
 app.use('/api/languages', languageRoutes);
 
-// Rutas para gestion financiera
+// ===== RUTAS DE (Dashboard + Auditoría) =====
+const dashboardRoutes = require('./routes/dashboard');
+const auditoriaRoutes = require('./routes/auditoria');
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
+
+// ===== RUTAS DE CURSOS Y CLASES (Alexa) =====
+const cursosRoutes = require('./routes/cursos');
+const clasesRoutes = require('./routes/clases');
+app.use('/api/cursos', cursosRoutes);
+app.use('/api/clases', clasesRoutes);
+
+// ===== RUTAS FINANCIERAS =====
 const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
 const conceptosCobrosRoutes = require('./routes/conceptosCobros.routes');
 const cobrosRoutes = require('./routes/cobros.routes');
@@ -76,13 +102,22 @@ app.use('/api/conceptos-cobros', conceptosCobrosRoutes);
 app.use('/api/cobros', cobrosRoutes);
 app.use('/api/facturas', facturasRoutes);
 
-//middleware para cuando no encontramos ruta (solo GET y POST seguros)
+// ===== RUTAS NO ENCONTRADAS (404) =====
 app.get('*', (req, res) => {
   res.status(404).json({
     success: false,
     message: `Ruta ${req.originalUrl} no encontrada`,
     availableEndpoints: {
       auth: '/api/auth',
+      dashboard: '/api/dashboard',
+      auditoria: '/api/auditoria',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      cursos: '/api/cursos',
+      clases: '/api/clases',
+      cobros: '/api/cobros',
+      facturas: '/api/facturas',
       test: '/api/auth/test'
     }
   });
@@ -94,35 +129,39 @@ app.post('*', (req, res) => {
     message: `Ruta ${req.originalUrl} no encontrada`,
     availableEndpoints: {
       auth: '/api/auth',
+      dashboard: '/api/dashboard',
+      auditoria: '/api/auditoria',
+      students: '/api/students',
+      teachers: '/api/teachers',
+      languages: '/api/languages',
+      cursos: '/api/cursos',
+      clases: '/api/clases',
+      cobros: '/api/cobros',
+      facturas: '/api/facturas',
       test: '/api/auth/test'
     }
   });
 });
 
-// Middleware global para manejo de errores
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
-  
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Error interno del servidor',
-    ...(process.env.NODE_ENV === 'development' && { 
-      stack: err.stack,
-      error: err 
-    })
-  });
-});
+// ===== MIDDLEWARE DE ERROR GLOBAL (shared/middleware) =====
+const { errorHandler } = require('./shared/middleware');
+app.use(errorHandler);
 
+// ===== INICIAR SERVIDOR =====
 app.listen(PORT, () => {
-  console.log(` Server running on port ${PORT}`);
-  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(` API URL: http://localhost:${PORT}`);
-  console.log(`
-    Auth endpoints: http://localhost:${PORT}/api/auth`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`API URL: http://localhost:${PORT}`);
+  console.log(`Auth endpoints: http://localhost:${PORT}/api/auth`);
+  console.log(`Dashboard endpoints: http://localhost:${PORT}/api/dashboard`);
+  console.log(`Auditoría endpoints: http://localhost:${PORT}/api/auditoria`);
+  console.log(`Cursos endpoints: http://localhost:${PORT}/api/cursos`);
+  console.log(`Clases endpoints: http://localhost:${PORT}/api/clases`);
+  console.log(`Financial endpoints: http://localhost:${PORT}/api/cobros`);
 });
 
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 };

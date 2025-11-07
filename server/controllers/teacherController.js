@@ -165,7 +165,8 @@ const updateTeacher = async (req, res) => {
       experiencia,
       isActive,
       disponible,
-      condicion
+      condicion,
+      horariosPermitidos
     } = req.body;
 
     const teacher = await userService.findUserById(id);
@@ -190,6 +191,12 @@ const updateTeacher = async (req, res) => {
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
     if (typeof disponible === 'boolean') updateData.disponible = disponible;
     if (condicion) updateData.condicion = condicion;
+    // Agregar soporte para horariosPermitidos
+    if (horariosPermitidos !== undefined) {
+      updateData.horariosPermitidos = Array.isArray(horariosPermitidos) 
+        ? horariosPermitidos 
+        : [];
+    }
 
     const updatedTeacher = await userService.updateUser(id, updateData);
 
@@ -221,7 +228,6 @@ const updateTeacher = async (req, res) => {
 };
 
 // deactivate teacher
-
 const deactivateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
@@ -236,7 +242,10 @@ const deactivateTeacher = async (req, res) => {
       });
     }
 
-    const updatedTeacher = await userService.updateUser(id, { isActive: false });
+    const updatedTeacher = await userService.updateUser(id, { 
+      isActive: false,
+      condicion: 'inactivo'
+    });
 
     res.json({
       success: true,
@@ -248,6 +257,63 @@ const deactivateTeacher = async (req, res) => {
 
   } catch (error) {
     console.error('Error en deactivateTeacher:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// delete teacher (hard delete)
+const deleteTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const teacher = await userService.findUserById(id);
+    
+    if (!teacher || teacher.role !== 'profesor') {
+      return res.status(404).json({
+        success: false,
+        message: 'Profesor no encontrado',
+        code: 'TEACHER_NOT_FOUND'
+      });
+    }
+
+    // Verificar que el profesor no tenga cursos activos o planificados asignados
+    const { Curso } = require('../models');
+    const cursosActivos = await Curso.countDocuments({
+      profesor: id,
+      estado: { $in: ['planificado', 'activo'] }
+    });
+
+    if (cursosActivos > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `No se puede eliminar el profesor porque tiene ${cursosActivos} curso(s) activo(s) o planificado(s) asignado(s)`,
+        code: 'TEACHER_HAS_ACTIVE_COURSES'
+      });
+    }
+
+    // Eliminar permanentemente
+    const { BaseUser } = require('../models');
+    await BaseUser.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: 'Profesor eliminado permanentemente',
+      data: {
+        deletedTeacher: {
+          _id: teacher._id,
+          email: teacher.email,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en deleteTeacher:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -362,5 +428,6 @@ module.exports = {
   updateTeacher,
   deactivateTeacher,
   reactivateTeacher,
+  deleteTeacher,
   getTeachersStats
 };

@@ -43,8 +43,39 @@ exports.validarCreacionCurso = [
 
   // --- NUEVA VALIDACIÓN ---
   body('horario')
-    .notEmpty().withMessage('El horario es obligatorio')
-    .custom(isValidObjectId).withMessage('ID de horario no válido'),
+    .optional()
+    .custom((value, { req }) => {
+      // Si no hay horario pero tampoco hay horarios, es un error
+      if (!value && (!req.body.horarios || req.body.horarios.length === 0)) {
+        throw new Error('Debe proporcionar al menos un horario (horario o horarios)');
+      }
+      // Si hay horario, validar que sea un ObjectId válido
+      if (value && !isValidObjectId(value)) {
+        throw new Error('ID de horario no válido');
+      }
+      return true;
+    }),
+  
+  body('horarios')
+    .optional()
+    .isArray().withMessage('horarios debe ser un array')
+    .custom((value) => {
+      if (value && value.length > 3) {
+        throw new Error('Puede seleccionar máximo 3 horarios por curso');
+      }
+      if (value && value.length === 0) {
+        throw new Error('Si proporciona horarios, debe tener al menos un elemento');
+      }
+      // Validar que todos los elementos sean ObjectIds válidos
+      if (value) {
+        for (const horarioId of value) {
+          if (!isValidObjectId(horarioId)) {
+            throw new Error(`ID de horario no válido: ${horarioId}`);
+          }
+        }
+      }
+      return true;
+    }),
   // --- FIN NUEVA VALIDACIÓN ---
     
   body('fechaInicio')
@@ -115,7 +146,39 @@ exports.validarEdicionCurso = [
   // --- NUEVA VALIDACIÓN ---
   body('horario')
     .optional()
-    .custom(isValidObjectId).withMessage('ID de horario no válido'),
+    .custom((value, { req }) => {
+      // Si no hay horario pero tampoco hay horarios, es un error
+      if (!value && (!req.body.horarios || req.body.horarios.length === 0)) {
+        // Permitir que no haya horario si se está editando y no se está cambiando
+        return true; // En edición, puede no estar presente
+      }
+      // Si hay horario, validar que sea un ObjectId válido
+      if (value && !isValidObjectId(value)) {
+        throw new Error('ID de horario no válido');
+      }
+      return true;
+    }),
+  
+  body('horarios')
+    .optional()
+    .isArray().withMessage('horarios debe ser un array')
+    .custom((value) => {
+      if (value && value.length > 3) {
+        throw new Error('Puede seleccionar máximo 3 horarios por curso');
+      }
+      if (value && value.length === 0) {
+        throw new Error('Si proporciona horarios, debe tener al menos un elemento');
+      }
+      // Validar que todos los elementos sean ObjectIds válidos
+      if (value) {
+        for (const horarioId of value) {
+          if (!isValidObjectId(horarioId)) {
+            throw new Error(`ID de horario no válido: ${horarioId}`);
+          }
+        }
+      }
+      return true;
+    }),
   // --- FIN NUEVA VALIDACIÓN ---
 
   // --- NUEVA VALIDACIÓN ---

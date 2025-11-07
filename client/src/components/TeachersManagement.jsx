@@ -194,16 +194,19 @@ const TeachersManagement = ({ onBack }) => {
   }, []);
 
   const handleDelete = useCallback(async (teacherId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este profesor?')) {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este profesor? Esta acción no se puede deshacer.')) {
       try {
         const response = await api.delete(`/teachers/${teacherId}`);
         if (response.data.success) {
           // Recargar lista
           setCurrentPage(1);
           setSearchTerm(''); // Reset search to reload all
+          alert('Profesor eliminado exitosamente');
         }
       } catch (error) {
         console.error('Error deleting teacher:', error);
+        const errorMsg = error.response?.data?.message || 'Error al eliminar el profesor';
+        alert(errorMsg);
       }
     }
   }, []);
@@ -264,15 +267,14 @@ const TeachersManagement = ({ onBack }) => {
       // Transform data to match server expectations
       const transformedData = {
         ...teacherData,
-        // Transform horarios to Spanish field names and lowercase days
-        horarios: teacherData.horarios?.map(schedule => ({
-          dia: (schedule.day || schedule.dia)?.toLowerCase()?.replace('é', 'e').replace('á', 'a').replace('ú', 'u'),
-          horaInicio: schedule.startTime || schedule.horaInicio,
-          horaFin: schedule.endTime || schedule.horaFin
-        })) || [],
+        // Enviar horariosPermitidos como array de IDs
+        horariosPermitidos: teacherData.horariosPermitidos || [],
         // Keep especialidades as ObjectIds - no transformation needed
         especialidades: teacherData.especialidades || []
       };
+      
+      // Remover campos que no deben enviarse
+      delete transformedData.horarios; // Eliminar el campo antiguo 'horarios'
       
       console.log('Transformed request payload:', JSON.stringify(transformedData, null, 2));
       
@@ -700,11 +702,33 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     phone: teacher.phone || '',
     especialidades: teacher.especialidades ? 
       teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
-    horarios: teacher.horarios || [],
+    horariosPermitidos: teacher.horariosPermitidos ? 
+      teacher.horariosPermitidos.map(h => typeof h === 'object' ? h._id : h) : [],
     condicion: teacher.condicion || 'activo'
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allHorarios, setAllHorarios] = useState([]);
+  const [loadingHorarios, setLoadingHorarios] = useState(true);
+
+  // Cargar todos los horarios disponibles
+  useEffect(() => {
+    const fetchHorarios = async () => {
+      try {
+        setLoadingHorarios(true);
+        const response = await api.get('/cursos/horarios/todos');
+        if (response.data.success) {
+          setAllHorarios(response.data.data || []);
+        }
+      } catch (error) {
+        console.error('Error cargando horarios:', error);
+        setAllHorarios([]);
+      } finally {
+        setLoadingHorarios(false);
+      }
+    };
+    fetchHorarios();
+  }, []);
 
   // Actualizar formData cuando teacher cambie (después de una actualización exitosa)
   useEffect(() => {
@@ -715,7 +739,8 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
       phone: teacher.phone || '',
       especialidades: teacher.especialidades ? 
         teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
-      horarios: teacher.horarios || [],
+      horariosPermitidos: teacher.horariosPermitidos ? 
+        teacher.horariosPermitidos.map(h => typeof h === 'object' ? h._id : h) : [],
       condicion: teacher.condicion || 'activo'
     });
   }, [teacher]);
@@ -788,27 +813,18 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     });
   };
 
-  const addSchedule = () => {
-    setFormData(prev => ({
-      ...prev,
-      horarios: [...prev.horarios, { day: 'Lunes', startTime: '09:00', endTime: '10:00' }]
-    }));
-  };
-
-  const removeSchedule = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      horarios: prev.horarios.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateSchedule = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      horarios: prev.horarios.map((schedule, i) => 
-        i === index ? { ...schedule, [field]: value } : schedule
-      )
-    }));
+  const handleHorarioToggle = (horarioId) => {
+    setFormData(prev => {
+      const currentHorarios = prev.horariosPermitidos || [];
+      const isSelected = currentHorarios.includes(horarioId);
+      
+      return {
+        ...prev,
+        horariosPermitidos: isSelected
+          ? currentHorarios.filter(id => id !== horarioId)
+          : [...currentHorarios, horarioId]
+      };
+    });
   };
 
   return (
@@ -1030,107 +1046,86 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
             </div>
           </div>
 
-          {/* Horarios */}
+          {/* Horarios Permitidos */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h4 style={{ color: 'var(--text-primary)', margin: '0', display: 'flex', alignItems: 'center' }}>
-                <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#3498db' }} />
-                Horarios
-              </h4>
-              <button
-                type="button"
-                onClick={addSchedule}
-                style={{
-                  background: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <FaPlus style={{ marginRight: '0.25rem' }} />
-                Agregar
-              </button>
-            </div>
-            {formData.horarios.map((schedule, index) => (
-              <div key={index} style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr auto',
-                gap: '0.5rem',
-                alignItems: 'center',
-                marginBottom: '0.5rem',
-                padding: '0.75rem',
-                border: '1px solid var(--border-color)',
-                borderRadius: '6px',
-                backgroundColor: 'var(--bg-tertiary)'
+            <h4 style={{ color: 'var(--text-primary)', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#3498db' }} />
+              Horarios Permitidos
+              <span style={{ 
+                fontSize: '0.85rem', 
+                fontWeight: '400', 
+                color: 'var(--text-secondary)',
+                fontStyle: 'italic',
+                marginLeft: '0.5rem'
               }}>
-                <select
-                  value={schedule.day}
-                  onChange={(e) => updateSchedule(index, 'day', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    border: '1px solid var(--input-border)',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    backgroundColor: 'var(--input-bg)',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  {dayOptions.map(day => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
-                <select
-                  value={schedule.startTime}
-                  onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    border: '1px solid var(--input-border)',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    backgroundColor: 'var(--input-bg)',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  {timeOptions.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-                <select
-                  value={schedule.endTime}
-                  onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    border: '1px solid var(--input-border)',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    backgroundColor: 'var(--input-bg)',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  {timeOptions.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => removeSchedule(index)}
-                  style={{
-                    background: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.5rem',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem'
-                  }}
-                >
-                  <FaTrash />
-                </button>
+                (Haga clic para marcar los horarios en los que el profesor puede dar clases)
+              </span>
+            </h4>
+            {loadingHorarios ? (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Cargando horarios...</p>
+            ) : allHorarios.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No hay horarios disponibles. Contacte al administrador.</p>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '0.75rem',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                padding: '0.5rem',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-secondary)'
+              }}>
+                {allHorarios.map(horario => {
+                  const isSelected = formData.horariosPermitidos.includes(horario._id);
+                  const diaCapitalizado = horario.dia.charAt(0).toUpperCase() + horario.dia.slice(1);
+                  const displayText = horario.display || `${diaCapitalizado} ${horario.horaInicio} - ${horario.horaFin}`;
+                  
+                  return (
+                    <div
+                      key={horario._id}
+                      onClick={() => handleHorarioToggle(horario._id)}
+                      title={isSelected ? 'Horario permitido - Click para desmarcar' : 'Horario no permitido - Click para permitir'}
+                      style={{
+                        padding: '0.75rem',
+                        border: `2px solid ${isSelected ? '#27ae60' : '#e74c3c'}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        backgroundColor: isSelected ? '#d4edda' : '#f8d7da',
+                        color: isSelected ? '#155724' : '#721c24',
+                        fontSize: '0.85rem',
+                        fontWeight: isSelected ? '600' : '400',
+                        transition: 'all 0.2s ease',
+                        textAlign: 'center',
+                        position: 'relative'
+                      }}
+                    >
+                      {displayText}
+                      {isSelected && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '6px',
+                          fontSize: '0.7rem',
+                          color: '#27ae60'
+                        }}>✓</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            )}
+            {formData.horariosPermitidos.length > 0 && (
+              <p style={{ color: '#27ae60', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: '500' }}>
+                ✓ {formData.horariosPermitidos.length} horario(s) permitido(s) - El profesor puede dar clases en estos horarios
+              </p>
+            )}
+            {formData.horariosPermitidos.length === 0 && allHorarios.length > 0 && (
+              <p style={{ color: '#e74c3c', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: '500' }}>
+                ⚠ Ningún horario seleccionado - El profesor no podrá ser asignado a cursos hasta que seleccione al menos un horario
+              </p>
+            )}
           </div>
 
           {/* Botones */}
