@@ -146,7 +146,6 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // --- HERE'S THE MAGIC! ---
     // If the field that changed is 'profesor'...
     if (name === 'profesor') {
       // Clear previous schedule
@@ -206,10 +205,10 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
       console.log('Datos a enviar:', dataToSave);
 
       if (course) {
-        // Assuming apiAdapter.courses.update
+        // Update existing course
         response = await apiAdapter.courses.update(course._id, dataToSave);
       } else {
-        // Assuming apiAdapter.courses.create
+        // Create new course
         response = await apiAdapter.courses.create(dataToSave);
       }
       
