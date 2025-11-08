@@ -8,6 +8,9 @@ const Empresa = require('./Empresa');
 const AuditoriaLog = require('./AuditoriaLog');
 const Horario = require('./Horario');
 const Curso = require('./Curso');
+const PerfilEstudiante = require('./PerfilEstudiante');
+const ReporteAcademico = require('./ReporteAcademico');
+const ReporteFinanciero = require('./ReporteFinanciero');
 
 module.exports = {
   BaseUser,
@@ -19,6 +22,9 @@ module.exports = {
   AuditoriaLog,
   Horario,
   Curso,
+  PerfilEstudiante,
+  ReporteAcademico,
+  ReporteFinanciero,
   //function helper
   getUserModel: (role) => {
     switch(role) {

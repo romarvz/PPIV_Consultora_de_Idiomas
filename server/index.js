@@ -54,6 +54,9 @@ const startServer = async () => {
           facturas: '/api/facturas',
           conceptos: '/api/conceptos-cobros',
           categorias: '/api/concept-categories',
+          perfiles: '/api/perfiles',
+          reportesAcademicos: '/api/reportes-academicos',
+          reportesFinancieros: '/api/reportes-financieros',
           test: '/api/auth/test'
         }
       });
@@ -90,6 +93,15 @@ const startServer = async () => {
     app.use('/api/concept-categories', conceptCategoryRoutes);
     app.use('/api/conceptos-cobros', conceptosCobrosRoutes);
     
+    // ===== RUTAS DE PERFILES Y REPORTES (Verónica) =====
+    const perfilesRoutes = require('./routes/perfiles');
+    const reportesAcademicosRoutes = require('./routes/reportes-academicos');
+    const reportesFinancierosRoutes = require('./routes/reportes-financieros');
+    
+    app.use('/api/perfiles', perfilesRoutes);
+    app.use('/api/reportes-academicos', reportesAcademicosRoutes);
+    app.use('/api/reportes-financieros', reportesFinancierosRoutes);
+    
     // ===== RUTAS NO ENCONTRADAS (404) =====
     app.get('*', (req, res) => {
       res.status(404).json({
@@ -104,6 +116,9 @@ const startServer = async () => {
           languages: '/api/languages',
           cobros: '/api/cobros',
           facturas: '/api/facturas',
+          perfiles: '/api/perfiles',
+          reportesAcademicos: '/api/reportes-academicos',
+          reportesFinancieros: '/api/reportes-financieros',
           test: '/api/auth/test'
         }
       });
@@ -122,6 +137,9 @@ const startServer = async () => {
           languages: '/api/languages',
           cobros: '/api/cobros',
           facturas: '/api/facturas',
+          perfiles: '/api/perfiles',
+          reportesAcademicos: '/api/reportes-academicos',
+          reportesFinancieros: '/api/reportes-financieros',
           test: '/api/auth/test'
         }
       });
