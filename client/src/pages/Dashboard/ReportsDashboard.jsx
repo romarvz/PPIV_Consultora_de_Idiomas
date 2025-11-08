@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import apiAdapter from '../../services/apiAdapter'
-import { FaFileExport, FaSpinner } from 'react-icons/fa'
+import api from '../../services/api'
+import { FaFileExport, FaSpinner, FaFilePdf, FaFileExcel } from 'react-icons/fa'
 
 const ReportsDashboard = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('academic')
@@ -34,9 +35,111 @@ const ReportsDashboard = ({ onClose }) => {
     }
   }
 
-  const handleExportCSV = () => {
-    const reportType = activeTab === 'academic' ? 'Académico' : 'Financiero'
-    alert(`Exportando Reporte ${reportType} a CSV...\n\nEsta funcionalidad está simulada. En producción, aquí se generaría y descargaría el archivo CSV.`)
+  const handleExportPDF = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (activeTab === 'academic') {
+        // Get first report ID from academic data
+        const reportId = academicData?.students?.[0]?._id
+        if (!reportId) {
+          alert('No hay reportes académicos disponibles para exportar')
+          return
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-pdf`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) throw new Error('Error al exportar PDF')
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-academico-${reportId}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        const periodo = '2025-Q1' // You can make this dynamic
+        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-pdf`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) throw new Error('Error al exportar PDF')
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-financiero-${periodo}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Error al exportar PDF: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleExportExcel = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (activeTab === 'academic') {
+        const reportId = academicData?.students?.[0]?._id
+        if (!reportId) {
+          alert('No hay reportes académicos disponibles para exportar')
+          return
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-excel`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) throw new Error('Error al exportar Excel')
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-academico-${reportId}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        const periodo = '2025-Q1'
+        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-excel`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) throw new Error('Error al exportar Excel')
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-financiero-${periodo}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting Excel:', error)
+      alert('Error al exportar Excel: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const formatCurrency = (amount) => {
@@ -201,32 +304,56 @@ const ReportsDashboard = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Export Button */}
+        {/* Export Buttons */}
         <div style={{
           padding: '1rem',
           background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
-          justifyContent: 'flex-end'
+          justifyContent: 'flex-end',
+          gap: '0.75rem'
         }}>
           <button
-            onClick={handleExportCSV}
+            onClick={handleExportPDF}
+            disabled={loading}
             style={{
-              background: 'var(--primary)',
+              background: '#dc2626',
               color: 'white',
               border: 'none',
               padding: '0.75rem 1.5rem',
               borderRadius: '6px',
               fontSize: '0.9rem',
               fontWeight: '600',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              opacity: loading ? 0.6 : 1
             }}
           >
-            <FaFileExport /> Exportar a CSV
+            <FaFilePdf /> Exportar PDF
+          </button>
+          <button
+            onClick={handleExportExcel}
+            disabled={loading}
+            style={{
+              background: '#16a34a',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            <FaFileExcel /> Exportar Excel
           </button>
         </div>
 
