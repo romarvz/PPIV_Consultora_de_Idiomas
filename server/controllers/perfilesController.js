@@ -63,7 +63,7 @@ exports.obtenerPerfilEstudiante = async (req, res) => {
         const { id } = req.params;
 
         // Verificar permisos: solo el estudiante mismo, profesores o admin
-        const esPropio = req.user._id.toString() === id;
+        const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esPropio && !esProfesorOAdmin) {
@@ -113,7 +113,7 @@ exports.obtenerPreferencias = async (req, res) => {
         const { id } = req.params;
 
         // Verificar permisos: solo el estudiante mismo o admin
-        const esPropio = req.user._id.toString() === id;
+        const esPropio = req.user.id.toString() === id;
         const esAdmin = req.user.role === 'admin';
 
         if (!esPropio && !esAdmin) {
@@ -143,7 +143,7 @@ exports.actualizarPreferencias = async (req, res) => {
         const nuevasPreferencias = req.body;
 
         // Verificar permisos: solo el estudiante mismo o admin
-        const esPropio = req.user._id.toString() === id;
+        const esPropio = req.user.id.toString() === id;
         const esAdmin = req.user.role === 'admin';
 
         if (!esPropio && !esAdmin) {
@@ -172,7 +172,7 @@ exports.obtenerCertificados = async (req, res) => {
         const { id } = req.params;
 
         // Verificar permisos: estudiante, profesor o admin
-        const esPropio = req.user._id.toString() === id;
+        const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esPropio && !esProfesorOAdmin) {
@@ -249,7 +249,7 @@ exports.obtenerEstadisticas = async (req, res) => {
         const { id } = req.params;
 
         // Verificar permisos
-        const esPropio = req.user._id.toString() === id;
+        const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esPropio && !esProfesorOAdmin) {
@@ -299,7 +299,7 @@ exports.obtenerHistorialCursos = async (req, res) => {
         const { id } = req.params;
 
         // Verificar permisos
-        const esPropio = req.user._id.toString() === id;
+        const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esPropio && !esProfesorOAdmin) {

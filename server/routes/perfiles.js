@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const perfilesController = require('../controllers/perfilesController');
-const { authMiddleware, checkRole } = require('../middleware/authMiddlewareNew');
+const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew');
 /**
  * RUTAS: Perfiles
  * BASE URL: /api/perfiles
@@ -13,7 +13,7 @@ const { authMiddleware, checkRole } = require('../middleware/authMiddlewareNew')
 // ============================================
 // PROTEGER TODAS LAS RUTAS CON AUTENTICACIÓN
 // ============================================
-router.use(authMiddleware);
+router.use(authenticateToken);
 
 // ============================================
 // SECCIÓN 1: PERFIL COMPLETO DEL ESTUDIANTE
@@ -32,7 +32,7 @@ router.get('/estudiante/:id', perfilesController.obtenerPerfilEstudiante);
  * Acceso: Admin
  */
 router.post('/estudiante/:id',
-    checkRole(['admin']),
+    requireRole(['admin']),
     perfilesController.crearPerfilEstudiante
 );
 
@@ -71,7 +71,7 @@ router.get('/estudiante/:id/certificados', perfilesController.obtenerCertificado
  * Acceso: Admin, Profesor (del curso)
  */
 router.post('/estudiante/:id/certificados',
-    checkRole(['admin', 'profesor']),
+    requireRole(['admin', 'profesor']),
     perfilesController.agregarCertificado
 );
 
@@ -99,7 +99,7 @@ router.get('/estudiante/:id/estadisticas', perfilesController.obtenerEstadistica
  * Acceso: Admin
  */
 router.put('/estudiante/:id/estadisticas/actualizar',
-    checkRole(['admin']),
+    requireRole(['admin']),
     perfilesController.actualizarEstadisticas
 );
 
@@ -120,7 +120,7 @@ router.get('/estudiante/:id/historial', perfilesController.obtenerHistorialCurso
  * Acceso: Admin (se llama automáticamente cuando termina un curso)
  */
 router.post('/estudiante/:id/historial',
-    checkRole(['admin']),
+    requireRole(['admin']),
     perfilesController.agregarCursoHistorial
 );
 

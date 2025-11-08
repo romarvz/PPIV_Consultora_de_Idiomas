@@ -2,47 +2,14 @@ const express = require('express');
 const router = express.Router();
 const reportesFinancierosController = require('../controllers/reportesFinancierosController');
 
+const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew');
+
 /**
  * RUTAS: Reportes Financieros
  * BASE URL: /api/reportes-financieros
- * 
- * NOTA: Autenticación comentada por ahora, se activará cuando Romina termine su middleware
  */
 
-// TEMPORARY: Comment out authentication until middleware is ready
-// const { authMiddleware } = require('../middleware/authMiddlewareNew');
-// router.use(authMiddleware);
-
-// Temporary auth middleware for testing
-const tempAuthMiddleware = (req, res, next) => {
-    req.user = {
-        _id: 'temp-user-id',
-        role: 'admin'
-    };
-    next();
-};
-
-const checkRole = (roles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                error: 'No autenticado'
-            });
-        }
-
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                error: 'No tienes permisos para esta acción'
-            });
-        }
-
-        next();
-    };
-};
-
-router.use(tempAuthMiddleware);
+router.use(authenticateToken);
 
 // ============================================
 // SECCIÓN 1: GENERAR REPORTES
@@ -54,7 +21,7 @@ router.use(tempAuthMiddleware);
  * Acceso: Admin
  */
 router.post('/generar',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.generarReporte
 );
 
@@ -64,7 +31,7 @@ router.post('/generar',
  * Acceso: Admin
  */
 router.post('/generar-automatico',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.generarReporteAutomatico
 );
 
@@ -78,7 +45,7 @@ router.post('/generar-automatico',
  * Acceso: Admin
  */
 router.get('/periodo/:periodo',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.obtenerReportePorPeriodo
 );
 
@@ -89,7 +56,7 @@ router.get('/periodo/:periodo',
  * Acceso: Admin
  */
 router.get('/recientes',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.obtenerReportesRecientes
 );
 
@@ -100,7 +67,7 @@ router.get('/recientes',
  * Acceso: Admin
  */
 router.get('/',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.obtenerTodosReportes
 );
 
@@ -114,7 +81,7 @@ router.get('/',
  * Acceso: Admin
  */
 router.put('/periodo/:periodo',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.actualizarReporte
 );
 
@@ -124,7 +91,7 @@ router.put('/periodo/:periodo',
  * Acceso: Admin
  */
 router.post('/periodo/:periodo/deuda',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.agregarEstudianteConDeuda
 );
 
@@ -139,7 +106,7 @@ router.post('/periodo/:periodo/deuda',
  * Acceso: Admin
  */
 router.get('/comparar/:periodo1/:periodo2',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.compararPeriodos
 );
 
@@ -150,7 +117,7 @@ router.get('/comparar/:periodo1/:periodo2',
  * Acceso: Admin
  */
 router.get('/tendencias',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.obtenerTendencias
 );
 
@@ -160,7 +127,7 @@ router.get('/tendencias',
  * Acceso: Admin
  */
 router.get('/morosidad',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.obtenerEstadisticasMorosidad
 );
 
@@ -170,7 +137,7 @@ router.get('/morosidad',
  * Acceso: Admin
  */
 router.get('/proyeccion',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.calcularProyeccion
 );
 
@@ -184,7 +151,7 @@ router.get('/proyeccion',
  * Acceso: Admin
  */
 router.get('/periodo/:periodo/exportar-pdf',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.exportarPDF
 );
 
@@ -194,7 +161,7 @@ router.get('/periodo/:periodo/exportar-pdf',
  * Acceso: Admin
  */
 router.get('/periodo/:periodo/exportar-excel',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesFinancierosController.exportarExcel
 );
 

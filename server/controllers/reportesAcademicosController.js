@@ -55,7 +55,7 @@ exports.generarReporte = async (req, res) => {
         }
 
         // El profesor o admin que genera el reporte
-        const generadoPorId = req.user._id;
+        const generadoPorId = req.user.id;
 
         const reporte = await reportesAcademicosService.generarReporteAcademico({
             estudianteId,
@@ -85,7 +85,7 @@ exports.generarReporte = async (req, res) => {
 exports.generarReportesAutomaticos = async (req, res) => {
     try {
         const { cursoId } = req.params;
-        const generadoPorId = req.user._id;
+        const generadoPorId = req.user.id;
 
         const reportes = await reportesAcademicosService.generarReportesAutomaticosCurso(
             cursoId,
@@ -118,7 +118,7 @@ exports.obtenerReportePorId = async (req, res) => {
         }
 
         // Verificar permisos: solo el estudiante, profesor del curso, o admin
-        const esEstudiante = reporte.estudiante._id.toString() === req.user._id.toString();
+        const esEstudiante = reporte.estudiante._id.toString() === req.user.id.toString();
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esEstudiante && !esProfesorOAdmin) {
@@ -142,7 +142,7 @@ exports.obtenerReportesPorEstudiante = async (req, res) => {
         const { periodo, estado, cursoId } = req.query;
 
         // Verificar permisos
-        const esPropio = req.user._id.toString() === estudianteId;
+        const esPropio = req.user.id.toString() === estudianteId;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esPropio && !esProfesorOAdmin) {
@@ -275,7 +275,7 @@ exports.obtenerEstadisticasEstudiante = async (req, res) => {
         const { estudianteId } = req.params;
 
         // Verificar permisos
-        const esPropio = req.user._id.toString() === estudianteId;
+        const esPropio = req.user.id.toString() === estudianteId;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esPropio && !esProfesorOAdmin) {
@@ -332,7 +332,7 @@ exports.exportarPDF = async (req, res) => {
         }
 
         // Verificar permisos
-        const esEstudiante = reporte.estudiante._id.toString() === req.user._id.toString();
+        const esEstudiante = reporte.estudiante._id.toString() === req.user.id.toString();
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esEstudiante && !esProfesorOAdmin) {
@@ -367,7 +367,7 @@ exports.exportarExcel = async (req, res) => {
         }
 
         // Verificar permisos
-        const esEstudiante = reporte.estudiante._id.toString() === req.user._id.toString();
+        const esEstudiante = reporte.estudiante._id.toString() === req.user.id.toString();
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
         if (!esEstudiante && !esProfesorOAdmin) {

@@ -59,7 +59,7 @@ exports.generarReporte = async (req, res) => {
             return sendError(res, 'Falta dato requerido: periodo (formato: YYYY-Q1 o YYYY-MM)', 400);
         }
 
-        const generadoPorId = req.user._id;
+        const generadoPorId = req.user.id;
 
         const reporte = await reportesFinancierosService.generarReporteFinanciero({
             periodo,
@@ -93,7 +93,7 @@ exports.generarReporte = async (req, res) => {
  */
 exports.generarReporteAutomatico = async (req, res) => {
     try {
-        const generadoPorId = req.user._id;
+        const generadoPorId = req.user.id;
 
         const reporte = await reportesFinancierosService.generarReporteAutomatico(generadoPorId);
 

@@ -2,47 +2,14 @@ const express = require('express');
 const router = express.Router();
 const reportesAcademicosController = require('../controllers/reportesAcademicosController');
 
+const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew');
+
 /**
  * RUTAS: Reportes Académicos
  * BASE URL: /api/reportes-academicos
- * 
- * NOTA: Autenticación comentada por ahora, se activará cuando Romina termine su middleware
  */
 
-// TEMPORARY: Comment out authentication until middleware is ready
-// const { authMiddleware } = require('../middleware/authMiddlewareNew');
-// router.use(authMiddleware);
-
-// Temporary auth middleware for testing
-const tempAuthMiddleware = (req, res, next) => {
-    req.user = {
-        _id: 'temp-user-id',
-        role: 'admin'
-    };
-    next();
-};
-
-const checkRole = (roles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                error: 'No autenticado'
-            });
-        }
-
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                error: 'No tienes permisos para esta acción'
-            });
-        }
-
-        next();
-    };
-};
-
-router.use(tempAuthMiddleware);
+router.use(authenticateToken);
 
 // ============================================
 // SECCIÓN 1: GENERAR REPORTES
@@ -54,7 +21,7 @@ router.use(tempAuthMiddleware);
  * Acceso: Profesor, Admin
  */
 router.post('/generar',
-    checkRole(['profesor', 'admin']),
+    requireRole(['profesor', 'admin']),
     reportesAcademicosController.generarReporte
 );
 
@@ -64,7 +31,7 @@ router.post('/generar',
  * Acceso: Admin
  */
 router.post('/generar-automatico/:cursoId',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesAcademicosController.generarReportesAutomaticos
 );
 
@@ -94,7 +61,7 @@ router.get('/estudiante/:estudianteId', reportesAcademicosController.obtenerRepo
  * Acceso: Profesor, Admin
  */
 router.get('/curso/:cursoId',
-    checkRole(['profesor', 'admin']),
+    requireRole(['profesor', 'admin']),
     reportesAcademicosController.obtenerReportesPorCurso
 );
 
@@ -104,7 +71,7 @@ router.get('/curso/:cursoId',
  * Acceso: Admin
  */
 router.get('/periodo/:periodo',
-    checkRole(['admin']),
+    requireRole(['admin']),
     reportesAcademicosController.obtenerReportesPorPeriodo
 );
 
@@ -118,7 +85,7 @@ router.get('/periodo/:periodo',
  * Acceso: Profesor (del curso), Admin
  */
 router.put('/:id',
-    checkRole(['profesor', 'admin']),
+    requireRole(['profesor', 'admin']),
     reportesAcademicosController.actualizarReporte
 );
 
@@ -128,7 +95,7 @@ router.put('/:id',
  * Acceso: Profesor (del curso), Admin
  */
 router.post('/:id/evaluacion',
-    checkRole(['profesor', 'admin']),
+    requireRole(['profesor', 'admin']),
     reportesAcademicosController.agregarEvaluacion
 );
 
@@ -151,7 +118,7 @@ router.get('/estudiante/:estudianteId/estadisticas',
  * Acceso: Profesor, Admin
  */
 router.get('/curso/:cursoId/resumen',
-    checkRole(['profesor', 'admin']),
+    requireRole(['profesor', 'admin']),
     reportesAcademicosController.obtenerResumenCurso
 );
 
