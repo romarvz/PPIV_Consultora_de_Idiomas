@@ -6,29 +6,29 @@ const { authenticateToken, requireRole } = require('../middleware/authMiddleware
  * RUTAS: Perfiles
  * BASE URL: /api/perfiles
  * 
- * Todas las rutas requieren autenticación
- * Algunas requieren roles específicos
+ * All routes require authentication
+ * Some require specific roles
  */
 
 // ============================================
-// PROTEGER TODAS LAS RUTAS CON AUTENTICACIÓN
+// PROTECT ALL ROUTES WITH AUTHENTICATION
 // ============================================
 router.use(authenticateToken);
 
 // ============================================
-// SECCIÓN 1: PERFIL COMPLETO DEL ESTUDIANTE
+// SECTION 1: COMPLETE STUDENT PROFILE
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id
- * Obtiene el perfil completo de un estudiante
+ * Gets complete student profile
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/estudiante/:id', perfilesController.obtenerPerfilEstudiante);
 
 /**
  * POST /api/perfiles/estudiante/:id
- * Crea o inicializa el perfil de un estudiante
+ * Creates or initializes student profile
  * Acceso: Admin
  */
 router.post('/estudiante/:id',
@@ -37,37 +37,37 @@ router.post('/estudiante/:id',
 );
 
 // ============================================
-// SECCIÓN 2: PREFERENCIAS DEL ESTUDIANTE
+// SECTION 2: STUDENT PREFERENCES
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/preferencias
- * Obtiene solo las preferencias del estudiante
+ * Gets only student preferences
  * Acceso: Estudiante (propio), Admin
  */
 router.get('/estudiante/:id/preferencias', perfilesController.obtenerPreferencias);
 
 /**
  * PUT /api/perfiles/estudiante/:id/preferencias
- * Actualiza las preferencias del estudiante (horarios, modalidad, idiomas)
+ * Updates student preferences (schedules, modality, languages)
  * Acceso: Estudiante (propio), Admin
  */
 router.put('/estudiante/:id/preferencias', perfilesController.actualizarPreferencias);
 
 // ============================================
-// SECCIÓN 3: CERTIFICADOS
+// SECTION 3: CERTIFICATES
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/certificados
- * Obtiene todos los certificados del estudiante
+ * Gets all student certificates
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/estudiante/:id/certificados', perfilesController.obtenerCertificados);
 
 /**
  * POST /api/perfiles/estudiante/:id/certificados
- * Agrega un nuevo certificado al estudiante
+ * Adds new certificate to student
  * Acceso: Admin, Profesor (del curso)
  */
 router.post('/estudiante/:id/certificados',
@@ -77,25 +77,25 @@ router.post('/estudiante/:id/certificados',
 
 /**
  * GET /api/perfiles/certificado/verificar/:codigo
- * Verifica la autenticidad de un certificado por código
- * Acceso: Público (sin autenticación necesaria)
+ * Verifies certificate authenticity by code
+ * Acceso: Public (no authentication required)
  */
 router.get('/certificado/verificar/:codigo', perfilesController.verificarCertificado);
 
 // ============================================
-// SECCIÓN 4: ESTADÍSTICAS
+// SECTION 4: STATISTICS
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/estadisticas
- * Obtiene las estadísticas del estudiante
+ * Gets student statistics
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/estudiante/:id/estadisticas', perfilesController.obtenerEstadisticas);
 
 /**
  * PUT /api/perfiles/estudiante/:id/estadisticas/actualizar
- * Recalcula las estadísticas del estudiante
+ * Recalculates student statistics
  * Acceso: Admin
  */
 router.put('/estudiante/:id/estadisticas/actualizar',
@@ -104,20 +104,20 @@ router.put('/estudiante/:id/estadisticas/actualizar',
 );
 
 // ============================================
-// SECCIÓN 5: HISTORIAL DE CURSOS
+// SECTION 5: COURSE HISTORY
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/historial
- * Obtiene el historial completo de cursos del estudiante
+ * Gets complete student course history
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/estudiante/:id/historial', perfilesController.obtenerHistorialCursos);
 
 /**
  * POST /api/perfiles/estudiante/:id/historial
- * Agrega un curso al historial del estudiante
- * Acceso: Admin (se llama automáticamente cuando termina un curso)
+ * Adds course to student history
+ * Acceso: Admin (called automatically when course ends)
  */
 router.post('/estudiante/:id/historial',
     requireRole(['admin']),
@@ -125,12 +125,12 @@ router.post('/estudiante/:id/historial',
 );
 
 // ============================================
-// SECCIÓN 6: PERFIL DE PROFESOR (OPCIONAL)
+// SECTION 6: TEACHER PROFILE (OPTIONAL)
 // ============================================
 
 /**
  * GET /api/perfiles/profesor/:id
- * Obtiene el perfil público de un profesor
+ * Gets teacher public profile
  * Acceso: Todos los usuarios autenticados
  */
 router.get('/profesor/:id', perfilesController.obtenerPerfilProfesor);

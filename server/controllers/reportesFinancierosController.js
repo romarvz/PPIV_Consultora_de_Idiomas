@@ -5,13 +5,13 @@ const XLSX = require('xlsx');
 
 /**
  * CONTROLLER: reportesFinancierosController
- * PROPÓSITO: Maneja las peticiones HTTP para reportes financieros
+ * PURPOSE: Handles HTTP requests for financial reports
  * 
- * IMPORTANTE: Usa helpers temporales, reemplazar con los de Romina
+ * 
  */
 
-// Helpers temporales
-const sendSuccess = (res, data, message = 'Éxito', statusCode = 200) => {
+// 
+const sendSuccess = (res, data, message = 'Success', statusCode = 200) => {
     return res.status(statusCode).json({
         success: true,
         message,
@@ -27,12 +27,12 @@ const sendError = (res, error, statusCode = 500) => {
 };
 
 // ============================================
-// SECCIÓN 1: GENERAR REPORTES
+// SECTION 1: GENERATE REPORTS
 // ============================================
 
 /**
  * POST /api/reportes-financieros/generar
- * Genera un nuevo reporte financiero para un período
+ * Generates new financial report for period
  */
 exports.generarReporte = async (req, res) => {
     try {
@@ -54,7 +54,7 @@ exports.generarReporte = async (req, res) => {
             notas
         } = req.body;
 
-        // Validar datos requeridos
+        // 
         if (!periodo) {
             return sendError(res, 'Falta dato requerido: periodo (formato: YYYY-Q1 o YYYY-MM)', 400);
         }
@@ -89,7 +89,7 @@ exports.generarReporte = async (req, res) => {
 
 /**
  * POST /api/reportes-financieros/generar-automatico
- * Genera reporte automático para el período actual
+ * Generates automatic report for current period
  */
 exports.generarReporteAutomatico = async (req, res) => {
     try {
@@ -105,12 +105,12 @@ exports.generarReporteAutomatico = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 2: OBTENER REPORTES
+// SECTION 2: GET REPORTS
 // ============================================
 
 /**
  * GET /api/reportes-financieros/periodo/:periodo
- * Obtiene un reporte por período específico
+ * Gets report by specific period
  */
 exports.obtenerReportePorPeriodo = async (req, res) => {
     try {
@@ -131,7 +131,7 @@ exports.obtenerReportePorPeriodo = async (req, res) => {
 
 /**
  * GET /api/reportes-financieros/recientes
- * Obtiene los reportes más recientes
+ * Gets most recent reports
  */
 exports.obtenerReportesRecientes = async (req, res) => {
     try {
@@ -149,7 +149,7 @@ exports.obtenerReportesRecientes = async (req, res) => {
 
 /**
  * GET /api/reportes-financieros
- * Obtiene todos los reportes con filtros opcionales
+ * Gets all reports with optional filters
  */
 exports.obtenerTodosReportes = async (req, res) => {
     try {
@@ -168,12 +168,12 @@ exports.obtenerTodosReportes = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 3: ACTUALIZAR REPORTES
+// SECTION 3: UPDATE REPORTS
 // ============================================
 
 /**
  * PUT /api/reportes-financieros/periodo/:periodo
- * Actualiza un reporte existente
+ * Updates existing report
  */
 exports.actualizarReporte = async (req, res) => {
     try {
@@ -194,7 +194,7 @@ exports.actualizarReporte = async (req, res) => {
 
 /**
  * POST /api/reportes-financieros/periodo/:periodo/deuda
- * Agrega un estudiante con deuda al reporte
+ * Adds student with debt to report
  */
 exports.agregarEstudianteConDeuda = async (req, res) => {
     try {
@@ -220,12 +220,12 @@ exports.agregarEstudianteConDeuda = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 4: ANÁLISIS Y COMPARACIONES
+// SECTION 4: ANALYSIS AND COMPARISONS
 // ============================================
 
 /**
  * GET /api/reportes-financieros/comparar/:periodo1/:periodo2
- * Compara dos períodos financieros
+ * Compares two financial periods
  */
 exports.compararPeriodos = async (req, res) => {
     try {
@@ -242,7 +242,7 @@ exports.compararPeriodos = async (req, res) => {
 
 /**
  * GET /api/reportes-financieros/tendencias
- * Obtiene tendencias financieras de últimos períodos
+ * Gets financial trends from recent periods
  */
 exports.obtenerTendencias = async (req, res) => {
     try {
@@ -275,7 +275,7 @@ exports.obtenerEstadisticasMorosidad = async (req, res) => {
 
 /**
  * GET /api/reportes-financieros/proyeccion
- * Calcula proyección de ingresos para próximo período
+ * Calculates income projection for next period
  */
 exports.calcularProyeccion = async (req, res) => {
     try {
@@ -293,12 +293,12 @@ exports.calcularProyeccion = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 5: EXPORTACIÓN
+// SECTION 5: EXPORT
 // ============================================
 
 /**
  * GET /api/reportes-financieros/periodo/:periodo/exportar-pdf
- * Exporta reporte financiero a PDF
+ * Exports financial report to PDF
  */
 exports.exportarPDF = async (req, res) => {
     try {
@@ -325,7 +325,7 @@ exports.exportarPDF = async (req, res) => {
 
 /**
  * GET /api/reportes-financieros/periodo/:periodo/exportar-excel
- * Exporta reporte financiero a Excel
+ * Exports financial report to Excel
  */
 exports.exportarExcel = async (req, res) => {
     try {

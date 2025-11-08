@@ -17,8 +17,8 @@ const perfilEstudianteSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'BaseUser',
         required: [true, 'User is required'],
-        unique: true, // One student = one profile
-        index: true // Optimizes searches by user
+        unique: true,
+        index: true
     },
 
     // ============================================
@@ -91,7 +91,7 @@ const perfilEstudianteSchema = new mongoose.Schema({
         codigoVerificacion: {
             type: String,
             unique: true,
-            sparse: true // Allows nulls but if there is a value it must be unique
+            sparse: true
         }
     }],
 
@@ -105,8 +105,8 @@ const perfilEstudianteSchema = new mongoose.Schema({
                 type: String,
                 enum: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
             },
-            horaInicio: String, // Format: "14:00"
-            horaFin: String     // Format: "18:00"
+            horaInicio: String,
+            horaFin: String
         }],
         modalidad: {
             type: String,
@@ -149,7 +149,7 @@ const perfilEstudianteSchema = new mongoose.Schema({
     }
 
 }, {
-    timestamps: true, // Automatically adds createdAt and updatedAt
+    timestamps: true
     collection: 'perfiles_estudiantes'
 });
 

@@ -5,13 +5,13 @@ const XLSX = require('xlsx');
 
 /**
  * CONTROLLER: reportesAcademicosController
- * PROPÓSITO: Maneja las peticiones HTTP para reportes académicos
+ * PURPOSE: Handles HTTP requests for academic reports
  * 
- * IMPORTANTE: Usa helpers temporales, reemplazar con los de Romina
+ * 
  */
 
-// Helpers temporales
-const sendSuccess = (res, data, message = 'Éxito', statusCode = 200) => {
+// 
+const sendSuccess = (res, data, message = 'Success', statusCode = 200) => {
     return res.status(statusCode).json({
         success: true,
         message,
@@ -27,12 +27,12 @@ const sendError = (res, error, statusCode = 500) => {
 };
 
 // ============================================
-// SECCIÓN 1: GENERAR REPORTES
+// SECTION 1: GENERATE REPORTS
 // ============================================
 
 /**
  * POST /api/reportes-academicos/generar
- * Genera un nuevo reporte académico
+ * Generates new academic report
  */
 exports.generarReporte = async (req, res) => {
     try {
@@ -49,12 +49,12 @@ exports.generarReporte = async (req, res) => {
             areasAMejorar
         } = req.body;
 
-        // Validar datos requeridos
+        // 
         if (!estudianteId || !cursoId) {
             return sendError(res, 'Faltan datos requeridos: estudianteId, cursoId', 400);
         }
 
-        // El profesor o admin que genera el reporte
+        // 
         const generadoPorId = req.user.id;
 
         const reporte = await reportesAcademicosService.generarReporteAcademico({
@@ -80,7 +80,7 @@ exports.generarReporte = async (req, res) => {
 
 /**
  * POST /api/reportes-academicos/generar-automatico/:cursoId
- * Genera reportes automáticos para todos los estudiantes de un curso
+ * Generates automatic reports for all course students
  */
 exports.generarReportesAutomaticos = async (req, res) => {
     try {
@@ -100,12 +100,12 @@ exports.generarReportesAutomaticos = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 2: OBTENER REPORTES
+// SECTION 2: GET REPORTS
 // ============================================
 
 /**
  * GET /api/reportes-academicos/:id
- * Obtiene un reporte específico por ID
+ * Gets specific report by ID
  */
 exports.obtenerReportePorId = async (req, res) => {
     try {
@@ -117,7 +117,7 @@ exports.obtenerReportePorId = async (req, res) => {
             return sendError(res, 'Reporte no encontrado', 404);
         }
 
-        // Verificar permisos: solo el estudiante, profesor del curso, o admin
+        // 
         const esEstudiante = reporte.estudiante._id.toString() === req.user.id.toString();
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -134,14 +134,14 @@ exports.obtenerReportePorId = async (req, res) => {
 
 /**
  * GET /api/reportes-academicos/estudiante/:estudianteId
- * Obtiene todos los reportes de un estudiante
+ * Gets all student reports
  */
 exports.obtenerReportesPorEstudiante = async (req, res) => {
     try {
         const { estudianteId } = req.params;
         const { periodo, estado, cursoId } = req.query;
 
-        // Verificar permisos
+        // 
         const esPropio = req.user.id.toString() === estudianteId;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -163,7 +163,7 @@ exports.obtenerReportesPorEstudiante = async (req, res) => {
 
 /**
  * GET /api/reportes-academicos/curso/:cursoId
- * Obtiene todos los reportes de un curso
+ * Gets all course reports
  */
 exports.obtenerReportesPorCurso = async (req, res) => {
     try {
@@ -189,7 +189,7 @@ exports.obtenerReportesPorCurso = async (req, res) => {
 
 /**
  * GET /api/reportes-academicos/periodo/:periodo
- * Obtiene todos los reportes de un período
+ * Gets all period reports
  */
 exports.obtenerReportesPorPeriodo = async (req, res) => {
     try {
@@ -210,12 +210,12 @@ exports.obtenerReportesPorPeriodo = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 3: ACTUALIZAR REPORTES
+// SECTION 3: UPDATE REPORTS
 // ============================================
 
 /**
  * PUT /api/reportes-academicos/:id
- * Actualiza un reporte existente
+ * Updates existing report
  */
 exports.actualizarReporte = async (req, res) => {
     try {
@@ -236,14 +236,14 @@ exports.actualizarReporte = async (req, res) => {
 
 /**
  * POST /api/reportes-academicos/:id/evaluacion
- * Agrega una evaluación al reporte
+ * Adds evaluation to report
  */
 exports.agregarEvaluacion = async (req, res) => {
     try {
         const { id } = req.params;
         const { tipo, nota, fecha, comentarios } = req.body;
 
-        // Validar datos requeridos
+        // 
         if (!tipo || nota === undefined) {
             return sendError(res, 'Faltan datos requeridos: tipo, nota', 400);
         }
@@ -263,18 +263,18 @@ exports.agregarEvaluacion = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 4: ESTADÍSTICAS Y ANÁLISIS
+// SECTION 4: STATISTICS AND ANALYSIS
 // ============================================
 
 /**
  * GET /api/reportes-academicos/estudiante/:estudianteId/estadisticas
- * Obtiene estadísticas generales del estudiante
+ * Gets general student statistics
  */
 exports.obtenerEstadisticasEstudiante = async (req, res) => {
     try {
         const { estudianteId } = req.params;
 
-        // Verificar permisos
+        // 
         const esPropio = req.user.id.toString() === estudianteId;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -293,7 +293,7 @@ exports.obtenerEstadisticasEstudiante = async (req, res) => {
 
 /**
  * GET /api/reportes-academicos/curso/:cursoId/resumen
- * Obtiene resumen del curso (todos los estudiantes)
+ * Gets course summary (all students)
  */
 exports.obtenerResumenCurso = async (req, res) => {
     try {
@@ -314,12 +314,12 @@ exports.obtenerResumenCurso = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 5: EXPORTACIÓN
+// SECTION 5: EXPORT
 // ============================================
 
 /**
  * GET /api/reportes-academicos/:id/exportar-pdf
- * Exporta reporte a PDF
+ * Exports report to PDF
  */
 exports.exportarPDF = async (req, res) => {
     try {
@@ -331,7 +331,7 @@ exports.exportarPDF = async (req, res) => {
             return sendError(res, 'Reporte no encontrado', 404);
         }
 
-        // Verificar permisos
+        // 
         const esEstudiante = reporte.estudiante._id.toString() === req.user.id.toString();
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -354,7 +354,7 @@ exports.exportarPDF = async (req, res) => {
 
 /**
  * GET /api/reportes-academicos/:id/exportar-excel
- * Exporta reporte a Excel
+ * Exports report to Excel
  */
 exports.exportarExcel = async (req, res) => {
     try {
@@ -366,7 +366,7 @@ exports.exportarExcel = async (req, res) => {
             return sendError(res, 'Reporte no encontrado', 404);
         }
 
-        // Verificar permisos
+        // 
         const esEstudiante = reporte.estudiante._id.toString() === req.user.id.toString();
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 

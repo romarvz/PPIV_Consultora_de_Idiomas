@@ -2,16 +2,16 @@ const perfilesService = require('../services/perfilesService');
 
 /**
  * CONTROLLER: perfilesController
- * PROPÓSITO: Maneja las peticiones HTTP relacionadas con perfiles
+ * PURPOSE: Handles HTTP requests for profiles
  * 
- * IMPORTANTE: Este controlador debe usar los helpers de Romina cuando estén listos:
+ * 
  * - const { sendSuccess, sendError } = require('../shared/helpers/responseHandler');
  * 
- * Por ahora usa respuestas estándar de Express
+ * 
  */
 
-// Helpers temporales (reemplazar con los de Romina cuando estén listos)
-const sendSuccess = (res, data, message = 'Éxito', statusCode = 200) => {
+// 
+const sendSuccess = (res, data, message = 'Success', statusCode = 200) => {
     return res.status(statusCode).json({
         success: true,
         message,
@@ -26,12 +26,12 @@ const sendError = (res, error, statusCode = 500) => {
     });
 };
 
-// SECCIÓN 6: PERFIL DE PROFESOR
+// SECTION 6: TEACHER PROFILE
 // ============================================
 
 /**
  * GET /api/perfiles/profesor/:id
- * Obtiene el perfil público de un profesor
+ * Gets teacher public profile
  */
 exports.obtenerPerfilProfesor = async (req, res) => {
     try {
@@ -51,18 +51,18 @@ exports.obtenerPerfilProfesor = async (req, res) => {
 };
 
 module.exports = exports;
-// SECCIÓN 1: PERFIL COMPLETO DEL ESTUDIANTE
+// SECTION 1: COMPLETE STUDENT PROFILE
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id
- * Obtiene el perfil completo de un estudiante
+ * Gets complete student profile
  */
 exports.obtenerPerfilEstudiante = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Verificar permisos: solo el estudiante mismo, profesores o admin
+        // 
         const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -85,7 +85,7 @@ exports.obtenerPerfilEstudiante = async (req, res) => {
 
 /**
  * POST /api/perfiles/estudiante/:id
- * Crea o inicializa el perfil de un estudiante
+ * Creates or initializes student profile
  */
 exports.crearPerfilEstudiante = async (req, res) => {
     try {
@@ -101,18 +101,18 @@ exports.crearPerfilEstudiante = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 2: PREFERENCIAS
+// SECTION 2: PREFERENCES
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/preferencias
- * Obtiene las preferencias del estudiante
+ * Gets student preferences
  */
 exports.obtenerPreferencias = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Verificar permisos: solo el estudiante mismo o admin
+        // 
         const esPropio = req.user.id.toString() === id;
         const esAdmin = req.user.role === 'admin';
 
@@ -135,14 +135,14 @@ exports.obtenerPreferencias = async (req, res) => {
 
 /**
  * PUT /api/perfiles/estudiante/:id/preferencias
- * Actualiza las preferencias del estudiante
+ * Updates student preferences
  */
 exports.actualizarPreferencias = async (req, res) => {
     try {
         const { id } = req.params;
         const nuevasPreferencias = req.body;
 
-        // Verificar permisos: solo el estudiante mismo o admin
+        // 
         const esPropio = req.user.id.toString() === id;
         const esAdmin = req.user.role === 'admin';
 
@@ -160,18 +160,18 @@ exports.actualizarPreferencias = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 3: CERTIFICADOS
+// SECTION 3: CERTIFICATES
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/certificados
- * Obtiene todos los certificados del estudiante
+ * Gets all student certificates
  */
 exports.obtenerCertificados = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Verificar permisos: estudiante, profesor o admin
+        // 
         const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -190,14 +190,14 @@ exports.obtenerCertificados = async (req, res) => {
 
 /**
  * POST /api/perfiles/estudiante/:id/certificados
- * Agrega un nuevo certificado al estudiante
+ * Adds new certificate to student
  */
 exports.agregarCertificado = async (req, res) => {
     try {
         const { id } = req.params;
         const { cursoId, idioma, nivel } = req.body;
 
-        // Validar datos requeridos
+        // 
         if (!cursoId || !idioma || !nivel) {
             return sendError(res, 'Faltan datos requeridos: cursoId, idioma, nivel', 400);
         }
@@ -217,7 +217,7 @@ exports.agregarCertificado = async (req, res) => {
 
 /**
  * GET /api/perfiles/certificado/verificar/:codigo
- * Verifica un certificado por su código (público, sin autenticación)
+ * Verifies certificate by code (public, no auth)
  */
 exports.verificarCertificado = async (req, res) => {
     try {
@@ -237,18 +237,18 @@ exports.verificarCertificado = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 4: ESTADÍSTICAS
+// SECTION 4: STATISTICS
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/estadisticas
- * Obtiene las estadísticas del estudiante
+ * Gets student statistics
  */
 exports.obtenerEstadisticas = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Verificar permisos
+        // 
         const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -271,7 +271,7 @@ exports.obtenerEstadisticas = async (req, res) => {
 
 /**
  * PUT /api/perfiles/estudiante/:id/estadisticas/actualizar
- * Recalcula las estadísticas del estudiante
+ * Recalculates student statistics
  */
 exports.actualizarEstadisticas = async (req, res) => {
     try {
@@ -287,18 +287,18 @@ exports.actualizarEstadisticas = async (req, res) => {
 };
 
 // ============================================
-// SECCIÓN 5: HISTORIAL DE CURSOS
+// SECTION 5: COURSE HISTORY
 // ============================================
 
 /**
  * GET /api/perfiles/estudiante/:id/historial
- * Obtiene el historial completo de cursos
+ * Gets complete course history
  */
 exports.obtenerHistorialCursos = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Verificar permisos
+        // 
         const esPropio = req.user.id.toString() === id;
         const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
 
@@ -317,14 +317,14 @@ exports.obtenerHistorialCursos = async (req, res) => {
 
 /**
  * POST /api/perfiles/estudiante/:id/historial
- * Agrega un curso al historial
+ * Adds course to history
  */
 exports.agregarCursoHistorial = async (req, res) => {
     try {
         const { id } = req.params;
         const { cursoId, fechaInicio, fechaFin, progreso, calificacionFinal, estado } = req.body;
 
-        // Validar datos requeridos
+        // 
         if (!cursoId || !fechaInicio) {
             return sendError(res, 'Faltan datos requeridos: cursoId, fechaInicio', 400);
         }

@@ -5,19 +5,19 @@ const reportesAcademicosController = require('../controllers/reportesAcademicosC
 const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew');
 
 /**
- * RUTAS: Reportes Académicos
+ * ROUTES: Academic Reports
  * BASE URL: /api/reportes-academicos
  */
 
 router.use(authenticateToken);
 
 // ============================================
-// SECCIÓN 1: GENERAR REPORTES
+// SECTION 1: GENERATE REPORTS
 // ============================================
 
 /**
  * POST /api/reportes-academicos/generar
- * Genera un nuevo reporte académico para un estudiante
+ * Generates new academic report for student
  * Acceso: Profesor, Admin
  */
 router.post('/generar',
@@ -27,7 +27,7 @@ router.post('/generar',
 
 /**
  * POST /api/reportes-academicos/generar-automatico/:cursoId
- * Genera reportes automáticos para todos los estudiantes de un curso
+ * Generates automatic reports for all course students
  * Acceso: Admin
  */
 router.post('/generar-automatico/:cursoId',
@@ -36,28 +36,28 @@ router.post('/generar-automatico/:cursoId',
 );
 
 // ============================================
-// SECCIÓN 2: OBTENER REPORTES
+// SECTION 2: GET REPORTS
 // ============================================
 
 /**
  * GET /api/reportes-academicos/:id
- * Obtiene un reporte específico por ID
+ * Gets specific report by ID
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/:id', reportesAcademicosController.obtenerReportePorId);
 
 /**
  * GET /api/reportes-academicos/estudiante/:estudianteId
- * Obtiene todos los reportes de un estudiante
- * Query params opcionales: ?periodo=2025-Q1&estado=aprobado&cursoId=xxx
+ * Gets all student reports
+ * Optional query params: ?periodo=2025-Q1&estado=aprobado&cursoId=xxx
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/estudiante/:estudianteId', reportesAcademicosController.obtenerReportesPorEstudiante);
 
 /**
  * GET /api/reportes-academicos/curso/:cursoId
- * Obtiene todos los reportes de un curso
- * Query params opcionales: ?periodo=2025-Q1&estado=aprobado
+ * Gets all course reports
+ * Optional query params: ?periodo=2025-Q1&estado=aprobado
  * Acceso: Profesor, Admin
  */
 router.get('/curso/:cursoId',
@@ -67,7 +67,7 @@ router.get('/curso/:cursoId',
 
 /**
  * GET /api/reportes-academicos/periodo/:periodo
- * Obtiene todos los reportes de un período (ej: 2025-Q1)
+ * Gets all period reports (e.g. 2025-Q1)
  * Acceso: Admin
  */
 router.get('/periodo/:periodo',
@@ -76,12 +76,12 @@ router.get('/periodo/:periodo',
 );
 
 // ============================================
-// SECCIÓN 3: ACTUALIZAR REPORTES
+// SECTION 3: UPDATE REPORTS
 // ============================================
 
 /**
  * PUT /api/reportes-academicos/:id
- * Actualiza un reporte existente
+ * Updates existing report
  * Acceso: Profesor (del curso), Admin
  */
 router.put('/:id',
@@ -91,7 +91,7 @@ router.put('/:id',
 
 /**
  * POST /api/reportes-academicos/:id/evaluacion
- * Agrega una evaluación al reporte
+ * Adds evaluation to report
  * Acceso: Profesor (del curso), Admin
  */
 router.post('/:id/evaluacion',
@@ -100,12 +100,12 @@ router.post('/:id/evaluacion',
 );
 
 // ============================================
-// SECCIÓN 4: ESTADÍSTICAS Y ANÁLISIS
+// SECTION 4: STATISTICS AND ANALYSIS
 // ============================================
 
 /**
  * GET /api/reportes-academicos/estudiante/:estudianteId/estadisticas
- * Obtiene estadísticas generales del estudiante basadas en todos sus reportes
+ * Gets general student statistics based on all reports
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/estudiante/:estudianteId/estadisticas',
@@ -114,7 +114,7 @@ router.get('/estudiante/:estudianteId/estadisticas',
 
 /**
  * GET /api/reportes-academicos/curso/:cursoId/resumen
- * Obtiene resumen del curso con todos los estudiantes
+ * Gets course summary with all students
  * Acceso: Profesor, Admin
  */
 router.get('/curso/:cursoId/resumen',
@@ -123,19 +123,19 @@ router.get('/curso/:cursoId/resumen',
 );
 
 // ============================================
-// SECCIÓN 5: EXPORTACIÓN
+// SECTION 5: EXPORT
 // ============================================
 
 /**
  * GET /api/reportes-academicos/:id/exportar-pdf
- * Exporta reporte a PDF
+ * Exports report to PDF
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/:id/exportar-pdf', reportesAcademicosController.exportarPDF);
 
 /**
  * GET /api/reportes-academicos/:id/exportar-excel
- * Exporta reporte a Excel
+ * Exports report to Excel
  * Acceso: Estudiante (propio), Profesor, Admin
  */
 router.get('/:id/exportar-excel', reportesAcademicosController.exportarExcel);
