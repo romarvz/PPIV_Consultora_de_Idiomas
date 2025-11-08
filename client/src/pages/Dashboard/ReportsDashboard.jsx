@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import apiAdapter from '../../services/apiAdapter'
 import api from '../../services/api'
-import { FaFileExport, FaSpinner, FaFilePdf, FaFileExcel } from 'react-icons/fa'
+import { FaFileExport, FaSpinner, FaFilePdf, FaFileExcel, FaPlus } from 'react-icons/fa'
+import GenerateReportModal from '../../components/reports/GenerateReportModal'
 
 const ReportsDashboard = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('academic')
@@ -12,6 +13,7 @@ const ReportsDashboard = ({ onClose }) => {
   const [financialFilters, setFinancialFilters] = useState({ search: '', paymentStatus: '', minAmount: '', maxAmount: '' })
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [expandedRows, setExpandedRows] = useState(new Set())
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
 
   useEffect(() => {
     loadReports()
@@ -315,15 +317,35 @@ const ReportsDashboard = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Export Buttons */}
+        {/* Action Buttons */}
         <div style={{
           padding: '1rem',
           background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '0.75rem'
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
+          <button
+            onClick={() => setShowGenerateModal(true)}
+            style={{
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <FaPlus /> Generar Reporte
+          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             onClick={handleExportPDF}
             disabled={loading}
@@ -366,6 +388,7 @@ const ReportsDashboard = ({ onClose }) => {
           >
             <FaFileExcel /> Exportar Excel
           </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -959,6 +982,15 @@ const ReportsDashboard = ({ onClose }) => {
           </div>
         </div>
       </div>
+
+      {showGenerateModal && (
+        <GenerateReportModal
+          type={activeTab}
+          onClose={() => setShowGenerateModal(false)}
+          onSuccess={loadReports}
+        />
+      )}
+    </div>
   )
 }
 
