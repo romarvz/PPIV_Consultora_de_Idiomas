@@ -41,10 +41,9 @@ const ReportsDashboard = ({ onClose }) => {
       const token = localStorage.getItem('token')
       
       if (activeTab === 'academic') {
-        // Get first report ID from academic data
         const reportId = academicData?.students?.[0]?._id
         if (!reportId) {
-          alert('No hay reportes académicos disponibles para exportar')
+          alert('No hay reportes académicos disponibles para exportar. Por favor, genere un reporte primero.')
           return
         }
         
@@ -52,7 +51,10 @@ const ReportsDashboard = ({ onClose }) => {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         
-        if (!response.ok) throw new Error('Error al exportar PDF')
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
         
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
@@ -64,12 +66,15 @@ const ReportsDashboard = ({ onClose }) => {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        const periodo = '2025-Q1' // You can make this dynamic
+        const periodo = '2025-Q1'
         const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-pdf`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         
-        if (!response.ok) throw new Error('Error al exportar PDF')
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
         
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
@@ -83,7 +88,7 @@ const ReportsDashboard = ({ onClose }) => {
       }
     } catch (error) {
       console.error('Error exporting PDF:', error)
-      alert('Error al exportar PDF: ' + error.message)
+      alert('Error al exportar PDF:\n' + error.message)
     } finally {
       setLoading(false)
     }
@@ -97,7 +102,7 @@ const ReportsDashboard = ({ onClose }) => {
       if (activeTab === 'academic') {
         const reportId = academicData?.students?.[0]?._id
         if (!reportId) {
-          alert('No hay reportes académicos disponibles para exportar')
+          alert('No hay reportes académicos disponibles para exportar. Por favor, genere un reporte primero.')
           return
         }
         
@@ -105,7 +110,10 @@ const ReportsDashboard = ({ onClose }) => {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         
-        if (!response.ok) throw new Error('Error al exportar Excel')
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
         
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
@@ -122,7 +130,10 @@ const ReportsDashboard = ({ onClose }) => {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         
-        if (!response.ok) throw new Error('Error al exportar Excel')
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
         
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
@@ -136,7 +147,7 @@ const ReportsDashboard = ({ onClose }) => {
       }
     } catch (error) {
       console.error('Error exporting Excel:', error)
-      alert('Error al exportar Excel: ' + error.message)
+      alert('Error al exportar Excel:\n' + error.message)
     } finally {
       setLoading(false)
     }
