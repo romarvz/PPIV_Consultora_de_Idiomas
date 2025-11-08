@@ -1,4 +1,7 @@
 const reportesFinancierosService = require('../services/reportesFinancierosService');
+const { generarReporteFinancieroPDF } = require('../services/pdfExportService');
+const { generarReporteFinancieroExcel } = require('../services/excelExportService');
+const XLSX = require('xlsx');
 
 /**
  * CONTROLLER: reportesFinancierosController
@@ -285,6 +288,65 @@ exports.calcularProyeccion = async (req, res) => {
         );
     } catch (error) {
         console.error('Error en calcularProyeccion:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
+// ============================================
+// SECCIÓN 5: EXPORTACIÓN
+// ============================================
+
+/**
+ * GET /api/reportes-financieros/periodo/:periodo/exportar-pdf
+ * Exporta reporte financiero a PDF
+ */
+exports.exportarPDF = async (req, res) => {
+    try {
+        const { periodo } = req.params;
+
+        const reporte = await reportesFinancierosService.obtenerReportePorPeriodo(periodo);
+
+        if (!reporte) {
+            return sendError(res, 'Reporte no encontrado', 404);
+        }
+
+        const doc = generarReporteFinancieroPDF(reporte);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=reporte-financiero-${periodo}.pdf`);
+
+        doc.pipe(res);
+        doc.end();
+    } catch (error) {
+        console.error('Error en exportarPDF:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
+/**
+ * GET /api/reportes-financieros/periodo/:periodo/exportar-excel
+ * Exporta reporte financiero a Excel
+ */
+exports.exportarExcel = async (req, res) => {
+    try {
+        const { periodo } = req.params;
+
+        const reporte = await reportesFinancierosService.obtenerReportePorPeriodo(periodo);
+
+        if (!reporte) {
+            return sendError(res, 'Reporte no encontrado', 404);
+        }
+
+        const workbook = generarReporteFinancieroExcel(reporte);
+
+        const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=reporte-financiero-${periodo}.xlsx`);
+
+        res.send(buffer);
+    } catch (error) {
+        console.error('Error en exportarExcel:', error);
         return sendError(res, error.message, 500);
     }
 };

@@ -174,4 +174,28 @@ router.get('/proyeccion',
     reportesFinancierosController.calcularProyeccion
 );
 
+// ============================================
+// SECCIÓN 5: EXPORTACIÓN
+// ============================================
+
+/**
+ * GET /api/reportes-financieros/periodo/:periodo/exportar-pdf
+ * Exporta reporte financiero a PDF
+ * Acceso: Admin
+ */
+router.get('/periodo/:periodo/exportar-pdf',
+    checkRole(['admin']),
+    reportesFinancierosController.exportarPDF
+);
+
+/**
+ * GET /api/reportes-financieros/periodo/:periodo/exportar-excel
+ * Exporta reporte financiero a Excel
+ * Acceso: Admin
+ */
+router.get('/periodo/:periodo/exportar-excel',
+    checkRole(['admin']),
+    reportesFinancierosController.exportarExcel
+);
+
 module.exports = router;

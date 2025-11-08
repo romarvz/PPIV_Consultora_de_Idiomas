@@ -1,4 +1,7 @@
 const reportesAcademicosService = require('../services/reportesAcademicosService');
+const { generarReporteAcademicoPDF } = require('../services/pdfExportService');
+const { generarReporteAcademicoExcel } = require('../services/excelExportService');
+const XLSX = require('xlsx');
 
 /**
  * CONTROLLER: reportesAcademicosController
@@ -306,6 +309,81 @@ exports.obtenerResumenCurso = async (req, res) => {
         return sendSuccess(res, resumen, 'Resumen del curso obtenido exitosamente');
     } catch (error) {
         console.error('Error en obtenerResumenCurso:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
+// ============================================
+// SECCIÓN 5: EXPORTACIÓN
+// ============================================
+
+/**
+ * GET /api/reportes-academicos/:id/exportar-pdf
+ * Exporta reporte a PDF
+ */
+exports.exportarPDF = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const reporte = await reportesAcademicosService.obtenerReportePorId(id);
+
+        if (!reporte) {
+            return sendError(res, 'Reporte no encontrado', 404);
+        }
+
+        // Verificar permisos
+        const esEstudiante = reporte.estudiante._id.toString() === req.user._id.toString();
+        const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
+
+        if (!esEstudiante && !esProfesorOAdmin) {
+            return sendError(res, 'No tienes permiso para exportar este reporte', 403);
+        }
+
+        const doc = generarReporteAcademicoPDF(reporte);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=reporte-academico-${id}.pdf`);
+
+        doc.pipe(res);
+        doc.end();
+    } catch (error) {
+        console.error('Error en exportarPDF:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
+/**
+ * GET /api/reportes-academicos/:id/exportar-excel
+ * Exporta reporte a Excel
+ */
+exports.exportarExcel = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const reporte = await reportesAcademicosService.obtenerReportePorId(id);
+
+        if (!reporte) {
+            return sendError(res, 'Reporte no encontrado', 404);
+        }
+
+        // Verificar permisos
+        const esEstudiante = reporte.estudiante._id.toString() === req.user._id.toString();
+        const esProfesorOAdmin = ['profesor', 'admin'].includes(req.user.role);
+
+        if (!esEstudiante && !esProfesorOAdmin) {
+            return sendError(res, 'No tienes permiso para exportar este reporte', 403);
+        }
+
+        const workbook = generarReporteAcademicoExcel(reporte);
+
+        const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=reporte-academico-${id}.xlsx`);
+
+        res.send(buffer);
+    } catch (error) {
+        console.error('Error en exportarExcel:', error);
         return sendError(res, error.message, 500);
     }
 };

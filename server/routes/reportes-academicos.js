@@ -155,4 +155,22 @@ router.get('/curso/:cursoId/resumen',
     reportesAcademicosController.obtenerResumenCurso
 );
 
+// ============================================
+// SECCIÓN 5: EXPORTACIÓN
+// ============================================
+
+/**
+ * GET /api/reportes-academicos/:id/exportar-pdf
+ * Exporta reporte a PDF
+ * Acceso: Estudiante (propio), Profesor, Admin
+ */
+router.get('/:id/exportar-pdf', reportesAcademicosController.exportarPDF);
+
+/**
+ * GET /api/reportes-academicos/:id/exportar-excel
+ * Exporta reporte a Excel
+ * Acceso: Estudiante (propio), Profesor, Admin
+ */
+router.get('/:id/exportar-excel', reportesAcademicosController.exportarExcel);
+
 module.exports = router;
