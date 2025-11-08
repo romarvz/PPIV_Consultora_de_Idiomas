@@ -12,7 +12,7 @@
 }
 
 .modal-content {
-  background: var(--card-background);
+  background: #ffffff;
   padding: 2rem;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow-hover);
