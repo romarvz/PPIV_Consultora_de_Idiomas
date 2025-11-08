@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/courseModals.css';
+import '../../styles/courseModals.css';
 
 
 const CourseDetailModal = ({ course, onClose, teacher }) => {
