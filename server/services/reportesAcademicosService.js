@@ -1,6 +1,7 @@
 const ReporteAcademico = require('../models/ReporteAcademico');
 const PerfilEstudiante = require('../models/PerfilEstudiante');
 const { BaseUser } = require('../models');
+const cursosService = require('./cursosService');
 
 /**
  * SERVICE: reportesAcademicosService
@@ -36,19 +37,19 @@ exports.generarReporteAcademico = async (datosReporte) => {
             throw new Error('Estudiante no encontrado');
         }
 
-        // TODO: Cuando Lorena tenga su servicio, usar esto:
-        // const cursosService = require('./cursosService');
-        // const curso = await cursosService.getCursoById(cursoId);
-        // if (!curso) throw new Error('Curso no encontrado');
+        let progreso = datosReporte.progreso;
+        if (!progreso && cursoId && estudianteId) {
+            try {
+                const progresoData = await cursosService.calcularProgresoCurso(cursoId, estudianteId);
+                progreso = progresoData.progreso || 0;
+            } catch (error) {
+                console.log('Could not calculate progress:', error.message);
+                progreso = 0;
+            }
+        }
 
-        // TODO: Obtener datos de asistencia de Lorena
-        // const clasesService = require('./clasesService');
-        // const horasData = await clasesService.getHorasCompletadasCurso(cursoId, estudianteId);
-
-        // TEMPORAL: Datos de ejemplo hasta que Lorena tenga su módulo
         const horasAsistidas = datosReporte.horasAsistidas || 0;
         const horasTotales = datosReporte.horasTotales || 0;
-        const progreso = datosReporte.progreso || 0;
 
         // Crear el reporte
         const nuevoReporte = new ReporteAcademico({
@@ -381,29 +382,25 @@ exports.obtenerResumenCurso = async (cursoId) => {
  */
 exports.generarReportesAutomaticosCurso = async (cursoId, generadoPorId) => {
     try {
-        // TODO: Cuando Lorena tenga su servicio, obtener estudiantes del curso
-        // const cursosService = require('./cursosService');
-        // const estudiantes = await cursosService.getEstudiantesCurso(cursoId);
+        const estudiantes = await cursosService.getEstudiantesCurso(cursoId);
+        
+        if (!estudiantes || estudiantes.length === 0) {
+            throw new Error('No students found in this course');
+        }
 
-        // Por ahora, lanzar error indicando que falta integración
-        throw new Error('Esta función requiere integración con el módulo de Lorena (cursosService)');
-
-        // FUTURO: Iterar sobre estudiantes y generar reporte para cada uno
-        /*
         const reportesGenerados = [];
         
         for (const estudiante of estudiantes) {
-        const reporte = await exports.generarReporteAcademico({
-            estudianteId: estudiante._id,
-            cursoId,
-            periodo: generarPeriodoActual(),
-            generadoPorId
+            const reporte = await exports.generarReporteAcademico({
+                estudianteId: estudiante._id,
+                cursoId,
+                periodo: generarPeriodoActual(),
+                generadoPorId
             });
             reportesGenerados.push(reporte);
         }
     
         return reportesGenerados;
-        */
     } catch (error) {
         throw new Error(`Error al generar reportes automáticos: ${error.message}`);
     }

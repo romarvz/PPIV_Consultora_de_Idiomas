@@ -1,5 +1,7 @@
 const ReporteFinanciero = require('../models/ReporteFinanciero');
 const { BaseUser } = require('../models');
+const Cobro = require('../models/cobros.model');
+const Factura = require('../models/factura.model');
 
 /**
  * SERVICE: reportesFinancierosService
@@ -35,24 +37,32 @@ exports.generarReporteFinanciero = async (datosReporte) => {
             throw new Error(`Ya existe un reporte para el período ${periodo}`);
         }
 
-        // TODO: Cuando Ayelen tenga su servicio, usar esto:
-        // const pagosService = require('./pagosService');
-        // const ingresosPorConcepto = await pagosService.calcularIngresosPorConcepto(fechaInicio, fechaFin);
-        // const ingresosPorMetodo = await pagosService.calcularIngresosPorMetodo(fechaInicio, fechaFin);
-        // const pagosPendientes = await pagosService.contarPagosPendientes();
-        // const pagosVencidos = await pagosService.contarPagosVencidos();
-        // const saldoPendiente = await pagosService.calcularSaldoTotal();
+        let totalIngresos = datosReporte.totalIngresos;
+        let saldoPendiente = datosReporte.saldoPendiente;
+        let pagosPendientes = datosReporte.pagosPendientes;
+        let pagosVencidos = datosReporte.pagosVencidos;
 
-        // TODO: Cuando Lorena tenga su servicio, usar esto:
-        // const cursosService = require('./cursosService');
-        // const ingresosPorIdioma = await cursosService.calcularIngresosPorIdioma(fechaInicio, fechaFin);
+        if (!totalIngresos) {
+            const cobros = await Cobro.find({
+                fechaCobro: { $gte: fechaInicio || calcularFechaInicioPeriodo(periodo), $lte: fechaFin || calcularFechaFinPeriodo(periodo) }
+            });
+            totalIngresos = cobros.reduce((sum, c) => sum + c.monto, 0);
+        }
 
-        // TEMPORAL: Datos de ejemplo hasta que Ayelen y Lorena tengan sus módulos
-        const totalIngresos = datosReporte.totalIngresos || 0;
+        if (!saldoPendiente) {
+            const facturasPendientes = await Factura.find({ estado: { $in: ['Pendiente', 'Cobrada Parcialmente'] } });
+            saldoPendiente = facturasPendientes.reduce((sum, f) => sum + (f.total - (f.totalCobrado || 0)), 0);
+        }
+
+        if (!pagosPendientes) {
+            pagosPendientes = await Factura.countDocuments({ estado: 'Pendiente' });
+        }
+
+        if (!pagosVencidos) {
+            pagosVencidos = await Factura.countDocuments({ estado: 'Vencida' });
+        }
+
         const totalGastos = datosReporte.totalGastos || 0;
-        const saldoPendiente = datosReporte.saldoPendiente || 0;
-        const pagosPendientes = datosReporte.pagosPendientes || 0;
-        const pagosVencidos = datosReporte.pagosVencidos || 0;
 
         // Crear el reporte
         const nuevoReporte = new ReporteFinanciero({
@@ -386,16 +396,23 @@ exports.calcularTendencias = async (cantidad = 4) => {
  */
 exports.obtenerEstadisticasMorosidad = async () => {
     try {
-        // TODO: Integrar con servicio de Ayelen
-        // const pagosService = require('./pagosService');
-        // const estudiantesConDeuda = await pagosService.obtenerEstudiantesConDeuda();
+        const facturasPendientes = await Factura.find({ 
+            estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] } 
+        }).populate('estudiante', 'firstName lastName');
 
-        // TEMPORAL: Retornar estructura vacía
+        const estudiantesConDeuda = facturasPendientes.map(f => ({
+            estudiante: f.estudiante,
+            montoDeuda: f.total - (f.totalCobrado || 0),
+            factura: f.numeroFactura
+        }));
+
+        const montoTotalDeuda = estudiantesConDeuda.reduce((sum, e) => sum + e.montoDeuda, 0);
+
         return {
-            totalEstudiantesConDeuda: 0,
-            montoTotalDeuda: 0,
-            promedioDeudaPorEstudiante: 0,
-            estudiantesMayorDeuda: []
+            totalEstudiantesConDeuda: estudiantesConDeuda.length,
+            montoTotalDeuda,
+            promedioDeudaPorEstudiante: estudiantesConDeuda.length > 0 ? montoTotalDeuda / estudiantesConDeuda.length : 0,
+            estudiantesMayorDeuda: estudiantesConDeuda.sort((a, b) => b.montoDeuda - a.montoDeuda).slice(0, 10)
         };
     } catch (error) {
         throw new Error(`Error al obtener estadísticas de morosidad: ${error.message}`);
@@ -437,36 +454,31 @@ exports.generarReporteAutomatico = async (generadoPorId) => {
     try {
         const periodo = generarPeriodoActual();
 
-        // TODO: Integrar con servicios de Ayelen
-        // const pagosService = require('./pagosService');
-        // const facturasService = require('./facturasService');
-
-        // Por ahora, lanzar error indicando que falta integración
-        throw new Error('Esta función requiere integración con el módulo de Ayelen (pagosService, facturasService)');
-
-        // FUTURO: Calcular datos reales
-        /*
         const fechaInicio = calcularFechaInicioPeriodo(periodo);
         const fechaFin = calcularFechaFinPeriodo(periodo);
         
-        const totalIngresos = await pagosService.calcularIngresosTotal(fechaInicio, fechaFin);
-        const ingresosPorConcepto = await pagosService.calcularIngresosPorConcepto(fechaInicio, fechaFin);
-        const ingresosPorMetodo = await pagosService.calcularIngresosPorMetodo(fechaInicio, fechaFin);
-        const saldoPendiente = await pagosService.calcularSaldoTotal();
-        const estudiantesConDeuda = await pagosService.obtenerEstudiantesConDeuda();
+        const cobros = await Cobro.find({
+            fechaCobro: { $gte: fechaInicio, $lte: fechaFin }
+        });
+        const totalIngresos = cobros.reduce((sum, c) => sum + c.monto, 0);
+
+        const facturasPendientes = await Factura.find({ estado: { $in: ['Pendiente', 'Cobrada Parcialmente'] } });
+        const saldoPendiente = facturasPendientes.reduce((sum, f) => sum + (f.total - (f.totalCobrado || 0)), 0);
+
+        const estudiantesConDeuda = facturasPendientes.map(f => ({
+            estudiante: f.estudiante,
+            montoDeuda: f.total - (f.totalCobrado || 0)
+        }));
         
         return await exports.generarReporteFinanciero({
             periodo,
             fechaInicio,
             fechaFin,
             totalIngresos,
-            ingresosPorConcepto,
-            ingresosPorMetodo,
             saldoPendiente,
             estudiantesConDeuda,
             generadoPorId
         });
-        */
     } catch (error) {
         throw new Error(`Error al generar reporte automático: ${error.message}`);
     }
