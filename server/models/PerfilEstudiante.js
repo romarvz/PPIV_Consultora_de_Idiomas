@@ -149,7 +149,7 @@ const perfilEstudianteSchema = new mongoose.Schema({
     }
 
 }, {
-    timestamps: true
+    timestamps: true,
     collection: 'perfiles_estudiantes'
 });
 
