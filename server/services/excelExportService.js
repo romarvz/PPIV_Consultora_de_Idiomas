@@ -30,13 +30,13 @@ const generarReporteAcademicoExcel = (reporte) => {
       ['Tipo', 'Nombre', 'Nota', 'Fecha', 'Observaciones']
     ];
     
-    reporte.evaluaciones.forEach(eval => {
+    reporte.evaluaciones.forEach(evaluacion => {
       evaluacionesData.push([
-        eval.tipo,
-        eval.nombre,
-        eval.nota,
-        new Date(eval.fecha).toLocaleDateString(),
-        eval.observaciones || ''
+        evaluacion.tipo,
+        evaluacion.nombre,
+        evaluacion.nota,
+        new Date(evaluacion.fecha).toLocaleDateString(),
+        evaluacion.observaciones || ''
       ]);
     });
     

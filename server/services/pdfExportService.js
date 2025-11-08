@@ -32,11 +32,11 @@ const generarReporteAcademicoPDF = (reporte) => {
     doc.fontSize(14).text('Evaluaciones', { underline: true });
     doc.fontSize(10);
     
-    reporte.evaluaciones.forEach((eval, index) => {
-      doc.text(`${index + 1}. ${eval.tipo} - ${eval.nombre}`);
-      doc.text(`   Nota: ${eval.nota} - Fecha: ${new Date(eval.fecha).toLocaleDateString()}`);
-      if (eval.observaciones) {
-        doc.text(`   Observaciones: ${eval.observaciones}`);
+    reporte.evaluaciones.forEach((evaluacion, index) => {
+      doc.text(`${index + 1}. ${evaluacion.tipo} - ${evaluacion.nombre}`);
+      doc.text(`   Nota: ${evaluacion.nota} - Fecha: ${new Date(evaluacion.fecha).toLocaleDateString()}`);
+      if (evaluacion.observaciones) {
+        doc.text(`   Observaciones: ${evaluacion.observaciones}`);
       }
       doc.moveDown(0.5);
     });

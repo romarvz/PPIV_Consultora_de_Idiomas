@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest"
+    "test": "jest --testTimeout=10000",
+    "test:watch": "jest --watch --testTimeout=10000",
+    "test:coverage": "jest --coverage --testTimeout=10000",
+    "test:veronica": "jest __tests__/models/Perfil __tests__/models/Reporte __tests__/services/perfiles __tests__/services/reportes __tests__/integration/perfiles __tests__/integration/reportes --testTimeout=10000"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -24,7 +27,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "jest": "^29.6.2",
-    "nodemon": "^3.0.1"
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.3.0",
+    "nodemon": "^3.0.1",
+    "supertest": "^7.1.4"
   }
 }
