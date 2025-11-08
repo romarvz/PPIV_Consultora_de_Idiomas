@@ -6,7 +6,7 @@ import mockApi from './mockApi' // Mock para demo
 // SWITCH PRINCIPAL - Cambiar aquí para alternar entre mock y real
 // true = Usa datos mock (para demo sin backend)
 // false = Usa backend real (cuando esté implementado)
-const USE_MOCK = true
+const USE_MOCK = false
 
 // Variable de entorno alternativa (opcional)
 // const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true

@@ -44,8 +44,8 @@ const ReportsDashboard = ({ onClose }) => {
       
       if (activeTab === 'academic') {
         const reportId = academicData?.students?.[0]?._id
-        if (!reportId) {
-          alert('No hay reportes académicos disponibles para exportar. Por favor, genere un reporte primero.')
+        if (!reportId || reportId.startsWith('mock-')) {
+          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
           return
         }
         
@@ -103,8 +103,8 @@ const ReportsDashboard = ({ onClose }) => {
       
       if (activeTab === 'academic') {
         const reportId = academicData?.students?.[0]?._id
-        if (!reportId) {
-          alert('No hay reportes académicos disponibles para exportar. Por favor, genere un reporte primero.')
+        if (!reportId || reportId.startsWith('mock-')) {
+          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
           return
         }
         
@@ -261,7 +261,7 @@ const ReportsDashboard = ({ onClose }) => {
   }
 
   return (
-    <div>
+    <>
       {/* Header */}
       <div className="dashboard-section">
         <h3 className="dashboard-section__title">Reportes</h3>
@@ -981,7 +981,6 @@ const ReportsDashboard = ({ onClose }) => {
             )}
           </div>
         </div>
-      </div>
 
       {showGenerateModal && (
         <GenerateReportModal
@@ -990,7 +989,7 @@ const ReportsDashboard = ({ onClose }) => {
           onSuccess={loadReports}
         />
       )}
-    </div>
+    </>
   )
 }
 
