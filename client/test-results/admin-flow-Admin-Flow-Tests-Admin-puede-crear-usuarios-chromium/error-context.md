@@ -1,88 +1,101 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e3]:
-  - banner [ref=e4]:
-    - navigation [ref=e6]:
-      - generic [ref=e7] [cursor=pointer]:
-        - img "Logo" [ref=e8]
-        - generic [ref=e9]: Lingua Academy
-      - list [ref=e10]:
-        - listitem [ref=e11]:
-          - link "Nosotros" [ref=e12] [cursor=pointer]:
-            - /url: "#nosotros"
-        - listitem [ref=e13]:
-          - link "Servicios" [ref=e14] [cursor=pointer]:
-            - /url: "#servicios"
-        - listitem [ref=e15]:
-          - link "Clientes" [ref=e16] [cursor=pointer]:
-            - /url: "#clientes"
-        - listitem [ref=e17]:
-          - link "Demo" [ref=e18] [cursor=pointer]:
-            - /url: "#demo"
-        - listitem [ref=e19]:
-          - link "Contacto" [ref=e20] [cursor=pointer]:
-            - /url: "#contacto"
-      - generic [ref=e21]:
-        - button "🌙" [ref=e22] [cursor=pointer]
-        - button "Iniciar Sesión" [ref=e23] [cursor=pointer]
-  - main [ref=e24]:
-    - generic [ref=e27]:
-      - heading "Iniciar Sesión" [level=2] [ref=e28]
-      - generic [ref=e29]:
-        - strong [ref=e30]: "Información importante:"
-        - list [ref=e31]:
-          - listitem [ref=e32]:
-            - strong [ref=e33]: "Estudiantes y Profesores:"
-            - text: En tu primer login, usa tu DNI como contraseña
-          - listitem [ref=e34]:
-            - strong [ref=e35]: "Administradores:"
-            - text: Usa la contraseña que te fue asignada
-          - listitem [ref=e36]: Después del primer login, deberás cambiar tu contraseña
-      - generic [ref=e37]: Error de conexión
-      - generic [ref=e39]:
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - img "PPIV Consultora" [ref=e8]
+      - generic [ref=e9]:
+        - heading "Panel de Administración" [level=2] [ref=e10]
+        - paragraph [ref=e11]: ¡Bienvenido/a Admin!
+    - generic [ref=e12]:
+      - button "Cambiar a modo oscuro" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+      - generic [ref=e16]:
+        - generic [ref=e17]: Admin Sistema
+        - generic [ref=e18]: admin
+      - button "Cerrar Sesión" [ref=e19] [cursor=pointer]:
+        - img [ref=e20]
+        - text: Cerrar Sesión
+  - generic [ref=e22]:
+    - heading "Overview del Sistema" [level=3] [ref=e23]
+    - generic [ref=e24]:
+      - generic [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - heading "16" [level=3] [ref=e29]
+        - paragraph [ref=e30]: Total Estudiantes
+        - generic [ref=e31]:
+          - generic [ref=e32]: "Activos: 15"
+          - generic [ref=e33]: "Inactivos: 1"
+      - generic [ref=e34] [cursor=pointer]:
+        - img [ref=e36]
+        - heading "10" [level=3] [ref=e38]
+        - paragraph [ref=e39]: Total Profesores
         - generic [ref=e40]:
-          - generic [ref=e41]: Correo Electrónico
-          - textbox "Correo Electrónico" [ref=e42]:
-            - /placeholder: ejemplo@email.com
-            - text: admin@consultora.com
-        - generic [ref=e43]:
-          - generic [ref=e44]: Contraseña
-          - textbox "Contraseña" [ref=e45]:
-            - /placeholder: Tu contraseña
-            - text: Admin123!
-        - button "Ingresar" [ref=e46] [cursor=pointer]
-  - contentinfo [ref=e47]:
-    - generic [ref=e48]:
-      - generic [ref=e49]:
-        - generic [ref=e50]:
-          - heading "Lingua Academy" [level=4] [ref=e51]
-          - paragraph [ref=e52]: Consultora especializada en enseñanza de idiomas con metodologías innovadoras.
-        - generic [ref=e53]:
-          - heading "Enlaces" [level=4] [ref=e54]
-          - list [ref=e55]:
-            - listitem [ref=e56]:
-              - link "Nosotros" [ref=e57] [cursor=pointer]:
-                - /url: "#nosotros"
-            - listitem [ref=e58]:
-              - link "Servicios" [ref=e59] [cursor=pointer]:
-                - /url: "#servicios"
-            - listitem [ref=e60]:
-              - link "Clientes" [ref=e61] [cursor=pointer]:
-                - /url: "#clientes"
-            - listitem [ref=e62]:
-              - link "Contacto" [ref=e63] [cursor=pointer]:
-                - /url: "#contacto"
-        - generic [ref=e64]:
-          - heading "Contacto" [level=4] [ref=e65]
-          - paragraph [ref=e66]: "Email: info@linguaacademy.com"
-          - paragraph [ref=e67]: "Teléfono: +54 11 2183-6922"
-          - paragraph [ref=e68]:
-            - text: "LinkedIn:"
-            - link "Lingua Academy" [ref=e69] [cursor=pointer]:
-              - /url: https://www.linkedin.com/company/lingua-academy-ar/about/?viewAsMember=true
-      - paragraph [ref=e71]: © 2025 Lingua Academy. Todos los derechos reservados.
-  - button "↓" [ref=e72] [cursor=pointer]
-  - button "Contactar por WhatsApp" [ref=e73] [cursor=pointer]:
-    - img [ref=e74]
+          - generic [ref=e41]: "Activos: 9"
+          - generic [ref=e42]: "Especialidades: 6"
+      - generic [ref=e43] [cursor=pointer]:
+        - img [ref=e45]
+        - heading "6" [level=3] [ref=e47]
+        - paragraph [ref=e48]: Especialidades
+        - generic [ref=e50]: Francés, Alemán, Inglés +3 más
+      - generic [ref=e51] [cursor=pointer]:
+        - img [ref=e53]
+        - heading "$0" [level=3] [ref=e55]
+        - paragraph [ref=e56]: Ingresos del Mes
+        - generic [ref=e57]: "Pagos pendientes: 0"
+  - generic [ref=e58]:
+    - heading "Acciones Rápidas" [level=3] [ref=e59]:
+      - img [ref=e60]
+      - text: Acciones Rápidas
+    - generic [ref=e62]:
+      - generic [ref=e63] [cursor=pointer]:
+        - img [ref=e65]
+        - heading "Gestión de Estudiantes" [level=4] [ref=e67]
+        - paragraph [ref=e68]: Ver, editar y gestionar información de estudiantes, estados académicos y progreso
+        - button "Gestión de Estudiantes" [ref=e69]
+      - generic [ref=e70] [cursor=pointer]:
+        - img [ref=e72]
+        - heading "Gestión de Profesores" [level=4] [ref=e74]
+        - paragraph [ref=e75]: Registrar profesores, gestionar especialidades, configurar horarios
+        - button "Gestión de Profesores" [ref=e76]
+      - generic [ref=e77] [cursor=pointer]:
+        - img [ref=e79]
+        - heading "Gestión de Clases" [level=4] [ref=e81]
+        - paragraph [ref=e82]: Programar clases, asignar profesores, gestionar horarios
+        - button "Gestionar Clases" [ref=e83]
+      - generic [ref=e84] [cursor=pointer]:
+        - img [ref=e86]
+        - heading "Pagos y Finanzas" [level=4] [ref=e88]
+        - paragraph [ref=e89]: Gestionar pagos, generar facturas, revisar ingresos
+        - button "Ver Finanzas" [ref=e90]
+      - generic [ref=e91] [cursor=pointer]:
+        - img [ref=e93]
+        - heading "Reportes" [level=4] [ref=e95]
+        - paragraph [ref=e96]: Estadísticas académicas, reportes financieros, exportaciones
+        - button "Ver Reportes" [ref=e97]
+      - generic [ref=e98] [cursor=pointer]:
+        - img [ref=e100]
+        - heading "Configuración" [level=4] [ref=e102]
+        - paragraph [ref=e103]: Configurar sistema, gestionar roles, ajustar parámetros
+        - button "Configurar Sistema" [ref=e104]
+  - generic [ref=e105] [cursor=pointer]:
+    - heading "👤 Información Personal" [level=3] [ref=e106]
+    - generic [ref=e107]:
+      - generic [ref=e108]:
+        - paragraph [ref=e109]:
+          - strong [ref=e110]: "Nombre:"
+          - text: Admin Sistema
+        - paragraph [ref=e111]:
+          - strong [ref=e112]: "Email:"
+          - text: admin@consultora.com
+      - generic [ref=e113]:
+        - paragraph [ref=e114]:
+          - strong [ref=e115]: "DNI:"
+        - paragraph [ref=e116]:
+          - strong [ref=e117]: "Rol:"
+          - text: Administrador
+      - paragraph [ref=e119]:
+        - strong [ref=e120]: "Teléfono:"
+        - text: "1234567890"
 ```

@@ -39,7 +39,7 @@
             - strong [ref=e35]: "Administradores:"
             - text: Usa la contraseña que te fue asignada
           - listitem [ref=e36]: Después del primer login, deberás cambiar tu contraseña
-      - generic [ref=e37]: Error de conexión
+      - generic [ref=e37]: Credenciales inválidas
       - generic [ref=e39]:
         - generic [ref=e40]:
           - generic [ref=e41]: Correo Electrónico

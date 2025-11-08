@@ -39,50 +39,48 @@
             - strong [ref=e35]: "Administradores:"
             - text: Usa la contraseña que te fue asignada
           - listitem [ref=e36]: Después del primer login, deberás cambiar tu contraseña
-      - generic [ref=e37]: Credenciales inválidas
-      - generic [ref=e39]:
-        - generic [ref=e40]:
-          - generic [ref=e41]: Correo Electrónico
-          - textbox "Correo Electrónico" [ref=e42]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: Correo Electrónico
+          - textbox "Correo Electrónico" [active] [ref=e41]:
             - /placeholder: ejemplo@email.com
-            - text: carlos.rodriguez@email.com
-        - generic [ref=e43]:
-          - generic [ref=e44]: Contraseña
-          - textbox "Contraseña" [ref=e45]:
+        - generic [ref=e42]:
+          - generic [ref=e43]: Contraseña
+          - textbox "Contraseña" [ref=e44]:
             - /placeholder: Tu contraseña
-            - text: "12345678"
-        - button "Ingresar" [ref=e46] [cursor=pointer]
-  - contentinfo [ref=e47]:
-    - generic [ref=e48]:
-      - generic [ref=e49]:
-        - generic [ref=e50]:
-          - heading "Lingua Academy" [level=4] [ref=e51]
-          - paragraph [ref=e52]: Consultora especializada en enseñanza de idiomas con metodologías innovadoras.
-        - generic [ref=e53]:
-          - heading "Enlaces" [level=4] [ref=e54]
-          - list [ref=e55]:
-            - listitem [ref=e56]:
-              - link "Nosotros" [ref=e57] [cursor=pointer]:
+            - text: Admin123!
+        - button "Ingresar" [ref=e45] [cursor=pointer]
+  - contentinfo [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - heading "Lingua Academy" [level=4] [ref=e50]
+          - paragraph [ref=e51]: Consultora especializada en enseñanza de idiomas con metodologías innovadoras.
+        - generic [ref=e52]:
+          - heading "Enlaces" [level=4] [ref=e53]
+          - list [ref=e54]:
+            - listitem [ref=e55]:
+              - link "Nosotros" [ref=e56] [cursor=pointer]:
                 - /url: "#nosotros"
-            - listitem [ref=e58]:
-              - link "Servicios" [ref=e59] [cursor=pointer]:
+            - listitem [ref=e57]:
+              - link "Servicios" [ref=e58] [cursor=pointer]:
                 - /url: "#servicios"
-            - listitem [ref=e60]:
-              - link "Clientes" [ref=e61] [cursor=pointer]:
+            - listitem [ref=e59]:
+              - link "Clientes" [ref=e60] [cursor=pointer]:
                 - /url: "#clientes"
-            - listitem [ref=e62]:
-              - link "Contacto" [ref=e63] [cursor=pointer]:
+            - listitem [ref=e61]:
+              - link "Contacto" [ref=e62] [cursor=pointer]:
                 - /url: "#contacto"
-        - generic [ref=e64]:
-          - heading "Contacto" [level=4] [ref=e65]
-          - paragraph [ref=e66]: "Email: info@linguaacademy.com"
-          - paragraph [ref=e67]: "Teléfono: +54 11 2183-6922"
-          - paragraph [ref=e68]:
+        - generic [ref=e63]:
+          - heading "Contacto" [level=4] [ref=e64]
+          - paragraph [ref=e65]: "Email: info@linguaacademy.com"
+          - paragraph [ref=e66]: "Teléfono: +54 11 2183-6922"
+          - paragraph [ref=e67]:
             - text: "LinkedIn:"
-            - link "Lingua Academy" [ref=e69] [cursor=pointer]:
+            - link "Lingua Academy" [ref=e68] [cursor=pointer]:
               - /url: https://www.linkedin.com/company/lingua-academy-ar/about/?viewAsMember=true
-      - paragraph [ref=e71]: © 2025 Lingua Academy. Todos los derechos reservados.
-  - button "↓" [ref=e72] [cursor=pointer]
-  - button "Contactar por WhatsApp" [ref=e73] [cursor=pointer]:
-    - img [ref=e74]
+      - paragraph [ref=e70]: © 2025 Lingua Academy. Todos los derechos reservados.
+  - button "↑" [ref=e71] [cursor=pointer]
+  - button "Contactar por WhatsApp" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
 ```
