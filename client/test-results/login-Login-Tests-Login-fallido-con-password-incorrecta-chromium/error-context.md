@@ -1,0 +1,88 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e6]:
+      - generic [ref=e7] [cursor=pointer]:
+        - img "Logo" [ref=e8]
+        - generic [ref=e9]: Lingua Academy
+      - list [ref=e10]:
+        - listitem [ref=e11]:
+          - link "Nosotros" [ref=e12] [cursor=pointer]:
+            - /url: "#nosotros"
+        - listitem [ref=e13]:
+          - link "Servicios" [ref=e14] [cursor=pointer]:
+            - /url: "#servicios"
+        - listitem [ref=e15]:
+          - link "Clientes" [ref=e16] [cursor=pointer]:
+            - /url: "#clientes"
+        - listitem [ref=e17]:
+          - link "Demo" [ref=e18] [cursor=pointer]:
+            - /url: "#demo"
+        - listitem [ref=e19]:
+          - link "Contacto" [ref=e20] [cursor=pointer]:
+            - /url: "#contacto"
+      - generic [ref=e21]:
+        - button "🌙" [ref=e22] [cursor=pointer]
+        - button "Iniciar Sesión" [ref=e23] [cursor=pointer]
+  - main [ref=e24]:
+    - generic [ref=e27]:
+      - heading "Iniciar Sesión" [level=2] [ref=e28]
+      - generic [ref=e29]:
+        - strong [ref=e30]: "Información importante:"
+        - list [ref=e31]:
+          - listitem [ref=e32]:
+            - strong [ref=e33]: "Estudiantes y Profesores:"
+            - text: En tu primer login, usa tu DNI como contraseña
+          - listitem [ref=e34]:
+            - strong [ref=e35]: "Administradores:"
+            - text: Usa la contraseña que te fue asignada
+          - listitem [ref=e36]: Después del primer login, deberás cambiar tu contraseña
+      - generic [ref=e37]: Error de conexión
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]: Correo Electrónico
+          - textbox "Correo Electrónico" [ref=e42]:
+            - /placeholder: ejemplo@email.com
+            - text: admin@consultora.com
+        - generic [ref=e43]:
+          - generic [ref=e44]: Contraseña
+          - textbox "Contraseña" [ref=e45]:
+            - /placeholder: Tu contraseña
+            - text: wrongpassword
+        - button "Ingresar" [ref=e46] [cursor=pointer]
+  - contentinfo [ref=e47]:
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - heading "Lingua Academy" [level=4] [ref=e51]
+          - paragraph [ref=e52]: Consultora especializada en enseñanza de idiomas con metodologías innovadoras.
+        - generic [ref=e53]:
+          - heading "Enlaces" [level=4] [ref=e54]
+          - list [ref=e55]:
+            - listitem [ref=e56]:
+              - link "Nosotros" [ref=e57] [cursor=pointer]:
+                - /url: "#nosotros"
+            - listitem [ref=e58]:
+              - link "Servicios" [ref=e59] [cursor=pointer]:
+                - /url: "#servicios"
+            - listitem [ref=e60]:
+              - link "Clientes" [ref=e61] [cursor=pointer]:
+                - /url: "#clientes"
+            - listitem [ref=e62]:
+              - link "Contacto" [ref=e63] [cursor=pointer]:
+                - /url: "#contacto"
+        - generic [ref=e64]:
+          - heading "Contacto" [level=4] [ref=e65]
+          - paragraph [ref=e66]: "Email: info@linguaacademy.com"
+          - paragraph [ref=e67]: "Teléfono: +54 11 2183-6922"
+          - paragraph [ref=e68]:
+            - text: "LinkedIn:"
+            - link "Lingua Academy" [ref=e69] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/lingua-academy-ar/about/?viewAsMember=true
+      - paragraph [ref=e71]: © 2025 Lingua Academy. Todos los derechos reservados.
+  - button "↓" [ref=e72] [cursor=pointer]
+  - button "Contactar por WhatsApp" [ref=e73] [cursor=pointer]:
+    - img [ref=e74]
+```

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api/auth';
+const BASE_URL = 'http://localhost:3001/api/auth';
 
 // Función para hacer login y obtener token
 async function getAdminToken() {
