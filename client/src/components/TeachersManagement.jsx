@@ -1133,7 +1133,15 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
               </label>
               <select
                 value={formData.condicion}
-                onChange={(e) => setFormData(prev => ({ ...prev, condicion: e.target.value }))}
+                onChange={(e) => {
+                  const newCondicion = e.target.value;
+                  const newIsActive = newCondicion === 'activo';
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    condicion: newCondicion,
+                    isActive: newIsActive 
+                  }));
+                }}
                 required
                 style={{
                   padding: '0.75rem',

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Dashboard Routes
  * Endpoints for consolidated system data
  * 

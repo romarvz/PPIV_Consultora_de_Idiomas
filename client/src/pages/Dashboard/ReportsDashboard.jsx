@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import apiAdapter from '../../services/apiAdapter'
-import { FaFileExport, FaSpinner } from 'react-icons/fa'
+import api from '../../services/api'
+import { FaFileExport, FaSpinner, FaFilePdf, FaFileExcel, FaPlus } from 'react-icons/fa'
+import GenerateReportModal from '../../components/reports/GenerateReportModal'
 
 const ReportsDashboard = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('academic')
@@ -11,6 +13,7 @@ const ReportsDashboard = ({ onClose }) => {
   const [financialFilters, setFinancialFilters] = useState({ search: '', paymentStatus: '', minAmount: '', maxAmount: '' })
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [expandedRows, setExpandedRows] = useState(new Set())
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
 
   useEffect(() => {
     loadReports()
@@ -34,9 +37,122 @@ const ReportsDashboard = ({ onClose }) => {
     }
   }
 
-  const handleExportCSV = () => {
-    const reportType = activeTab === 'academic' ? 'Académico' : 'Financiero'
-    alert(`Exportando Reporte ${reportType} a CSV...\n\nEsta funcionalidad está simulada. En producción, aquí se generaría y descargaría el archivo CSV.`)
+  const handleExportPDF = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (activeTab === 'academic') {
+        const reportId = academicData?.students?.[0]?._id
+        if (!reportId || reportId.startsWith('mock-')) {
+          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
+          return
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-pdf`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-academico-${reportId}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        const periodo = '2025-Q1'
+        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-pdf`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-financiero-${periodo}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Error al exportar PDF:\n' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleExportExcel = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (activeTab === 'academic') {
+        const reportId = academicData?.students?.[0]?._id
+        if (!reportId || reportId.startsWith('mock-')) {
+          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
+          return
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-excel`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-academico-${reportId}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        const periodo = '2025-Q1'
+        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-excel`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-financiero-${periodo}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting Excel:', error)
+      alert('Error al exportar Excel:\n' + error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const formatCurrency = (amount) => {
@@ -145,7 +261,7 @@ const ReportsDashboard = ({ onClose }) => {
   }
 
   return (
-    <div>
+    <>
       {/* Header */}
       <div className="dashboard-section">
         <h3 className="dashboard-section__title">Reportes</h3>
@@ -201,16 +317,17 @@ const ReportsDashboard = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Export Button */}
+        {/* Action Buttons */}
         <div style={{
           padding: '1rem',
           background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
-          justifyContent: 'flex-end'
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
           <button
-            onClick={handleExportCSV}
+            onClick={() => setShowGenerateModal(true)}
             style={{
               background: 'var(--primary)',
               color: 'white',
@@ -226,8 +343,52 @@ const ReportsDashboard = ({ onClose }) => {
               transition: 'all 0.3s ease'
             }}
           >
-            <FaFileExport /> Exportar a CSV
+            <FaPlus /> Generar Reporte
           </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            onClick={handleExportPDF}
+            disabled={loading}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            <FaFilePdf /> Exportar PDF
+          </button>
+          <button
+            onClick={handleExportExcel}
+            disabled={loading}
+            style={{
+              background: '#16a34a',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            <FaFileExcel /> Exportar Excel
+          </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -820,7 +981,15 @@ const ReportsDashboard = ({ onClose }) => {
             )}
           </div>
         </div>
-      </div>
+
+      {showGenerateModal && (
+        <GenerateReportModal
+          type={activeTab}
+          onClose={() => setShowGenerateModal(false)}
+          onSuccess={loadReports}
+        />
+      )}
+    </>
   )
 }
 

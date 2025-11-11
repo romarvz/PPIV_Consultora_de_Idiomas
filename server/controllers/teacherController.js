@@ -370,7 +370,20 @@ const reactivateTeacher = async (req, res) => {
       });
     }
 
-    const updatedTeacher = await userService.updateUser(id, { isActive: true });
+    // Usar findByIdAndUpdate para evitar validaciones completas del esquema
+    const { BaseUser } = require('../models');
+    const updatedTeacher = await BaseUser.findByIdAndUpdate(
+      id, 
+      { 
+        isActive: true,
+        condicion: 'activo'
+      },
+      { 
+        new: true,
+        runValidators: false,  // Evitar validaciones del esquema
+        select: '-password'
+      }
+    );
 
     res.json({
       success: true,

@@ -13,7 +13,7 @@ exports.getInfoEmpresa = async (req, res) => {
   try {
     const empresa = await dashboardService.obtenerInfoEmpresa()
     
-    return sendSuccess(res, empresa, 'Informaci├│n de empresa obtenida')
+    return sendSuccess(res, empresa, 'Información de empresa obtenida')
   } catch (error) {
     return sendError(res, error)
   }
@@ -27,7 +27,7 @@ exports.getEstadisticas = async (req, res) => {
   try {
     const estadisticas = await dashboardService.obtenerEstadisticasEmpresa()
     
-    return sendSuccess(res, estadisticas, 'Estad├¡sticas obtenidas')
+    return sendSuccess(res, estadisticas, 'Estadísticas obtenidas')
   } catch (error) {
     return sendError(res, error)
   }
@@ -71,7 +71,7 @@ exports.getDatosGraficos = async (req, res) => {
   try {
     const datos = await dashboardService.obtenerDatosGraficos()
     
-    return sendSuccess(res, datos, 'Datos de gr├íficos obtenidos')
+    return sendSuccess(res, datos, 'Datos de gráficos obtenidos')
   } catch (error) {
     return sendError(res, error)
   }
@@ -85,7 +85,7 @@ exports.actualizarEstadisticas = async (req, res) => {
   try {
     await dashboardService.actualizarEstadisticas()
     
-    return sendSuccess(res, null, 'Estad├¡sticas actualizadas', 200)
+    return sendSuccess(res, null, 'Estadísticas actualizadas', 200)
   } catch (error) {
     return sendError(res, error)
   }
@@ -99,7 +99,7 @@ exports.invalidarCache = async (req, res) => {
   try {
     dashboardService.invalidarCache()
     
-    return sendSuccess(res, null, 'Cach├⌐ invalidado exitosamente', 200)
+    return sendSuccess(res, null, 'Caché invalidado exitosamente', 200)
   } catch (error) {
     return sendError(res, error)
   }

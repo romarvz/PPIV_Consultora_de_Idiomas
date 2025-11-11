@@ -1,8 +1,8 @@
-﻿/**
+/**
  * Servicio de Dashboard
- * Consolida datos de todos los m├│dulos del sistema
+ * Consolida datos de todos los módulos del sistema
  * 
- * IMPORTANTE: Este servicio CONSUME datos de otros m├│dulos
+ * IMPORTANTE: Este servicio CONSUME datos de otros módulos
  * No crea datos, solo los consulta y agrupa
  * 
  */
@@ -18,14 +18,14 @@ const Clase = require('../models/Clase')
 const Cobro = require('../models/cobros.model')
 const Factura = require('../models/factura.model')
 
-// ===== CACH├ë PARA OPTIMIZACI├ôN =====
+// ===== CACHÉ PARA OPTIMIZACIÓN =====
 let cacheKPIs = null
 let ultimaActualizacionCache = null
 const CACHE_DURACION = 5 * 60 * 1000 // 5 minutos
 
 
 /**
- * Obtener estad├¡sticas generales de la empresa
+ * Obtener estadísticas generales de la empresa
  */
 const obtenerEstadisticasEmpresa = async () => {
   try {
@@ -61,7 +61,7 @@ const obtenerEstadisticasEmpresa = async () => {
       }
     }
   } catch (error) {
-    console.error('Γ¥î Error al obtener estad├¡sticas:', error.message)
+    console.error('❌ Error al obtener estadísticas:', error.message)
     throw error
   }
 }
@@ -101,14 +101,14 @@ const calcularIngresosMes = async () => {
     
     return resultado[0]?.total || 0
   } catch (error) {
-    console.error('Γ¥î Error al calcular ingresos del mes:', error.message)
+    console.error('❌ Error al calcular ingresos del mes:', error.message)
     return 0
   }
 }
 
 /**
- * Calcular ingresos por mes (├║ltimos N meses)
- * Para gr├íficos
+ * Calcular ingresos por mes (últimos N meses)
+ * Para gráficos
  */
 const calcularIngresosPorMes = async (meses = 6) => {
   try {
@@ -146,20 +146,20 @@ const calcularIngresosPorMes = async (meses = 6) => {
     
     return resultado
   } catch (error) {
-    console.error('Γ¥î Error al calcular ingresos por mes:', error.message)
+    console.error('❌ Error al calcular ingresos por mes:', error.message)
     return []
   }
 }
 
 /**
- * Obtener actividad reciente (├║ltimos 7 d├¡as)
+ * Obtener actividad reciente (últimos 7 días)
  */
 const obtenerActividadReciente = async () => {
   try {
     const hace7Dias = new Date()
     hace7Dias.setDate(hace7Dias.getDate() - 7)
     
-    // ├Ültimas inscripciones (cursos creados recientemente)
+    // Últimas inscripciones (cursos creados recientemente)
     const inscripciones = await Curso.find({
       createdAt: { $gte: hace7Dias }
     })
@@ -170,7 +170,7 @@ const obtenerActividadReciente = async () => {
     .sort({ createdAt: -1 })
     .lean()
     
-    // ├Ültimos cobros 
+    // Últimos cobros 
     const cobros = await Cobro.find({
       fechaCobro: { $gte: hace7Dias }
     })
@@ -180,7 +180,7 @@ const obtenerActividadReciente = async () => {
     .sort({ fechaCobro: -1 })
     .lean()
     
-    // Pr├│ximas clases (siguientes 7 d├¡as)
+    // Próximas clases (siguientes 7 días)
     const dentro7Dias = new Date()
     dentro7Dias.setDate(dentro7Dias.getDate() + 7)
     
@@ -204,7 +204,7 @@ const obtenerActividadReciente = async () => {
       proximasClases
     }
   } catch (error) {
-    console.error('Γ¥î Error al obtener actividad reciente:', error.message)
+    console.error('❌ Error al obtener actividad reciente:', error.message)
     return {
       inscripciones: [],
       cobros: [],
@@ -214,14 +214,14 @@ const obtenerActividadReciente = async () => {
 }
 
 /**
- * Obtener datos para gr├íficos del dashboard
+ * Obtener datos para gráficos del dashboard
  */
 const obtenerDatosGraficos = async () => {
   try {
-    // Gr├ífico 1: Ingresos por mes
+    // Gráfico 1: Ingresos por mes
     const ingresosPorMes = await calcularIngresosPorMes(6)
     
-    // Gr├ífico 2: Estudiantes por idioma (Lorena)
+    // Gráfico 2: Estudiantes por idioma (Lorena)
     const estudiantesPorIdioma = await Curso.aggregate([
       {
         $match: { estado: 'activo' }
@@ -237,7 +237,7 @@ const obtenerDatosGraficos = async () => {
       }
     ])
     
-    // Gr├ífico 3: Clases por estado
+    // Gráfico 3: Clases por estado
     const clasesPorEstado = await Clase.aggregate([
       {
         $group: {
@@ -247,7 +247,7 @@ const obtenerDatosGraficos = async () => {
       }
     ])
     
-    // Gr├ífico 4: Cobros por m├⌐todo
+    // Gráfico 4: Cobros por método
     const cobrosPorMetodo = await Cobro.aggregate([
       {
         $group: {
@@ -268,13 +268,13 @@ const obtenerDatosGraficos = async () => {
       cobrosPorMetodo
     }
   } catch (error) {
-    console.error('Γ¥î Error al obtener datos de gr├íficos:', error.message)
+    console.error('❌ Error al obtener datos de gráficos:', error.message)
     throw error
   }
 }
 
 /**
- * Obtener informaci├│n general de la empresa
+ * Obtener información general de la empresa
  */
 const obtenerInfoEmpresa = async () => {
   try {
@@ -298,7 +298,7 @@ const obtenerInfoEmpresa = async () => {
     
     return empresa
   } catch (error) {
-    console.error('Γ¥î Error al obtener info empresa:', error.message)
+    console.error('❌ Error al obtener info empresa:', error.message)
     throw error
   }
 }
@@ -330,21 +330,21 @@ const obtenerKPIs = async () => {
       facturasPendientes: estadisticas.ingresos.facturasPendientes
     }
   } catch (error) {
-    console.error('Γ¥î Error al obtener KPIs:', error.message)
+    console.error('❌ Error al obtener KPIs:', error.message)
     throw error
   }
 }
 
 /**
- * Obtener KPIs con cach├⌐
+ * Obtener KPIs con caché
  */
 const obtenerKPIsConCache = async () => {
   const ahora = Date.now()
   
-  // Si hay cach├⌐ v├ílido, retornarlo
+  // Si hay caché válido, retornarlo
   if (cacheKPIs && ultimaActualizacionCache && 
       (ahora - ultimaActualizacionCache) < CACHE_DURACION) {
-    console.log('Retornando KPIs desde cach├⌐')
+    console.log('Retornando KPIs desde caché')
     return cacheKPIs
   }
   
@@ -359,17 +359,17 @@ const obtenerKPIsConCache = async () => {
 }
 
 /**
- * Invalidar cach├⌐ manualmente
+ * Invalidar caché manualmente
  */
 const invalidarCache = () => {
   cacheKPIs = null
   ultimaActualizacionCache = null
-  console.log('Cach├⌐ de KPIs invalidado')
+  console.log('Caché de KPIs invalidado')
 }
 
 /**
- * Actualizar estad├¡sticas de la empresa
- * Se llamar├í cuando otros m├│dulos creen/actualicen datos
+ * Actualizar estadísticas de la empresa
+ * Se llamará cuando otros módulos creen/actualicen datos
  */
 const actualizarEstadisticas = async () => {
   try {
@@ -388,12 +388,12 @@ const actualizarEstadisticas = async () => {
       }
     )
     
-    // Invalidar cach├⌐ al actualizar
+    // Invalidar caché al actualizar
     invalidarCache()
     
     return true
   } catch (error) {
-    console.error('Γ¥î Error al actualizar estad├¡sticas:', error.message)
+    console.error('❌ Error al actualizar estadísticas:', error.message)
     return false
   }
 }
