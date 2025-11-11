@@ -313,7 +313,13 @@ claseSchema.methods.cancelar = function(motivo) {
 };
 
 // Método para verificar disponibilidad del profesor
-claseSchema.statics.verificarDisponibilidadProfesor = async function(profesorId, fechaHora, duracionMinutos, claseIdExcluir = null) {
+claseSchema.statics.verificarDisponibilidadProfesor = async function(
+  profesorId,
+  fechaHora,
+  duracionMinutos,
+  claseIdExcluir = null,
+  cursoId = null
+) {
   const fechaInicio = new Date(fechaHora);
   const fechaFin = new Date(fechaInicio.getTime() + duracionMinutos * 60000);
   
@@ -335,10 +341,34 @@ claseSchema.statics.verificarDisponibilidadProfesor = async function(profesorId,
   };
   
   if (claseIdExcluir) {
-    query._id = { $ne: claseIdExcluir };
+    const excludeId = mongoose.Types.ObjectId.isValid(claseIdExcluir)
+      ? new mongoose.Types.ObjectId(claseIdExcluir)
+      : claseIdExcluir;
+    query._id = { $ne: excludeId };
   }
   
-  const clasesSuperpuestas = await this.find(query);
+  let clasesSuperpuestas = await this.find(query);
+
+  if (cursoId) {
+    const cursoIdStr = cursoId.toString();
+    const inicioMs = fechaInicio.getTime();
+    clasesSuperpuestas = clasesSuperpuestas.filter((clase) => {
+      if (!clase.fechaHora) {
+        return true;
+      }
+      const mismaHora = clase.fechaHora.getTime() === inicioMs;
+      const mismoCurso =
+        clase.curso &&
+        clase.curso.toString &&
+        clase.curso.toString() === cursoIdStr;
+      
+      if (mismaHora && mismoCurso) {
+        return false;
+      }
+      return true;
+    });
+  }
+
   return clasesSuperpuestas.length === 0;
 };
 

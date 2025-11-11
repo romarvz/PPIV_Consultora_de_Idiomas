@@ -9,47 +9,110 @@ import CourseDetailModal from '../components/courses/CourseDetailModal';
 // (slugify)
 const slugify = (text) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
+const idiomaLabels = {
+  ingles: 'Inglés',
+  frances: 'Francés',
+  aleman: 'Alemán',
+  italiano: 'Italiano',
+  portugues: 'Portugués',
+  chino: 'Chino',
+  japones: 'Japonés',
+  coreano: 'Coreano'
+};
+
+const capitalize = (value) =>
+  typeof value === 'string' && value.length > 0
+    ? value.charAt(0).toUpperCase() + value.slice(1)
+    : value;
+
+const normalizeCourse = (course) => {
+  if (!course) return null;
+
+  const id = course._id || course.id;
+  const name = course.name || course.nombre || 'Curso sin título';
+  const description =
+    course.description || course.descripcion || 'Pronto tendremos más información.';
+  const language =
+    course.language ||
+    idiomaLabels[course.idioma] ||
+    capitalize(course.idioma) ||
+    'Idioma';
+  const modality =
+    course.modality ||
+    (course.modalidad ? capitalize(course.modalidad) : '') ||
+    '';
+  const level = course.level || course.nivel || 'Todos los niveles';
+  const type = course.type || 'Otros';
+  const price =
+    typeof course.price === 'number'
+      ? course.price
+      : typeof course.tarifa === 'number'
+      ? course.tarifa
+      : null;
+  const imageUrl = course.imageUrl || course.coverImage || '/images/Logo.png';
+  const teacher = course.teacher || course.profesor || null;
+
+  return {
+    ...course,
+    id,
+    _id: id,
+    name,
+    description,
+    language,
+    modality,
+    level,
+    type,
+    price,
+    imageUrl,
+    teacher
+  };
+};
+
 const CoursesPage = () => {
   const [groupedCourses, setGroupedCourses] = useState({});
-  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  
+  const [error, setError] = useState(null);
+
   const location = useLocation(); 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-   // Llamada a APIs cursos y profesores 
-        const [coursesResponse, teachersResponse] = await Promise.all([
-          apiAdapter.courses.getAll({ activeOnly: true }),
-          apiAdapter.teachers.getAll() // tenemos un adapter para 'teachers'
-        ]);
+        setError(null);
 
-        // Verificación de respuestas exitosas
-        if (coursesResponse.data.success && teachersResponse.data.success) {
-          
-          // Agrupar cursos por 'type' 
-          const groups = coursesResponse.data.data.courses.reduce((acc, course) => {
-            const type = course.type || 'Otros'; // Usamos el campo 'type' del modelo
-            if (!acc[type]) acc[type] = [];
-            acc[type].push(course);
-            return acc;
-          }, {});
+        const coursesResponse = await apiAdapter.courses.getPublic({
+          activeOnly: true,
+          page: 1,
+          limit: 100
+        });
 
-          setGroupedCourses(groups);
-          setTeachers(teachersResponse.data.data); // Profesores de la API
-        
-
-        } else {
-          // Una de las dos falle
-          throw new Error('No se pudieron cargar los cursos o profesores');
+        if (!coursesResponse.data?.success) {
+          throw new Error('No se pudieron cargar los cursos disponibles');
         }
 
+        const payload = Array.isArray(coursesResponse.data?.data?.courses)
+          ? coursesResponse.data.data.courses
+          : Array.isArray(coursesResponse.data?.data)
+          ? coursesResponse.data.data
+          : [];
+
+        const normalizedCourses = payload
+          .map(normalizeCourse)
+          .filter(Boolean);
+
+        const groups = normalizedCourses.reduce((acc, course) => {
+          const type = course.type || 'Otros';
+          if (!acc[type]) acc[type] = [];
+          acc[type].push(course);
+          return acc;
+        }, {});
+
+        setGroupedCourses(groups);
       } catch (error) {
         console.error("Error al cargar los datos:", error);
+        setError(error.message || 'No se pudieron cargar los cursos');
       } finally {
         setLoading(false);
       }
@@ -81,16 +144,31 @@ const CoursesPage = () => {
   const handleSelectCourse = (course) => setSelectedCourse(course);
   const handleCloseModal = () => setSelectedCourse(null);
   
-  const selectedTeacher = selectedCourse 
-    ? teachers.find(t => t._id === selectedCourse.profesor) 
-    : null;
-  // --- FIN DE LA CORRECCIÓN ---
+  const selectedTeacher = (() => {
+    if (!selectedCourse) return null;
+    if (selectedCourse.teacher && typeof selectedCourse.teacher === 'object') {
+      return selectedCourse.teacher;
+    }
+    if (selectedCourse.profesor && typeof selectedCourse.profesor === 'object') {
+      return selectedCourse.profesor;
+    }
+    return null;
+  })();
 
   if (loading) return (
     <div className="courses-page" style={{ textAlign: 'center', padding: '4rem' }}>
       <h2>Cargando nuestra oferta...</h2>
     </div>
   );
+
+  if (error) {
+    return (
+      <div className="courses-page" style={{ textAlign: 'center', padding: '4rem' }}>
+        <h2>Lo sentimos</h2>
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="courses-page" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>

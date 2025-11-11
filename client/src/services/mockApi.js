@@ -572,6 +572,31 @@ export const mockApi = {
     }
     // --- FIN NUEVA FUNCIÓN MOCK ---
   },
+
+  // ==================== UPLOADS ====================
+  uploads: {
+    /**
+     * Simula la carga de una imagen de curso y devuelve una URL de prueba
+     */
+    uploadCourseImage: async () => {
+      await delay()
+      return {
+        data: {
+          success: true,
+          message: 'Imagen subida (mock)',
+          data: {
+            publicId: `mock-course-image-${Date.now()}`,
+            url: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+            secureUrl: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+            format: 'jpg',
+            bytes: 102400,
+            width: 800,
+            height: 600
+          }
+        }
+      }
+    }
+  },
  
   
   // ==================== REPORTES ====================

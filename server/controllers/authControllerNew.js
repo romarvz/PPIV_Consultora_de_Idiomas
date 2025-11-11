@@ -63,6 +63,7 @@ const register = async (req, res) => {
       especialidades, 
       tarifaPorHora, 
       disponibilidad,
+      horariosPermitidos,
       permisos
     } = req.body;
 
@@ -106,7 +107,10 @@ const register = async (req, res) => {
       lastName,
       role,
       phone,
-      dni
+      dni,
+      mustChangePassword: false,
+      isActive: true,
+      condicion: 'activo'
     };
 
     // Create user based on role
@@ -126,7 +130,8 @@ const register = async (req, res) => {
           ...baseUserData,
           especialidades,
           tarifaPorHora,
-          disponibilidad
+          disponibilidad,
+          horariosPermitidos
         });
         break;
         
@@ -213,7 +218,7 @@ const login = async (req, res) => {
       });
     }
 
-    // Check if user is active
+    // Check if user is active for login
     if (!user.isActive) {
       return res.status(401).json({
         success: false,

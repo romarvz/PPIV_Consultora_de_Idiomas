@@ -21,8 +21,23 @@ const CursoSchema = new mongoose.Schema({
   profesor: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser', required: true },
   horario: { type: mongoose.Schema.Types.ObjectId, ref: 'Horario' }, // Horario principal (para compatibilidad)
   horarios: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Horario' }], // Múltiples horarios (2-3 días por semana)
+  horariosDuraciones: [{
+    horario: { type: mongoose.Schema.Types.ObjectId, ref: 'Horario' },
+    duracionMinutos: { type: Number, min: 30, max: 180, default: 120 }
+  }],
+  duracionClaseMinutos: {
+    type: Number,
+    min: 30,
+    max: 180,
+    default: 120
+  },
   fechaInicio: { type: Date },
   fechaFin: { type: Date },
+  modalidad: {
+    type: String,
+    enum: ['presencial', 'online'],
+    default: 'presencial'
+  },
   estado: { 
     type: String, 
     enum: ["planificado", "activo", "completado", "cancelado"], 

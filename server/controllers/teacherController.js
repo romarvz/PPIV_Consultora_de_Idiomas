@@ -185,13 +185,22 @@ const updateTeacher = async (req, res) => {
     if (email) updateData.email = email;
     if (phone) updateData.phone = phone;
     if (especialidades) updateData.especialidades = especialidades;
-    if (tarifaPorHora) updateData.tarifaPorHora = tarifaPorHora;
+    // Preserve existing tarifaPorHora if not provided, as it's required by the model
+    if (tarifaPorHora !== undefined && tarifaPorHora !== null) {
+      updateData.tarifaPorHora = tarifaPorHora;
+    } else {
+      // Always preserve existing value to avoid validation errors
+      // since userService.updateUser uses save() which validates all required fields
+      if (teacher.tarifaPorHora !== undefined && teacher.tarifaPorHora !== null) {
+        updateData.tarifaPorHora = teacher.tarifaPorHora;
+      }
+    }
     if (disponibilidad) updateData.disponibilidad = disponibilidad;
     if (experiencia) updateData.experiencia = experiencia;
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
     if (typeof disponible === 'boolean') updateData.disponible = disponible;
     if (condicion) updateData.condicion = condicion;
-    // Agregar soporte para horariosPermitidos
+    // Add support for horariosPermitidos
     if (horariosPermitidos !== undefined) {
       updateData.horariosPermitidos = Array.isArray(horariosPermitidos) 
         ? horariosPermitidos 
@@ -216,6 +225,21 @@ const updateTeacher = async (req, res) => {
         success: false,
         message: 'Ya existe un usuario con este email',
         code: 'DUPLICATE_EMAIL'
+      });
+    }
+
+    // Handle validation errors more specifically
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors || {}).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Errores de validación',
+        errors: validationErrors,
+        code: 'VALIDATION_ERROR'
       });
     }
 
@@ -280,18 +304,26 @@ const deleteTeacher = async (req, res) => {
       });
     }
 
-    // Verificar que el profesor no tenga cursos activos o planificados asignados
+    // Verificar que el profesor no tenga cursos asignados
     const { Curso } = require('../models');
-    const cursosActivos = await Curso.countDocuments({
-      profesor: id,
-      estado: { $in: ['planificado', 'activo'] }
-    });
+    const cursosAsignados = await Curso.find({ profesor: id })
+      .select('nombre estado');
 
-    if (cursosActivos > 0) {
+    if (cursosAsignados.length > 0) {
+      const cursosDetalle = cursosAsignados.map(curso => ({
+        id: curso._id,
+        nombre: curso.nombre,
+        estado: curso.estado
+      }));
+
       return res.status(400).json({
         success: false,
-        message: `No se puede eliminar el profesor porque tiene ${cursosActivos} curso(s) activo(s) o planificado(s) asignado(s)`,
-        code: 'TEACHER_HAS_ACTIVE_COURSES'
+        message: `No se puede eliminar el profesor porque tiene ${cursosAsignados.length} curso(s) asignado(s).\n` +
+                 `Por favor reasigna o elimina esos cursos antes de eliminar al profesor.`,
+        code: 'TEACHER_HAS_COURSES',
+        data: {
+          cursos: cursosDetalle
+        }
       });
     }
 

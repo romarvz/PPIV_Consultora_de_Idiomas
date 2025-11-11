@@ -1,5 +1,92 @@
 // services/cursosService.js
+const mongoose = require('mongoose');
 const { Curso, Inscripcion, BaseUser, Horario } = require('../models');
+
+const MIN_CLASS_DURATION = 30;
+const MAX_CLASS_DURATION = 180;
+const DURATION_STEP = 15;
+
+const timeStringToMinutes = (timeString = '') => {
+  const [hours = 0, minutes = 0] = timeString.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+const calculateDurationFromSchedule = (horario) => {
+  if (!horario || !horario.horaInicio || !horario.horaFin) {
+    return 0;
+  }
+  return timeStringToMinutes(horario.horaFin) - timeStringToMinutes(horario.horaInicio);
+};
+
+const clampDuration = (value, fallback = 120) => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) {
+    return fallback;
+  }
+  const rounded = Math.round(num / DURATION_STEP) * DURATION_STEP;
+  return Math.min(MAX_CLASS_DURATION, Math.max(MIN_CLASS_DURATION, rounded));
+};
+
+const toObjectId = (value) => {
+  if (!value) return null;
+  if (value instanceof mongoose.Types.ObjectId) return value;
+  try {
+    return new mongoose.Types.ObjectId(value);
+  } catch (error) {
+    return null;
+  }
+};
+
+const normalizeHorarioIds = (ids = []) => {
+  const normalized = [];
+  ids.forEach((id) => {
+    const objectId = toObjectId(id);
+    if (objectId) {
+      normalized.push(objectId);
+    }
+  });
+  return normalized;
+};
+
+const buildCursoDurationData = (horarioIds = [], rawDurations = [], horarioDocs = [], fallbackDuration = null) => {
+  const idStrings = horarioIds.map((id) => id.toString());
+  const durationsMap = new Map();
+
+  (rawDurations || []).forEach((item) => {
+    if (!item) return;
+    const sourceId = item.horario || item.horarioId || item.id || item._id;
+    const objectId = toObjectId(sourceId);
+    if (!objectId) return;
+    const key = objectId.toString();
+    if (!idStrings.includes(key) || durationsMap.has(key)) return;
+    durationsMap.set(key, clampDuration(item.duracionMinutos));
+  });
+
+  horarioIds.forEach((objectId) => {
+    const key = objectId.toString();
+    if (durationsMap.has(key)) {
+      return;
+    }
+    const horarioDoc = horarioDocs.find((doc) => doc._id.toString() === key);
+    const horarioDuration = horarioDoc ? clampDuration(calculateDurationFromSchedule(horarioDoc)) : null;
+    const duration = horarioDuration || clampDuration(fallbackDuration) || 120;
+    durationsMap.set(key, duration);
+  });
+
+  const horariosDuraciones = Array.from(durationsMap.entries()).map(([key, duration]) => ({
+    horario: new mongoose.Types.ObjectId(key),
+    duracionMinutos: duration
+  }));
+
+  const duracionClaseMinutos = horariosDuraciones.length > 0
+    ? horariosDuraciones[0].duracionMinutos
+    : clampDuration(fallbackDuration) || 120;
+
+  return {
+    horariosDuraciones,
+    duracionClaseMinutos
+  };
+};
 
 /**
  * Get course by ID with complete information
@@ -63,6 +150,29 @@ exports.createCurso = async (cursoData) => {
     }
   }
   
+  const selectedHorarioIdsRaw = Array.isArray(cursoData.horarios) && cursoData.horarios.length > 0
+    ? cursoData.horarios
+    : (cursoData.horario ? [cursoData.horario] : []);
+  const normalizedHorarioIds = normalizeHorarioIds(selectedHorarioIdsRaw);
+  if (normalizedHorarioIds.length > 0) {
+    cursoData.horarios = normalizedHorarioIds;
+    cursoData.horario = normalizedHorarioIds[0];
+  }
+
+  const horarioDocs = normalizedHorarioIds.length > 0
+    ? await Horario.find({ _id: { $in: normalizedHorarioIds } })
+    : [];
+
+  const { horariosDuraciones, duracionClaseMinutos } = buildCursoDurationData(
+    normalizedHorarioIds,
+    cursoData.horariosDuraciones || [],
+    horarioDocs,
+    cursoData.duracionClaseMinutos
+  );
+
+  cursoData.horariosDuraciones = horariosDuraciones;
+  cursoData.duracionClaseMinutos = duracionClaseMinutos;
+  
   // Create course
   const curso = await Curso.create(cursoData);
   
@@ -81,9 +191,9 @@ exports.updateCurso = async (cursoId, updateData) => {
   }
   
   // Do not allow changing teacher if course already has enrolled students
-  if (updateData.profesor && curso.estudiantes.length > 0) {
-    throw new Error('No se puede cambiar el profesor de un curso con estudiantes inscritos');
-  }
+  // if (updateData.profesor && curso.estudiantes.length > 0) {
+  //   throw new Error('No se puede cambiar el profesor de un curso con estudiantes inscritos');
+  // }
 
   // If teacher or schedule is being changed, validate that schedule is allowed
   if (updateData.profesor || updateData.horario) {
@@ -125,6 +235,44 @@ exports.updateCurso = async (cursoId, updateData) => {
       }
     }
   }
+  
+  const existingHorarioIds = (curso.horarios || []).map((horario) => {
+    if (!horario) return null;
+    if (horario._id) return horario._id;
+    return horario;
+  }).filter(Boolean);
+
+  let normalizedHorarioIds = [];
+  if (Array.isArray(updateData.horarios) && updateData.horarios.length > 0) {
+    normalizedHorarioIds = normalizeHorarioIds(updateData.horarios);
+    updateData.horarios = normalizedHorarioIds;
+    if (!updateData.horario && normalizedHorarioIds.length > 0) {
+      updateData.horario = normalizedHorarioIds[0];
+    }
+  } else {
+    normalizedHorarioIds = normalizeHorarioIds(existingHorarioIds);
+  }
+
+  if (updateData.horario) {
+    const normalizedHorario = toObjectId(updateData.horario);
+    if (normalizedHorario) {
+      updateData.horario = normalizedHorario;
+    }
+  }
+
+  const horarioDocs = normalizedHorarioIds.length > 0
+    ? await Horario.find({ _id: { $in: normalizedHorarioIds } })
+    : [];
+
+  const { horariosDuraciones, duracionClaseMinutos } = buildCursoDurationData(
+    normalizedHorarioIds,
+    updateData.horariosDuraciones || curso.horariosDuraciones || [],
+    horarioDocs,
+    updateData.duracionClaseMinutos ?? curso.duracionClaseMinutos
+  );
+
+  updateData.horariosDuraciones = horariosDuraciones;
+  updateData.duracionClaseMinutos = duracionClaseMinutos;
   
   // Update fields
   Object.assign(curso, updateData);
@@ -221,8 +369,8 @@ exports.listarCursos = async (filtros = {}, paginacion = {}) => {
  */
 exports.getCursosByProfesor = async (profesorId, filtros = {}) => {
   const query = { profesor: profesorId, ...filtros };
-  
-  return await Curso.find(query)
+  console.log('cursosService.getCursosByProfesor - profesorId:', profesorId, 'filtros:', filtros);
+  const cursos = await Curso.find(query)
     .populate('estudiantes', 'firstName lastName email')
     .populate({
       path: 'horario',
@@ -230,6 +378,8 @@ exports.getCursosByProfesor = async (profesorId, filtros = {}) => {
       options: { strictPopulate: false }
     })
     .sort({ fechaInicio: -1 });
+  console.log('cursosService.getCursosByProfesor - encontrados:', cursos.length);
+  return cursos;
 };
 
 /**

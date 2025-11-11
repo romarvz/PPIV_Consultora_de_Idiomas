@@ -198,18 +198,59 @@ const TeachersManagement = ({ onBack }) => {
       try {
         const response = await api.delete(`/teachers/${teacherId}`);
         if (response.data.success) {
-          // Recargar lista
-          setCurrentPage(1);
-          setSearchTerm(''); // Reset search to reload all
           alert('Profesor eliminado exitosamente');
+
+          if (editingTeacher && editingTeacher._id === teacherId) {
+            setEditingTeacher(null);
+            setShowEditModal(false);
+          }
+
+          try {
+            const params = {
+              page: currentPage,
+              limit: 10,
+              ...(searchTerm && { search: searchTerm }),
+              ...(filterStatus !== 'all' && { status: filterStatus })
+            };
+
+            const teachersResponse = await api.get('/teachers', { params });
+            if (teachersResponse.data.success) {
+              setTeachers(teachersResponse.data.data.teachers || []);
+              setTotalPages(teachersResponse.data.data.totalPages || 1);
+              setTotalTeachers(teachersResponse.data.data.total || 0);
+            }
+          } catch (reloadError) {
+            console.error('Error reloading teachers after deletion:', reloadError);
+          }
+
+          try {
+            const statsResponse = await api.get('/teachers/stats');
+            if (statsResponse.data.success) {
+              setStats({
+                total: statsResponse.data.data.overview.total || 0,
+                active: statsResponse.data.data.overview.active || 0,
+                inactive: statsResponse.data.data.overview.inactive || 0
+              });
+            }
+          } catch (statsError) {
+            console.error('Error reloading stats after deletion:', statsError);
+          }
         }
       } catch (error) {
         console.error('Error deleting teacher:', error);
         const errorMsg = error.response?.data?.message || 'Error al eliminar el profesor';
-        alert(errorMsg);
+        const cursos = error.response?.data?.data?.cursos;
+        if (cursos && cursos.length > 0) {
+          const detalle = cursos.slice(0, 5)
+            .map(c => `- ${c.nombre}${c.estado ? ` (${c.estado})` : ''}`)
+            .join('\n');
+          alert(`${errorMsg}\n\nCursos asignados:\n${detalle}`);
+        } else {
+          alert(errorMsg);
+        }
       }
     }
-  }, []);
+  }, [currentPage, filterStatus, searchTerm, editingTeacher]);
 
   // Funciones para el modal de registro
   const handleNewTeacher = useCallback(() => {
@@ -270,20 +311,56 @@ const TeachersManagement = ({ onBack }) => {
         // Enviar horariosPermitidos como array de IDs
         horariosPermitidos: teacherData.horariosPermitidos || [],
         // Keep especialidades as ObjectIds - no transformation needed
-        especialidades: teacherData.especialidades || []
+        especialidades: teacherData.especialidades || [],
+        tarifaPorHora: teacherData.tarifaPorHora || 0 // Add tarifaPorHora
       };
-      
+
+      // Normalizar tarifaPorHora a número si está presente
+      if (transformedData.tarifaPorHora !== undefined && 
+          transformedData.tarifaPorHora !== null &&
+          transformedData.tarifaPorHora !== '') {
+        transformedData.tarifaPorHora = Number(transformedData.tarifaPorHora);
+      } else {
+        delete transformedData.tarifaPorHora;
+      }
+
       // Remover campos que no deben enviarse
       delete transformedData.horarios; // Eliminar el campo antiguo 'horarios'
       
+      // Ajustar flags de estado según condición seleccionada
+      if (teacherData.condicion) {
+        const isActivo = teacherData.condicion === 'activo';
+        transformedData.isActive = isActivo;
+        transformedData.disponible = isActivo;
+      }
+
       console.log('Transformed request payload:', JSON.stringify(transformedData, null, 2));
       
       const response = await api.put(`/teachers/${teacherData._id}`, transformedData);
       console.log('Save teacher response:', response.data);
       
       if (response.data.success) {
-        // Forzar recarga de la tabla agregando un timestamp como dependency
-        const timestamp = Date.now();
+        setCurrentPage(prev => prev);
+        setSuccessMessage('Profesor actualizado correctamente');
+
+        if (response.data.data && response.data.data.stats) {
+          setStats({
+            total: response.data.data.stats.total || stats.total,
+            active: response.data.data.stats.active || stats.active,
+            inactive: response.data.data.stats.inactive || stats.inactive
+          });
+        } else {
+          const statsResponse = await api.get('/teachers/stats');
+          if (statsResponse.data.success) {
+            setStats({
+              total: statsResponse.data.data.overview.total || 0,
+              active: statsResponse.data.data.overview.active || 0,
+              inactive: statsResponse.data.data.overview.inactive || 0
+            });
+          }
+        }
+        
+        // Forzar recarga de la tabla
         setCurrentPage(prev => prev); // Trigger re-render
         
         // Recargar datos completos de la tabla
@@ -306,33 +383,15 @@ const TeachersManagement = ({ onBack }) => {
         
         // Actualizar el profesor en edición con los nuevos datos del servidor
         if (response.data.data) {
-          setEditingTeacher(response.data.data);
+          const updatedTeacher = response.data.data.teacher || response.data.data;
+          setEditingTeacher(updatedTeacher);
         }
-        
-        // Establecer mensaje de éxito
-        setSuccessMessage('Profesor actualizado exitosamente. Los cambios se reflejan en la tabla.');
         
         // Llamar callback de éxito
         if (onSuccess) {
           onSuccess('Profesor actualizado exitosamente. Los cambios se reflejan en la tabla.');
         }
         
-        // Refrescar estadísticas si cambió el estado
-        const oldTeacher = teachers.find(t => t._id === teacherData._id);
-        if (oldTeacher && oldTeacher.condicion !== transformedData.condicion) {
-          // Recargar stats
-          setTimeout(() => {
-            api.get('/teachers/stats').then(statsResponse => {
-              if (statsResponse.data.success) {
-                setStats({
-                  total: statsResponse.data.data.overview.total || 0,
-                  active: statsResponse.data.data.overview.active || 0,
-                  inactive: statsResponse.data.data.overview.inactive || 0
-                });
-              }
-            }).catch(() => {});
-          }, 500);
-        }
       } else {
         const errorMsg = 'Error al actualizar el profesor: ' + (response.data.message || 'Error desconocido');
         setSuccessMessage(errorMsg);
@@ -357,7 +416,7 @@ const TeachersManagement = ({ onBack }) => {
         onError(errorMsg);
       }
     }
-  }, [editingTeacher]);
+  }, [currentPage, filterStatus, searchTerm, editingTeacher, stats]);
 
   const closeModal = useCallback(() => {
     setShowEditModal(false);
@@ -693,6 +752,29 @@ const TeachersManagement = ({ onBack }) => {
   );
 };
 
+const isHorarioValido = (horario) => {
+  if (!horario || !horario.horaInicio || !horario.horaFin) return false;
+  const [startH, startM] = horario.horaInicio.split(':').map(Number);
+  const [endH, endM] = horario.horaFin.split(':').map(Number);
+  if (Number.isNaN(startH) || Number.isNaN(startM) || Number.isNaN(endH) || Number.isNaN(endM)) return false;
+  const startMinutes = startH * 60 + startM;
+  const endMinutes = endH * 60 + endM;
+  const diff = endMinutes - startMinutes;
+  return diff >= 120 && diff % 60 === 0;
+};
+
+const ordenarHorarios = (horarios = []) => {
+  const diasOrden = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+  return [...horarios].sort((a, b) => {
+    const ordenA = diasOrden.indexOf(a.dia);
+    const ordenB = diasOrden.indexOf(b.dia);
+    if (ordenA !== ordenB) return ordenA - ordenB;
+    return a.horaInicio.localeCompare(b.horaInicio);
+  });
+};
+
+const filtrarHorariosValidos = (horarios = []) => ordenarHorarios(horarios.filter(isHorarioValido));
+
 // Componente Modal de Edición de Profesor
 const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSuccessMessage, languages }) => {
   const [formData, setFormData] = useState({
@@ -704,7 +786,9 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
       teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
     horariosPermitidos: teacher.horariosPermitidos ? 
       teacher.horariosPermitidos.map(h => typeof h === 'object' ? h._id : h) : [],
-    condicion: teacher.condicion || 'activo'
+    condicion: teacher.condicion || 'activo',
+    tarifaPorHora: teacher.tarifaPorHora ?? '',
+    dni: teacher.dni || ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -718,7 +802,7 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
         setLoadingHorarios(true);
         const response = await api.get('/cursos/horarios/todos');
         if (response.data.success) {
-          setAllHorarios(response.data.data || []);
+          setAllHorarios(filtrarHorariosValidos(response.data.data || []));
         }
       } catch (error) {
         console.error('Error cargando horarios:', error);
@@ -741,7 +825,9 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
         teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
       horariosPermitidos: teacher.horariosPermitidos ? 
         teacher.horariosPermitidos.map(h => typeof h === 'object' ? h._id : h) : [],
-      condicion: teacher.condicion || 'activo'
+      condicion: teacher.condicion || 'activo',
+      tarifaPorHora: teacher.tarifaPorHora ?? '',
+      dni: teacher.dni || ''
     });
   }, [teacher]);
 
@@ -758,6 +844,18 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     // Basic validation
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
       alert('Por favor complete los campos obligatorios (nombre, apellido, email)');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.especialidades || formData.especialidades.length === 0) {
+      alert('Por favor seleccione al menos una especialidad.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.tarifaPorHora === '' || Number(formData.tarifaPorHora) < 0) {
+      alert('Por favor ingrese una tarifa por hora válida (mayor o igual a 0).');
       setIsSubmitting(false);
       return;
     }
@@ -971,6 +1069,48 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid var(--input-border)',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
+                  }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
+                  DNI
+                </label>
+                <input
+                  type="text"
+                  value={formData.dni}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid var(--input-border)',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
+                  Tarifa por Hora
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.tarifaPorHora}
+                  onChange={(e) => setFormData(prev => ({ ...prev, tarifaPorHora: e.target.value }))}
                   style={{
                     width: '100%',
                     padding: '0.75rem',

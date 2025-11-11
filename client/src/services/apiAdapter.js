@@ -31,6 +31,12 @@ const apiAdapter = {
       // CAMBIO: Ruta en español
       return await api.get('/clases', { params })
     },
+    getMine: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getAll(params)
+      }
+      return await api.get('/clases/profesor/mis-clases', { params })
+    },
 
     /**
      * Crear nueva clase
@@ -61,12 +67,12 @@ const apiAdapter = {
      * Eliminar clase
      * @param {String} id - ID de la clase
      */
-    delete: async (id) => {
+    delete: async (id, data = {}) => {
       if (USE_MOCK) {
         return await mockApi.classes.delete(id)
       }
       // CAMBIO: Ruta en español
-      return await api.delete(`/clases/${id}`)
+      return await api.delete(`/clases/${id}`, { data })
     },
 
     /**
@@ -145,13 +151,27 @@ const apiAdapter = {
      * Obtener todos los cursos.
      * @param {Object} params - { activeOnly: Boolean }
      */
-    getAll: async (params = {}) => {
-      if (USE_MOCK) {
-        return await mockApi.courses.getAll(params);
-      }
-      // CAMBIO: Ruta en español
-      return await api.get('/cursos', { params });
-    },
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll(params);
+      }
+      // CAMBIO: Ruta en español
+      return await api.get('/cursos', { params });
+    },
+
+    /**
+     * Obtener cursos públicos sin autenticación
+     * @param {Object} params - filtros y paginación opcionales
+     */
+    getPublic: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll({
+          ...params,
+          activeOnly: params.activeOnly ?? true
+        });
+      }
+      return await api.get('/cursos/publico', { params });
+    },
 
     /**
      * Obtener un curso por ID
@@ -254,6 +274,26 @@ const apiAdapter = {
       }
       return await api.get('/cursos', { params });
     },
+    getPublic: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll({
+          ...params,
+          activeOnly: params.activeOnly ?? true
+        });
+      }
+      return await api.get('/cursos/publico', { params });
+    },
+    getMine: async () => {
+      if (USE_MOCK) {
+        return {
+          data: {
+            success: true,
+            data: []
+          }
+        };
+      }
+      return await api.get('/cursos/profesor/mis-cursos');
+    },
     getById: async (id) => {
       if (USE_MOCK) {
         return await mockApi.courses.getById(id);
@@ -302,6 +342,24 @@ const apiAdapter = {
         };
       }
       return response;
+    }
+  },
+
+  // ==================== SUBIDA DE ARCHIVOS ====================
+  uploads: {
+    /**
+     * Subir imagen de un curso
+     * @param {FormData} formData - Debe incluir el campo 'image'
+     */
+    uploadCourseImage: async (formData) => {
+      if (USE_MOCK) {
+        return await mockApi.uploads.uploadCourseImage(formData);
+      }
+      return await api.post('/uploads/course-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
     }
   },
 

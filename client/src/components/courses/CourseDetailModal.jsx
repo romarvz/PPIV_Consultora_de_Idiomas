@@ -18,17 +18,43 @@ const CourseDetailModal = ({ course, onClose, teacher }) => {
   // --- Lógica de datos  ---
   
   // 1. Mostrar el texto del horario
-  // 'horario' viene poblado)
   const scheduleDisplay = course.horario 
     ? course.horario.display // Si horario está poblado
     : (course.scheduleText || 'Horario a confirmar'); // Fallback
 
-  // 2. Usar 'costoTotal' (virtual) o 'tarifa'
-  const priceDisplay = course.costoTotal 
-    ? course.costoTotal.toLocaleString('es-AR') 
-    : course.tarifa.toLocaleString('es-AR');
-    
-  const currencyDisplay = course.costoTotal ? 'ARS (Total)' : 'ARS (por hora)';
+  // 2. Calcular precio disponible
+  const rawPrice = Number.isFinite(course.costoTotal)
+    ? course.costoTotal
+    : Number.isFinite(course.price)
+    ? course.price
+    : Number.isFinite(course.tarifa)
+    ? course.tarifa
+    : null;
+
+  const priceDisplay = Number.isFinite(rawPrice)
+    ? rawPrice.toLocaleString('es-AR')
+    : null;
+
+  const currencyDisplay = Number.isFinite(course.costoTotal) ? 'ARS (Total)' : 'ARS';
+
+  const teacherName = (() => {
+    if (teacher && (teacher.firstName || teacher.lastName)) {
+      return `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim();
+    }
+    if (teacher && teacher.name) {
+      return teacher.name;
+    }
+    if (typeof course.teacher === 'string' && course.teacher) {
+      return course.teacher;
+    }
+    if (course.profesor && typeof course.profesor === 'object') {
+      const { firstName, lastName } = course.profesor;
+      if (firstName || lastName) {
+        return `${firstName || ''} ${lastName || ''}`.trim();
+      }
+    }
+    return 'A confirmar';
+  })();
   
   // --- Fin lógica ---
 
@@ -41,15 +67,18 @@ const CourseDetailModal = ({ course, onClose, teacher }) => {
         
         <div className="modal-details">
           {/* El 'teacher' que se recibió como prop */}
-          <p><strong>Profesor:</strong> {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'A confirmar'}</p>
+          <p><strong>Profesor:</strong> {teacherName}</p>
           
           <p><strong>Horarios:</strong> {scheduleDisplay}</p>
-          
-          <p><strong>Valor:</strong> ${priceDisplay} {currencyDisplay}</p>
+          {priceDisplay && (
+            <p><strong>Valor:</strong> ${priceDisplay} {currencyDisplay}</p>
+          )}
           
           {/* Otros detalles del modelo */}
-          <p><strong>Nivel:</strong> {course.nivel}</p>
-          <p><strong>Duración:</strong> {course.duracionTotal} horas</p>
+          <p><strong>Nivel:</strong> {course.nivel || course.level}</p>
+          {course.duracionTotal && (
+            <p><strong>Duración:</strong> {course.duracionTotal} horas</p>
+          )}
 
         </div>
         

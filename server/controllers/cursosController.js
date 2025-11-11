@@ -285,7 +285,7 @@ exports.obtenerEstudiantesCurso = async (req, res) => {
  */
 exports.obtenerCursosProfesor = async (req, res) => {
   try {
-    const profesorId = req.user._id; // From authentication middleware
+    const profesorId = req.user.id || req.user._id; // From authentication middleware
     const cursos = await cursosService.getCursosByProfesor(profesorId);
     
     return res.status(200).json({

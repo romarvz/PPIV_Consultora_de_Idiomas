@@ -113,7 +113,6 @@ router.get(
 router.get(
   '/profesor/mis-cursos',
   requireRole(['profesor']),
-  paginationMiddleware,
   cursosController.obtenerCursosProfesor
 );
 

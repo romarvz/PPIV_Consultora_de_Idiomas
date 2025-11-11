@@ -88,8 +88,10 @@ app.use('/api/auditoria', auditoriaRoutes);
 // ===== RUTAS DE CURSOS Y CLASES (Alexa) =====
 const cursosRoutes = require('./routes/cursos');
 const clasesRoutes = require('./routes/clases');
+const uploadsRoutes = require('./routes/uploads');
 app.use('/api/cursos', cursosRoutes);
 app.use('/api/clases', clasesRoutes);
+app.use('/api/uploads', uploadsRoutes);
 
 // ===== RUTAS FINANCIERAS =====
 const conceptCategoryRoutes = require('./routes/conceptCategory.routes');
@@ -115,6 +117,7 @@ app.get('*', (req, res) => {
       teachers: '/api/teachers',
       languages: '/api/languages',
       cursos: '/api/cursos',
+      uploads: '/api/uploads',
       clases: '/api/clases',
       cobros: '/api/cobros',
       facturas: '/api/facturas',
@@ -135,6 +138,7 @@ app.post('*', (req, res) => {
       teachers: '/api/teachers',
       languages: '/api/languages',
       cursos: '/api/cursos',
+      uploads: '/api/uploads',
       clases: '/api/clases',
       cobros: '/api/cobros',
       facturas: '/api/facturas',

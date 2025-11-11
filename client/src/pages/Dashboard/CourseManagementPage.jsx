@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import apiAdapter from '../../services/apiAdapter';
 import CourseFormModal from '../../components/courses/CourseFormModal';
+import CourseClassesModal from '../../components/courses/CourseClassesModal';
 import CalendarView from '../../components/admin/CalendarView.jsx';
 import { FaCalendarAlt, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 
@@ -13,6 +14,8 @@ const CourseManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [isClassesModalOpen, setIsClassesModalOpen] = useState(false);
+  const [classesCourse, setClassesCourse] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   // --- CAMBIO AQUÍ: Eliminamos filterModality (no existe en el modelo real) ---
@@ -59,10 +62,20 @@ const CourseManagementPage = () => {
   const handleCloseModal = () => { setEditingCourse(null); setIsModalOpen(false); };
   
   // --- CAMBIO AQUÍ: Reemplazamos el reload() por fetchData() ---
-  const handleSave = () => { 
-    handleCloseModal(); 
-    fetchData(); // Vuelve a cargar los datos sin recargar la página
-  };
+  const handleSave = () => { 
+    handleCloseModal(); 
+    fetchData(); // Vuelve a cargar los datos sin recargar la página
+  };
+
+  const handleOpenClasses = (course) => {
+    setClassesCourse(course);
+    setIsClassesModalOpen(true);
+  };
+
+  const handleCloseClasses = () => {
+    setClassesCourse(null);
+    setIsClassesModalOpen(false);
+  };
 
   const handleDelete = async (courseId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este curso?')) {
@@ -74,7 +87,24 @@ const CourseManagementPage = () => {
     }
   };
 
-  if (loading) {
+  const getProfessorLabel = (course) => {
+    const prof = course.profesor;
+    if (!prof) return 'Sin asignar';
+    if (typeof prof === 'object') {
+      const first = prof.firstName ? prof.firstName.trim() : '';
+      const last = prof.lastName ? prof.lastName.trim() : '';
+      return last ? `${last}${first ? `, ${first.charAt(0)}.` : ''}` : (first || 'Sin asignar');
+    }
+    const fromList = teachers.find(t => t._id === prof);
+    if (fromList) {
+      const first = fromList.firstName ? fromList.firstName.trim() : '';
+      const last = fromList.lastName ? fromList.lastName.trim() : '';
+      return last ? `${last}${first ? `, ${first.charAt(0)}.` : ''}` : (first || 'Sin asignar');
+    }
+    return 'Sin asignar';
+  };
+
+  if (loading) {
     return <p className="loading-message" style={{ textAlign: 'center', padding: '2rem' }}>Cargando gestión de cursos...</p>;
   }
 
@@ -205,8 +235,8 @@ const CourseManagementPage = () => {
             <thead>
               <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Nombre del Curso</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Tipo</th>
-                {/* --- CAMBIO AQUÍ: Eliminamos la columna Modalidad --- */}
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Tipo</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Profesor</th>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#495057' }}>Estado</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600', color: '#495057' }}>Acciones</th>
               </tr>
@@ -216,7 +246,7 @@ const CourseManagementPage = () => {
                 <tr key={course._id} style={{ borderBottom: '1px solid #dee2e6' }}>
                   <td style={{ padding: '1rem', fontWeight: '600', color: '#2c3e50' }}>{course.nombre}</td>
                   <td style={{ padding: '1rem', color: '#6c757d' }}>{course.type}</td>
-                  {/* --- CAMBIO AQUÍ: Eliminamos la celda Modalidad --- */}
+                  <td style={{ padding: '1rem', color: '#6c757d' }}>{getProfessorLabel(course)}</td>
                   <td style={{ padding: '1rem' }}>
                     {/* --- CAMBIO AQUÍ: Mostramos el 'estado' real con formato --- */}
                     <span style={{
@@ -256,8 +286,21 @@ const CourseManagementPage = () => {
                         <FaEdit />
                       </button>
                       <button
+                        onClick={() => handleOpenClasses(course)}
+                        style={{
+                          background: '#8e44ad',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        Clases
+                      </button>
+                      <button
                         onClick={() => handleDelete(course._id)}
-// ... (estilos del botón sin cambios)
                         style={{
                           background: '#e74c3c',
                           color: 'white',
@@ -269,7 +312,7 @@ const CourseManagementPage = () => {
                         }}
                       >
                         <FaTrash />
-NB                     </button>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -279,7 +322,7 @@ NB                     </button>
         </div>
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -300,6 +343,14 @@ NB                     </button>
           />
         </div>
       )}
+
+      {isClassesModalOpen && classesCourse && (
+        <CourseClassesModal
+          course={classesCourse}
+          onClose={handleCloseClasses}
+          isReadOnly
+        />
+      )}
     </div>
   );
 };

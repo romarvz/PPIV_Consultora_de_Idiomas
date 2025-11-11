@@ -91,9 +91,6 @@ router.get(
 router.get(
   '/profesor/mis-clases',
   requireRole(['profesor']),
-  validarFiltrosClases,
-  handleValidationErrors,
-  paginationMiddleware,
   clasesController.obtenerClasesProfesor
 );
 

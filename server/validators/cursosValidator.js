@@ -36,6 +36,15 @@ exports.validarCreacionCurso = [
   body('tarifa')
     .notEmpty().withMessage('La tarifa es obligatoria')
     .isFloat({ min: 0 }).withMessage('La tarifa no puede ser negativa'),
+
+  body('modalidad')
+    .notEmpty().withMessage('La modalidad es obligatoria')
+    .isIn(['presencial', 'online']).withMessage('Modalidad no válida'),
+
+  body('type')
+    .notEmpty().withMessage('El formato del curso es obligatorio')
+    .isIn(['Curso Grupal', 'Clase Individual', 'Curso Corporativo', 'Certificacion', 'Inmersion Cultural', 'Otros'])
+    .withMessage('Tipo de curso no válido'),
     
   body('profesor')
     .notEmpty().withMessage('El profesor es obligatorio')
@@ -142,6 +151,15 @@ exports.validarEdicionCurso = [
   body('tarifa')
     .optional()
     .isFloat({ min: 0 }).withMessage('La tarifa no puede ser negativa'),
+
+  body('modalidad')
+    .optional()
+    .isIn(['presencial', 'online']).withMessage('Modalidad no válida'),
+
+  body('type')
+    .optional()
+    .isIn(['Curso Grupal', 'Clase Individual', 'Curso Corporativo', 'Certificacion', 'Inmersion Cultural', 'Otros'])
+    .withMessage('Tipo de curso no válido'),
 
   // --- NUEVA VALIDACIÓN ---
   body('horario')
