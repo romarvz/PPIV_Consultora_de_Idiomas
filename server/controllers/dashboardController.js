@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Dashboard Controller
  * Endpoints to get consolidated system data
  */
