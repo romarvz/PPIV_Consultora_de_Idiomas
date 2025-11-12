@@ -1,4 +1,4 @@
-// API Mock completa para simular el backend
+// client/src/services/mockApi.js
 
 import { 
   mockStudents, 
@@ -526,22 +526,24 @@ export const mockApi = {
       return { data: { success: true, message: 'Curso eliminado exitosamente' } };
     },
 
+    // --- NUEVA FUNCIÓN MOCK ---
     /**
-     * Obtener horarios disponibles de un profesor para crear cursos
+     * Simula la obtención de horarios disponibles para un profesor.
+     * Transforma los datos de 'mockTeachers.horarios' al formato de 'Horario.js'.
      * @param {String} profesorId - ID del profesor
-     * @returns {Promise} Horarios disponibles en formato del modelo Horario.js
      */
     getAvailableSchedulesByTeacher: async (profesorId) => {
-      await delay(); // Simular latencia de red
+      await delay();
       
-      // Buscar el profesor en el storage mock
       const teacher = storage.teachers.find(t => t._id === profesorId);
       
       if (!teacher || !teacher.horarios) {
-        return { data: { success: true, data: { horarios: [], count: 0 } } };
+        // Profesor no encontrado o no tiene horarios definidos en el mock
+        return { data: { success: true, data: [] } };
       }
-      
-      // Transformar los datos del mock al formato del modelo Horario.js
+
+      // 1. Transforma los horarios del mock al formato que espera el frontend
+      // (el formato que devuelve nuestro backend real, con _id y display)
       let availableSchedules = teacher.horarios.map((h, index) => {
         const diaCapitalizado = h.dia.charAt(0).toUpperCase() + h.dia.slice(1);
         return {
@@ -549,26 +551,50 @@ export const mockApi = {
           dia: h.dia,
           horaInicio: h.horaInicio,
           horaFin: h.horaFin,
-          tipo: 'clase',
-          display: `${diaCapitalizado} ${h.horaInicio} - ${h.horaFin}`
+          display: `${diaCapitalizado} ${h.horaInicio} - ${h.horaFin}` // Simula el virtual
         };
       });
-      
-      // Simular que un horario está "ocupado" (opcional, para testing)
+
+      // 2. Simular que un horario está "ocupado"
+      // Para probar la lógica, quitamos aleatoriamente uno de los horarios si hay más de uno.
       if (availableSchedules.length > 1) {
-        availableSchedules.splice(0, 1); // Quita el primero para simular ocupación
+        // Quita un horario al azar para simular que está ocupado
+        const randomIndex = Math.floor(Math.random() * availableSchedules.length);
+        availableSchedules.splice(randomIndex, 1);
       }
-      
-      return { 
-        data: { 
-          success: true, 
-          data: { 
-            horarios: availableSchedules, 
-            count: availableSchedules.length 
-          },
-          message: `Horarios disponibles obtenidos: ${availableSchedules.length} encontrados`
-        } 
+
+      return {
+        data: {
+          success: true,
+          data: availableSchedules
+        }
       };
+    }
+    // --- FIN NUEVA FUNCIÓN MOCK ---
+  },
+
+  // ==================== UPLOADS ====================
+  uploads: {
+    /**
+     * Simula la carga de una imagen de curso y devuelve una URL de prueba
+     */
+    uploadCourseImage: async () => {
+      await delay()
+      return {
+        data: {
+          success: true,
+          message: 'Imagen subida (mock)',
+          data: {
+            publicId: `mock-course-image-${Date.now()}`,
+            url: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+            secureUrl: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+            format: 'jpg',
+            bytes: 102400,
+            width: 800,
+            height: 600
+          }
+        }
+      }
     }
   },
  

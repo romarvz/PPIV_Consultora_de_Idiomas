@@ -1,8 +1,7 @@
 /**
- /**
  * Dashboard Controller
- * Endpoints to get consolidated system * 
-*/
+ * Endpoints to get consolidated system data
+ */
 
 const dashboardService = require('../services/dashboardService')
 const { sendSuccess, sendError } = require('../shared/helpers')

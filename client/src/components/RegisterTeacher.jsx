@@ -10,15 +10,7 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
     especialidades: [],
     tarifaPorHora: '',
     phone: '',
-    disponibilidad: {
-      lunes: [],
-      martes: [],
-      miercoles: [],
-      jueves: [],
-      viernes: [],
-      sabado: [],
-      domingo: []
-    }
+    horariosPermitidos: []
   })
   
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -27,6 +19,8 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
   const [showSuccess, setShowSuccess] = useState(false)
   const [languages, setLanguages] = useState([])
   const [loadingLanguages, setLoadingLanguages] = useState(true)
+  const [allHorarios, setAllHorarios] = useState([])
+  const [loadingHorarios, setLoadingHorarios] = useState(true)
   
   // Cargar idiomas disponibles desde la API
   useEffect(() => {
@@ -49,15 +43,47 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
     fetchLanguages()
   }, [])
 
-  const diasSemana = [
-    { key: 'lunes', label: 'Lunes' },
-    { key: 'martes', label: 'Martes' },
-    { key: 'miercoles', label: 'Miércoles' },
-    { key: 'jueves', label: 'Jueves' },
-    { key: 'viernes', label: 'Viernes' },
-    { key: 'sabado', label: 'Sábado' },
-    { key: 'domingo', label: 'Domingo' }
-  ]
+  const isHorarioValido = (horario) => {
+    if (!horario || !horario.horaInicio || !horario.horaFin) return false
+    const [startH, startM] = horario.horaInicio.split(':').map(Number)
+    const [endH, endM] = horario.horaFin.split(':').map(Number)
+    if (Number.isNaN(startH) || Number.isNaN(startM) || Number.isNaN(endH) || Number.isNaN(endM)) return false
+    const startMinutes = startH * 60 + startM
+    const endMinutes = endH * 60 + endM
+    const diff = endMinutes - startMinutes
+    return diff >= 120 && diff % 60 === 0
+  }
+
+  const ordenarHorarios = (horarios = []) => {
+    const diasOrden = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+    return [...horarios].sort((a, b) => {
+      const ordenA = diasOrden.indexOf(a.dia)
+      const ordenB = diasOrden.indexOf(b.dia)
+      if (ordenA !== ordenB) return ordenA - ordenB
+      return a.horaInicio.localeCompare(b.horaInicio)
+    })
+  }
+
+  const filtrarHorariosValidos = (horarios = []) => ordenarHorarios(horarios.filter(isHorarioValido))
+
+  useEffect(() => {
+    const fetchHorarios = async () => {
+      try {
+        setLoadingHorarios(true)
+        const response = await apiService.get('/cursos/horarios/todos')
+        if (response.data.success) {
+          setAllHorarios(filtrarHorariosValidos(response.data.data || []))
+        }
+      } catch (err) {
+        console.error('Error cargando horarios:', err)
+        setAllHorarios([])
+      } finally {
+        setLoadingHorarios(false)
+      }
+    }
+
+    fetchHorarios()
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -78,39 +104,17 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
     }))
   }
 
-  const addHorario = (dia) => {
-    setFormData(prev => ({
-      ...prev,
-      disponibilidad: {
-        ...prev.disponibilidad,
-        [dia]: [
-          ...prev.disponibilidad[dia],
-          { inicio: '09:00', fin: '12:00' }
-        ]
+  const handleHorarioToggle = (horarioId) => {
+    setFormData(prev => {
+      const current = prev.horariosPermitidos || []
+      const isSelected = current.includes(horarioId)
+      return {
+        ...prev,
+        horariosPermitidos: isSelected
+          ? current.filter(id => id !== horarioId)
+          : [...current, horarioId]
       }
-    }))
-  }
-
-  const removeHorario = (dia, index) => {
-    setFormData(prev => ({
-      ...prev,
-      disponibilidad: {
-        ...prev.disponibilidad,
-        [dia]: prev.disponibilidad[dia].filter((_, i) => i !== index)
-      }
-    }))
-  }
-
-  const updateHorario = (dia, index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      disponibilidad: {
-        ...prev.disponibilidad,
-        [dia]: prev.disponibilidad[dia].map((horario, i) => 
-          i === index ? { ...horario, [field]: value } : horario
-        )
-      }
-    }))
+    })
   }
 
   const handleSubmit = async (e) => {
@@ -131,16 +135,33 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
       return
     }
 
+    if (!formData.horariosPermitidos || formData.horariosPermitidos.length === 0) {
+      setError('Debe seleccionar al menos un horario disponible')
+      setIsSubmitting(false)
+      return
+    }
+
     try {
-      // Preparar datos para envío
+      const horariosSeleccionados = formData.horariosPermitidos || []
+
+      let disponibilidad = {}
+      if (horariosSeleccionados.length > 0) {
+        disponibilidad = horariosSeleccionados.reduce((acc, horarioId) => {
+          const horarioObj = allHorarios.find(h => h._id === horarioId || h._id?.toString() === horarioId)
+          if (!horarioObj) return acc
+          const dia = horarioObj.dia
+          if (!acc[dia]) acc[dia] = []
+          acc[dia].push({ inicio: horarioObj.horaInicio, fin: horarioObj.horaFin })
+          return acc
+        }, {})
+      }
+
       const teacherData = {
         ...formData,
         role: 'profesor',
         tarifaPorHora: parseFloat(formData.tarifaPorHora),
-        // Filtrar días sin horarios
-        disponibilidad: Object.fromEntries(
-          Object.entries(formData.disponibilidad).filter(([_, horarios]) => horarios.length > 0)
-        )
+        horariosPermitidos: horariosSeleccionados,
+        disponibilidad
       }
 
       console.log('DEBUG Frontend - Especialidades before sending:', formData.especialidades)
@@ -152,6 +173,11 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
         // Mostrar información del usuario creado y contraseña temporal
         const userData = response.data.data.user
         const tempPassword = formData.dni // La contraseña temporal es el DNI
+
+        const horariosSeleccionadosNombres = horariosSeleccionados.map(id => {
+          const horario = allHorarios.find(h => h._id === id || h._id?.toString() === id)
+          return horario ? (horario.display || `${horario.dia} ${horario.horaInicio}-${horario.horaFin}`) : id
+        }).join(', ')
         
         // Obtener nombres de especialidades
         const especialidadesNombres = formData.especialidades.map(id => {
@@ -167,6 +193,7 @@ Nombre: ${formData.firstName} ${formData.lastName}
 DNI: ${formData.dni}
 Especialidades: ${especialidadesNombres}
 Tarifa: $${formData.tarifaPorHora}/hora
+Horarios: ${horariosSeleccionadosNombres || 'Sin horarios seleccionados'}
 
 Usuario: ${formData.email}
 Contraseña: ${tempPassword}
@@ -313,15 +340,7 @@ El registro se completó exitosamente`
                     especialidades: [],
                     tarifaPorHora: '',
                     phone: '',
-                    disponibilidad: {
-                      lunes: [],
-                      martes: [],
-                      miercoles: [],
-                      jueves: [],
-                      viernes: [],
-                      sabado: [],
-                      domingo: []
-                    }
+                    horariosPermitidos: []
                   })
                   // Cerrar modal
                   if (onSuccess) onSuccess()
@@ -488,78 +507,57 @@ El registro se completó exitosamente`
             </div>
           </div>
 
-          {/* Disponibilidad */}
+          {/* Horarios permitidos */}
           <div style={{ marginBottom: '25px' }}>
-            <h4 style={{ color: 'var(--primary)', marginBottom: '15px', fontWeight: '600', fontSize: '1.1rem' }}>Disponibilidad (Opcional)</h4>
-            
-            {diasSemana.map(dia => (
-              <div key={dia.key} style={{ marginBottom: '15px', padding: '15px', border: '1px solid var(--input-border)', borderRadius: '5px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <strong style={{ fontSize: '14px' }}>{dia.label}</strong>
-                  <button
-                    type="button"
-                    onClick={() => addHorario(dia.key)}
-                    disabled={isSubmitting}
-                    style={{
-                      padding: '6px 12px',
-                      background: 'var(--accent)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      height: '32px'
-                    }}
-                  >
-                    + Agregar horario
-                  </button>
-                </div>
-                
-                {formData.disponibilidad[dia.key].map((horario, index) => (
-                  <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
-                    <input
-                      type="time"
-                      value={horario.inicio}
-                      onChange={(e) => updateHorario(dia.key, index, 'inicio', e.target.value)}
-                      disabled={isSubmitting}
-                      style={{ padding: '5px', borderRadius: '3px', border: '1px solid var(--input-border)' }}
-                    />
-                    <span>a</span>
-                    <input
-                      type="time"
-                      value={horario.fin}
-                      onChange={(e) => updateHorario(dia.key, index, 'fin', e.target.value)}
-                      disabled={isSubmitting}
-                      style={{ padding: '5px', borderRadius: '3px', border: '1px solid var(--input-border)' }}
-                    />
+            <h4 style={{ color: 'var(--primary)', marginBottom: '15px', fontWeight: '600', fontSize: '1.1rem' }}>Horarios disponibles *</h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '15px' }}>
+              Seleccioná los bloques horarios que este profesor puede dictar. Podés elegir múltiples opciones.
+            </p>
+            {loadingHorarios ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                Cargando horarios disponibles...
+              </div>
+            ) : allHorarios.length === 0 ? (
+              <div style={{ padding: '16px', background: '#fff4e5', borderRadius: '6px', border: '1px solid #ffcc80', color: '#e65100' }}>
+                No hay horarios configurados en el sistema. Agregalos desde Gestión de Cursos.
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                gap: '12px'
+              }}>
+                {allHorarios.map(horario => {
+                  const horarioId = horario._id ? horario._id.toString() : horario.id
+                  const isSelected = formData.horariosPermitidos.includes(horarioId)
+                  const diaCapitalizado = horario.dia ? horario.dia.charAt(0).toUpperCase() + horario.dia.slice(1) : ''
+                  return (
                     <button
+                      key={horarioId}
                       type="button"
-                      onClick={() => removeHorario(dia.key, index)}
+                      onClick={() => handleHorarioToggle(horarioId)}
                       disabled={isSubmitting}
                       style={{
-                        padding: '5px 8px',
-                        background: '#e57373',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '3px',
-                        fontSize: '12px',
-                        cursor: 'pointer'
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: isSelected ? '2px solid var(--primary)' : '1px solid var(--input-border)',
+                        backgroundColor: isSelected ? 'var(--primary-light, #e3f2fd)' : 'var(--card-bg, #fff)',
+                        color: isSelected ? 'var(--primary)' : 'var(--text-primary)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        gap: '4px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
                       }}
                     >
-                      ✕
+                      <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{diaCapitalizado}</span>
+                      <span style={{ fontSize: '0.85rem' }}>{horario.horaInicio} - {horario.horaFin}</span>
                     </button>
-                  </div>
-                ))}
-                
-                {formData.disponibilidad[dia.key].length === 0 && (
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '12px', fontStyle: 'italic' }}>
-                    Sin horarios asignados
-                  </p>
-                )}
+                  )
+                })}
               </div>
-            ))}
+            )}
           </div>
 
           <div className="form-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>

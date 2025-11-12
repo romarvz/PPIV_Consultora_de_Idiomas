@@ -111,7 +111,17 @@ const profesorSpecificValidation = [
   body('disponibilidad')
     .optional()
     .isObject()
-    .withMessage('Disponibilidad debe ser un objeto válido')
+    .withMessage('Disponibilidad debe ser un objeto válido'),
+
+  body('horariosPermitidos')
+    .optional()
+    .isArray()
+    .withMessage('Horarios permitidos debe ser un array'),
+
+  body('horariosPermitidos.*')
+    .optional()
+    .isMongoId()
+    .withMessage('ID de horario inválido')
 ];
 
 // Validaciones para administradores

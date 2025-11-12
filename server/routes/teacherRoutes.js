@@ -6,6 +6,7 @@ const {
   updateTeacher,
   deactivateTeacher,
   reactivateTeacher,
+  deleteTeacher,
   getTeachersStats
 } = require('../controllers/teacherController');
 const { authenticateToken, requireAdmin } = require('../middleware/authMiddlewareNew');
@@ -57,7 +58,8 @@ router.get('/stats', authenticateToken, requireAdmin, getTeachersStats);
 router.get('/', authenticateToken, requireAdmin, getTeachers);
 router.get('/:id', authenticateToken, requireAdmin, validateId, getTeacherById);
 router.put('/:id', authenticateToken, requireAdmin, validateId, validateTeacherUpdate, updateTeacher);
-router.delete('/:id', authenticateToken, requireAdmin, validateId, deactivateTeacher);
+router.patch('/:id/deactivate', authenticateToken, requireAdmin, validateId, deactivateTeacher);
+router.delete('/:id', authenticateToken, requireAdmin, validateId, deleteTeacher);
 router.patch('/:id/reactivate', authenticateToken, requireAdmin, validateId, reactivateTeacher);
 
 module.exports = router;

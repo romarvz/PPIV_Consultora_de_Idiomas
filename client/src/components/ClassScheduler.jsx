@@ -1,4 +1,4 @@
-// /client/src/components/ClassScheduler.jsx (o donde lo tengas)
+// /client/src/components/ClassScheduler.jsx
 
 import React from 'react';
 

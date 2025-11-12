@@ -16,10 +16,36 @@ const CalendarView = () => {
       try {
         const response = await apiAdapter.classes.getAll();
         if (response.data.success) {
-          setClasses(response.data.data.classes);
+          // El backend devuelve data como array directo de clases
+          const clasesArray = Array.isArray(response.data.data) 
+            ? response.data.data 
+            : (response.data.data?.classes || []);
+          
+          // Transformar las clases al formato esperado por el calendario
+          const transformedClasses = clasesArray.map(clase => {
+            const fechaHora = new Date(clase.fechaHora);
+            const dateStr = fechaHora.toISOString().split('T')[0]; // YYYY-MM-DD
+            const timeStr = fechaHora.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+            
+            return {
+              _id: clase._id,
+              date: dateStr,
+              time: timeStr,
+              courseName: clase.curso?.nombre || clase.nombre || 'Sin nombre',
+              subject: clase.curso?.nombre || clase.nombre || 'Sin nombre',
+              teacherName: clase.profesor 
+                ? `${clase.profesor.firstName || ''} ${clase.profesor.lastName || ''}`.trim()
+                : 'No asignado',
+              studentCount: Array.isArray(clase.estudiantes) ? clase.estudiantes.length : 0,
+              status: clase.estado || 'programada'
+            };
+          });
+          
+          setClasses(transformedClasses);
         }
       } catch (error) {
         console.error("Error al cargar las clases:", error);
+        setClasses([]); // Asegurar que siempre sea un array
       }
     };
     fetchClasses();
@@ -63,8 +89,9 @@ const CalendarView = () => {
 
   const getClassesForDay = (day) => {
     if (!day) return [];
+    if (!Array.isArray(classes)) return []; // Protección adicional
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return classes.filter(cls => cls.date === dateStr);
+    return classes.filter(cls => cls && cls.date === dateStr);
   };
 
   const getStatusColor = (status) => {

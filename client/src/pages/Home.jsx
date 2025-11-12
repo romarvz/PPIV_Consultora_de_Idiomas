@@ -1,12 +1,110 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom'; // Agregamos useLocation
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { routes } from '../utils/routes';
+import apiAdapter from '../services/apiAdapter';
+
+const idiomaLabels = {
+  ingles: 'Inglés',
+  frances: 'Francés',
+  aleman: 'Alemán',
+  italiano: 'Italiano',
+  portugues: 'Portugués',
+  chino: 'Chino',
+  japones: 'Japonés',
+  coreano: 'Coreano'
+};
+
+const capitalize = (value) =>
+  typeof value === 'string' && value.length > 0
+    ? value.charAt(0).toUpperCase() + value.slice(1)
+    : value;
+
+const slugify = (text) =>
+  (text || 'otros')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+
+const normalizeCourse = (course) => {
+  if (!course) return null;
+
+  const name = course.name || course.nombre || 'Curso sin título';
+  const description =
+    course.description || course.descripcion || 'Pronto tendremos más información.';
+  const language =
+    course.language ||
+    idiomaLabels[course.idioma] ||
+    capitalize(course.idioma) ||
+    'Idioma';
+  const modality =
+    course.modality ||
+    (course.modalidad ? capitalize(course.modalidad) : '') ||
+    '';
+  const level = course.level || course.nivel || 'Todos los niveles';
+  const price =
+    typeof course.price === 'number'
+      ? course.price
+      : typeof course.tarifa === 'number'
+      ? course.tarifa
+      : null;
+  const type = course.type || 'Otros';
+
+  return {
+    id: course._id || course.id || name,
+    name,
+    description,
+    language,
+    modality,
+    level,
+    price,
+    type
+  };
+};
 
 // Home page with all sections for smooth scrolling navigation
 const Home = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Obtenemos la información de la URL
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation();
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesError, setCoursesError] = useState(null);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setCoursesLoading(true);
+        setCoursesError(null);
+
+        const response = await apiAdapter.courses.getPublic({
+          activeOnly: true,
+          page: 1,
+          limit: 6
+        });
+
+        if (!response.data?.success) {
+          throw new Error('No se pudieron cargar los cursos');
+        }
+
+        const payload = Array.isArray(response.data?.data?.courses)
+          ? response.data.data.courses
+          : Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
+
+        const normalized = payload.map(normalizeCourse).filter(Boolean).slice(0, 6);
+        setCourses(normalized);
+      } catch (error) {
+        console.error('Error al cargar cursos públicos:', error);
+        setCoursesError('No pudimos cargar los cursos en este momento.');
+      } finally {
+        setCoursesLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   // Set up scroll animations when sections come into view (Tu useEffect original)
   useEffect(() => {
@@ -75,50 +173,70 @@ const Home = () => {
       <section id="servicios" className="section">
         <div className="container">
           <h2 className="section-title">Servicios</h2>
-          <div className="services-grid">
-            
-            <Link to="/cursos#clase-individual" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="service-card">
-                <h3>Clases Individuales</h3>
-                <p>Atención personalizada con horarios flexibles adaptados a tus necesidades específicas.</p>
-              </div>
-            </Link>
 
-            <Link to="/cursos#curso-grupal" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="service-card">
-                <h3>Clases Grupales</h3>
-                <p>Aprendé en grupos reducidos con metodología interactiva y ambiente colaborativo.</p>
-              </div>
-            </Link>
+          {coursesLoading && (
+            <p style={{ textAlign: 'center', margin: '2rem 0' }}>
+              Estamos preparando nuestra oferta académica...
+            </p>
+          )}
 
-            <Link to="/cursos#curso-corporativo" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="service-card">
-                <h3>Cursos Corporativos</h3>
-                <p>Programas especializados para empresas con enfoque en comunicación profesional.</p>
-              </div>
-            </Link>
+          {coursesError && (
+            <p style={{ textAlign: 'center', margin: '2rem 0', color: '#e74c3c' }}>
+              {coursesError}
+            </p>
+          )}
 
-            <Link to="/cursos#certificacion" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="service-card">
-                <h3>Preparación Certificaciones</h3>
-                <p>Cursos de preparación para FCE, CAE, CPE, TOEFL, TOEIC, y otras certificaciones internacionales.</p>
-              </div>
-            </Link>
+          {!coursesLoading && !coursesError && courses.length === 0 && (
+            <p style={{ textAlign: 'center', margin: '2rem 0' }}>
+              Aún no hay cursos publicados. ¡Vuelve pronto!
+            </p>
+          )}
 
-            <Link to="/cursos#inmersion-cultural" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="service-card">
-                <h3>Inmersión Cultural</h3>
-                <p>Programas que combinan idioma con cultura para una experiencia de aprendizaje integral.</p>
-              </div>
-            </Link>
+          {!coursesLoading && !coursesError && courses.length > 0 && (
+            <div className="services-grid">
+              {courses.map((course) => (
+                <Link
+                  key={course.id}
+                  to={`/cursos#${slugify(course.type)}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div className="service-card">
+                    <h3>{course.name}</h3>
+                    <p>
+                      {course.description.length > 160
+                        ? `${course.description.slice(0, 157)}...`
+                        : course.description}
+                    </p>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        flexWrap: 'wrap',
+                        marginTop: '1rem',
+                        fontSize: '0.9rem',
+                        fontWeight: 600,
+                        color: '#1f76d3'
+                      }}
+                    >
+                      <span>{course.language}</span>
+                      <span>{course.level}</span>
+                      {course.modality && <span>{course.modality}</span>}
+                    </div>
+                    {typeof course.price === 'number' && (
+                      <p style={{ marginTop: '0.75rem', fontWeight: 600, color: '#2c3e50' }}>
+                        Desde ${course.price.toLocaleString('es-AR')}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
 
-            <Link to="/cursos" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="service-card">
-                <h3>Modalidad Online</h3>
-                <p>Clases virtuales con plataforma interactiva propia y recursos multimedia avanzados.</p>
-              </div>
+          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+            <Link to="/cursos" className="cta-btn">
+              Ver todos los cursos
             </Link>
-            
           </div>
         </div>
       </section>

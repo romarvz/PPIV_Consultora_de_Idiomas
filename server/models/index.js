@@ -6,8 +6,12 @@ const Admin = require('./Admin');
 const Language = require('./Language');
 const Empresa = require('./Empresa');
 const AuditoriaLog = require('./AuditoriaLog');
-const Horario = require('./Horario');
+
 const Curso = require('./Curso');
+const Horario = require('./Horario');
+const Inscripcion = require('./Inscripcion');
+const Clase = require('./Clase');
+const EventoCalendario = require('./EventoCalendario');
 const PerfilEstudiante = require('./PerfilEstudiante');
 const ReporteAcademico = require('./ReporteAcademico');
 const ReporteFinanciero = require('./ReporteFinanciero');
@@ -20,11 +24,15 @@ module.exports = {
   Language,
   Empresa,
   AuditoriaLog,
-  Horario,
   Curso,
+  Horario,
+  Inscripcion,
+  Clase,
+  EventoCalendario,
   PerfilEstudiante,
   ReporteAcademico,
   ReporteFinanciero,
+
   //function helper
   getUserModel: (role) => {
     switch(role) {
