@@ -183,7 +183,7 @@ eventoCalendarioSchema.virtual('necesitaRecordatorio').get(function() {
 // Middleware pre-save: validar que el usuario existe
 eventoCalendarioSchema.pre('save', async function(next) {
   if (this.isModified('usuario')) {
-    const BaseUser = mongoose.model('User');
+    const BaseUser = mongoose.model('BaseUser');
     const usuario = await BaseUser.findById(this.usuario);
     
     if (!usuario) {

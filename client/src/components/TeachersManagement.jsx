@@ -194,90 +194,63 @@ const TeachersManagement = ({ onBack }) => {
   }, []);
 
   const handleDelete = useCallback(async (teacherId) => {
-    if (window.confirm('¿Estás seguro de que quieres desactivar este profesor?')) {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este profesor? Esta acción no se puede deshacer.')) {
       try {
         const response = await api.delete(`/teachers/${teacherId}`);
         if (response.data.success) {
-          // Resetear filtros y página
-          setCurrentPage(1);
-          setSearchTerm('');
-          setFilterStatus('all');
-          
-          // Forzar recarga inmediata de la lista de profesores
-          setLoading(true);
-          const params = {
-            page: 1,
-            limit: itemsPerPage
-          };
-          
-          const teachersResponse = await api.get('/teachers', { params });
-          if (teachersResponse.data.success) {
-            setTeachers(teachersResponse.data.data.teachers || []);
-            setTotalPages(teachersResponse.data.data.totalPages || 1);
-            setTotalTeachers(teachersResponse.data.data.total || 0);
+          alert('Profesor eliminado exitosamente');
+
+          if (editingTeacher && editingTeacher._id === teacherId) {
+            setEditingTeacher(null);
+            setShowEditModal(false);
           }
-          
-          // Recargar estadísticas también
-          const statsResponse = await api.get('/teachers/stats');
-          if (statsResponse.data.success) {
-            setStats({
-              total: statsResponse.data.data.overview.total || 0,
-              active: statsResponse.data.data.overview.active || 0,
-              inactive: statsResponse.data.data.overview.inactive || 0
-            });
+
+          try {
+            const params = {
+              page: currentPage,
+              limit: 10,
+              ...(searchTerm && { search: searchTerm }),
+              ...(filterStatus !== 'all' && { status: filterStatus })
+            };
+
+            const teachersResponse = await api.get('/teachers', { params });
+            if (teachersResponse.data.success) {
+              setTeachers(teachersResponse.data.data.teachers || []);
+              setTotalPages(teachersResponse.data.data.totalPages || 1);
+              setTotalTeachers(teachersResponse.data.data.total || 0);
+            }
+          } catch (reloadError) {
+            console.error('Error reloading teachers after deletion:', reloadError);
           }
-          
-          setLoading(false);
+
+          try {
+            const statsResponse = await api.get('/teachers/stats');
+            if (statsResponse.data.success) {
+              setStats({
+                total: statsResponse.data.data.overview.total || 0,
+                active: statsResponse.data.data.overview.active || 0,
+                inactive: statsResponse.data.data.overview.inactive || 0
+              });
+            }
+          } catch (statsError) {
+            console.error('Error reloading stats after deletion:', statsError);
+          }
         }
       } catch (error) {
         console.error('Error deleting teacher:', error);
-        setLoading(false);
-      }
-    }
-  }, [itemsPerPage]);
-
-  const handleReactivate = useCallback(async (teacherId) => {
-    if (window.confirm('¿Estás seguro de que quieres reactivar este profesor?')) {
-      try {
-        const response = await api.patch(`/teachers/${teacherId}/reactivate`);
-        if (response.data.success) {
-          // Resetear filtros y página
-          setCurrentPage(1);
-          setSearchTerm('');
-          setFilterStatus('all');
-          
-          // Forzar recarga inmediata de la lista de profesores
-          setLoading(true);
-          const params = {
-            page: 1,
-            limit: itemsPerPage
-          };
-          
-          const teachersResponse = await api.get('/teachers', { params });
-          if (teachersResponse.data.success) {
-            setTeachers(teachersResponse.data.data.teachers || []);
-            setTotalPages(teachersResponse.data.data.totalPages || 1);
-            setTotalTeachers(teachersResponse.data.data.total || 0);
-          }
-          
-          // Recargar estadísticas también
-          const statsResponse = await api.get('/teachers/stats');
-          if (statsResponse.data.success) {
-            setStats({
-              total: statsResponse.data.data.overview.total || 0,
-              active: statsResponse.data.data.overview.active || 0,
-              inactive: statsResponse.data.data.overview.inactive || 0
-            });
-          }
-          
-          setLoading(false);
+        const errorMsg = error.response?.data?.message || 'Error al eliminar el profesor';
+        const cursos = error.response?.data?.data?.cursos;
+        if (cursos && cursos.length > 0) {
+          const detalle = cursos.slice(0, 5)
+            .map(c => `- ${c.nombre}${c.estado ? ` (${c.estado})` : ''}`)
+            .join('\n');
+          alert(`${errorMsg}\n\nCursos asignados:\n${detalle}`);
+        } else {
+          alert(errorMsg);
         }
-      } catch (error) {
-        console.error('Error reactivating teacher:', error);
-        setLoading(false);
       }
     }
-  }, [itemsPerPage]);
+  }, [currentPage, filterStatus, searchTerm, editingTeacher]);
 
   // Funciones para el modal de registro
   const handleNewTeacher = useCallback(() => {
@@ -335,24 +308,59 @@ const TeachersManagement = ({ onBack }) => {
       // Transform data to match server expectations
       const transformedData = {
         ...teacherData,
-        // Transform horarios to Spanish field names and lowercase days
-        horarios: teacherData.horarios?.map(schedule => ({
-          dia: (schedule.day || schedule.dia)?.toLowerCase()?.replace('é', 'e').replace('á', 'a').replace('ú', 'u'),
-          horaInicio: schedule.startTime || schedule.horaInicio,
-          horaFin: schedule.endTime || schedule.horaFin
-        })) || [],
+        // Enviar horariosPermitidos como array de IDs
+        horariosPermitidos: teacherData.horariosPermitidos || [],
         // Keep especialidades as ObjectIds - no transformation needed
-        especialidades: teacherData.especialidades || []
+        especialidades: teacherData.especialidades || [],
+        tarifaPorHora: teacherData.tarifaPorHora || 0 // Add tarifaPorHora
       };
+
+      // Normalizar tarifaPorHora a número si está presente
+      if (transformedData.tarifaPorHora !== undefined && 
+          transformedData.tarifaPorHora !== null &&
+          transformedData.tarifaPorHora !== '') {
+        transformedData.tarifaPorHora = Number(transformedData.tarifaPorHora);
+      } else {
+        delete transformedData.tarifaPorHora;
+      }
+
+      // Remover campos que no deben enviarse
+      delete transformedData.horarios; // Eliminar el campo antiguo 'horarios'
       
+      // Ajustar flags de estado según condición seleccionada
+      if (teacherData.condicion) {
+        const isActivo = teacherData.condicion === 'activo';
+        transformedData.isActive = isActivo;
+        transformedData.disponible = isActivo;
+      }
+
       console.log('Transformed request payload:', JSON.stringify(transformedData, null, 2));
       
       const response = await api.put(`/teachers/${teacherData._id}`, transformedData);
       console.log('Save teacher response:', response.data);
       
       if (response.data.success) {
-        // Forzar recarga de la tabla agregando un timestamp como dependency
-        const timestamp = Date.now();
+        setCurrentPage(prev => prev);
+        setSuccessMessage('Profesor actualizado correctamente');
+
+        if (response.data.data && response.data.data.stats) {
+          setStats({
+            total: response.data.data.stats.total || stats.total,
+            active: response.data.data.stats.active || stats.active,
+            inactive: response.data.data.stats.inactive || stats.inactive
+          });
+        } else {
+          const statsResponse = await api.get('/teachers/stats');
+          if (statsResponse.data.success) {
+            setStats({
+              total: statsResponse.data.data.overview.total || 0,
+              active: statsResponse.data.data.overview.active || 0,
+              inactive: statsResponse.data.data.overview.inactive || 0
+            });
+          }
+        }
+        
+        // Forzar recarga de la tabla
         setCurrentPage(prev => prev); // Trigger re-render
         
         // Recargar datos completos de la tabla
@@ -375,30 +383,15 @@ const TeachersManagement = ({ onBack }) => {
         
         // Actualizar el profesor en edición con los nuevos datos del servidor
         if (response.data.data) {
-          setEditingTeacher(response.data.data);
+          const updatedTeacher = response.data.data.teacher || response.data.data;
+          setEditingTeacher(updatedTeacher);
         }
-        
-        // Establecer mensaje de éxito
-        setSuccessMessage('Profesor actualizado exitosamente. Los cambios se reflejan en la tabla.');
         
         // Llamar callback de éxito
         if (onSuccess) {
           onSuccess('Profesor actualizado exitosamente. Los cambios se reflejan en la tabla.');
         }
         
-        // Siempre refrescar estadísticas después de actualizar un profesor
-        // (puede haber cambios en estado activo/inactivo)
-        setTimeout(() => {
-          api.get('/teachers/stats').then(statsResponse => {
-            if (statsResponse.data.success) {
-              setStats({
-                total: statsResponse.data.data.overview.total || 0,
-                active: statsResponse.data.data.overview.active || 0,
-                inactive: statsResponse.data.data.overview.inactive || 0
-              });
-            }
-          }).catch(() => {});
-        }, 300);
       } else {
         const errorMsg = 'Error al actualizar el profesor: ' + (response.data.message || 'Error desconocido');
         setSuccessMessage(errorMsg);
@@ -423,7 +416,7 @@ const TeachersManagement = ({ onBack }) => {
         onError(errorMsg);
       }
     }
-  }, [editingTeacher]);
+  }, [currentPage, filterStatus, searchTerm, editingTeacher, stats]);
 
   const closeModal = useCallback(() => {
     setShowEditModal(false);
@@ -759,6 +752,29 @@ const TeachersManagement = ({ onBack }) => {
   );
 };
 
+const isHorarioValido = (horario) => {
+  if (!horario || !horario.horaInicio || !horario.horaFin) return false;
+  const [startH, startM] = horario.horaInicio.split(':').map(Number);
+  const [endH, endM] = horario.horaFin.split(':').map(Number);
+  if (Number.isNaN(startH) || Number.isNaN(startM) || Number.isNaN(endH) || Number.isNaN(endM)) return false;
+  const startMinutes = startH * 60 + startM;
+  const endMinutes = endH * 60 + endM;
+  const diff = endMinutes - startMinutes;
+  return diff >= 120 && diff % 60 === 0;
+};
+
+const ordenarHorarios = (horarios = []) => {
+  const diasOrden = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+  return [...horarios].sort((a, b) => {
+    const ordenA = diasOrden.indexOf(a.dia);
+    const ordenB = diasOrden.indexOf(b.dia);
+    if (ordenA !== ordenB) return ordenA - ordenB;
+    return a.horaInicio.localeCompare(b.horaInicio);
+  });
+};
+
+const filtrarHorariosValidos = (horarios = []) => ordenarHorarios(horarios.filter(isHorarioValido));
+
 // Componente Modal de Edición de Profesor
 const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSuccessMessage, languages }) => {
   const [formData, setFormData] = useState({
@@ -768,12 +784,35 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     phone: teacher.phone || '',
     especialidades: teacher.especialidades ? 
       teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
-    horarios: teacher.horarios || [],
+    horariosPermitidos: teacher.horariosPermitidos ? 
+      teacher.horariosPermitidos.map(h => typeof h === 'object' ? h._id : h) : [],
     condicion: teacher.condicion || 'activo',
-    isActive: teacher.isActive !== undefined ? teacher.isActive : (teacher.condicion === 'activo' || true)
+    tarifaPorHora: teacher.tarifaPorHora ?? '',
+    dni: teacher.dni || ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allHorarios, setAllHorarios] = useState([]);
+  const [loadingHorarios, setLoadingHorarios] = useState(true);
+
+  // Cargar todos los horarios disponibles
+  useEffect(() => {
+    const fetchHorarios = async () => {
+      try {
+        setLoadingHorarios(true);
+        const response = await api.get('/cursos/horarios/todos');
+        if (response.data.success) {
+          setAllHorarios(filtrarHorariosValidos(response.data.data || []));
+        }
+      } catch (error) {
+        console.error('Error cargando horarios:', error);
+        setAllHorarios([]);
+      } finally {
+        setLoadingHorarios(false);
+      }
+    };
+    fetchHorarios();
+  }, []);
 
   // Actualizar formData cuando teacher cambie (después de una actualización exitosa)
   useEffect(() => {
@@ -784,9 +823,11 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
       phone: teacher.phone || '',
       especialidades: teacher.especialidades ? 
         teacher.especialidades.map(esp => typeof esp === 'object' ? esp._id : esp) : [],
-      horarios: teacher.horarios || [],
+      horariosPermitidos: teacher.horariosPermitidos ? 
+        teacher.horariosPermitidos.map(h => typeof h === 'object' ? h._id : h) : [],
       condicion: teacher.condicion || 'activo',
-      isActive: teacher.isActive !== undefined ? teacher.isActive : (teacher.condicion === 'activo' || true)
+      tarifaPorHora: teacher.tarifaPorHora ?? '',
+      dni: teacher.dni || ''
     });
   }, [teacher]);
 
@@ -803,6 +844,18 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     // Basic validation
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
       alert('Por favor complete los campos obligatorios (nombre, apellido, email)');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.especialidades || formData.especialidades.length === 0) {
+      alert('Por favor seleccione al menos una especialidad.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.tarifaPorHora === '' || Number(formData.tarifaPorHora) < 0) {
+      alert('Por favor ingrese una tarifa por hora válida (mayor o igual a 0).');
       setIsSubmitting(false);
       return;
     }
@@ -858,27 +911,18 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     });
   };
 
-  const addSchedule = () => {
-    setFormData(prev => ({
-      ...prev,
-      horarios: [...prev.horarios, { day: 'Lunes', startTime: '09:00', endTime: '10:00' }]
-    }));
-  };
-
-  const removeSchedule = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      horarios: prev.horarios.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateSchedule = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      horarios: prev.horarios.map((schedule, i) => 
-        i === index ? { ...schedule, [field]: value } : schedule
-      )
-    }));
+  const handleHorarioToggle = (horarioId) => {
+    setFormData(prev => {
+      const currentHorarios = prev.horariosPermitidos || [];
+      const isSelected = currentHorarios.includes(horarioId);
+      
+      return {
+        ...prev,
+        horariosPermitidos: isSelected
+          ? currentHorarios.filter(id => id !== horarioId)
+          : [...currentHorarios, horarioId]
+      };
+    });
   };
 
   return (
@@ -1037,6 +1081,48 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
                 />
               </div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
+                  DNI
+                </label>
+                <input
+                  type="text"
+                  value={formData.dni}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid var(--input-border)',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)' }}>
+                  Tarifa por Hora
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.tarifaPorHora}
+                  onChange={(e) => setFormData(prev => ({ ...prev, tarifaPorHora: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid var(--input-border)',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Estado */}
@@ -1108,107 +1194,86 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
             </div>
           </div>
 
-          {/* Horarios */}
+          {/* Horarios Permitidos */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h4 style={{ color: 'var(--text-primary)', margin: '0', display: 'flex', alignItems: 'center' }}>
-                <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#3498db' }} />
-                Horarios
-              </h4>
-              <button
-                type="button"
-                onClick={addSchedule}
-                style={{
-                  background: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <FaPlus style={{ marginRight: '0.25rem' }} />
-                Agregar
-              </button>
-            </div>
-            {formData.horarios.map((schedule, index) => (
-              <div key={index} style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr auto',
-                gap: '0.5rem',
-                alignItems: 'center',
-                marginBottom: '0.5rem',
-                padding: '0.75rem',
-                border: '1px solid var(--border-color)',
-                borderRadius: '6px',
-                backgroundColor: 'var(--bg-tertiary)'
+            <h4 style={{ color: 'var(--text-primary)', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#3498db' }} />
+              Horarios Permitidos
+              <span style={{ 
+                fontSize: '0.85rem', 
+                fontWeight: '400', 
+                color: 'var(--text-secondary)',
+                fontStyle: 'italic',
+                marginLeft: '0.5rem'
               }}>
-                <select
-                  value={schedule.day}
-                  onChange={(e) => updateSchedule(index, 'day', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    border: '1px solid var(--input-border)',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    backgroundColor: 'var(--input-bg)',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  {dayOptions.map(day => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
-                <select
-                  value={schedule.startTime}
-                  onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    border: '1px solid var(--input-border)',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    backgroundColor: 'var(--input-bg)',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  {timeOptions.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-                <select
-                  value={schedule.endTime}
-                  onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
-                  style={{
-                    padding: '0.5rem',
-                    border: '1px solid var(--input-border)',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    backgroundColor: 'var(--input-bg)',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  {timeOptions.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => removeSchedule(index)}
-                  style={{
-                    background: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.5rem',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem'
-                  }}
-                >
-                  <FaTrash />
-                </button>
+                (Haga clic para marcar los horarios en los que el profesor puede dar clases)
+              </span>
+            </h4>
+            {loadingHorarios ? (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Cargando horarios...</p>
+            ) : allHorarios.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No hay horarios disponibles. Contacte al administrador.</p>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '0.75rem',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                padding: '0.5rem',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-secondary)'
+              }}>
+                {allHorarios.map(horario => {
+                  const isSelected = formData.horariosPermitidos.includes(horario._id);
+                  const diaCapitalizado = horario.dia.charAt(0).toUpperCase() + horario.dia.slice(1);
+                  const displayText = horario.display || `${diaCapitalizado} ${horario.horaInicio} - ${horario.horaFin}`;
+                  
+                  return (
+                    <div
+                      key={horario._id}
+                      onClick={() => handleHorarioToggle(horario._id)}
+                      title={isSelected ? 'Horario permitido - Click para desmarcar' : 'Horario no permitido - Click para permitir'}
+                      style={{
+                        padding: '0.75rem',
+                        border: `2px solid ${isSelected ? '#27ae60' : '#e74c3c'}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        backgroundColor: isSelected ? '#d4edda' : '#f8d7da',
+                        color: isSelected ? '#155724' : '#721c24',
+                        fontSize: '0.85rem',
+                        fontWeight: isSelected ? '600' : '400',
+                        transition: 'all 0.2s ease',
+                        textAlign: 'center',
+                        position: 'relative'
+                      }}
+                    >
+                      {displayText}
+                      {isSelected && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '6px',
+                          fontSize: '0.7rem',
+                          color: '#27ae60'
+                        }}>✓</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            )}
+            {formData.horariosPermitidos.length > 0 && (
+              <p style={{ color: '#27ae60', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: '500' }}>
+                ✓ {formData.horariosPermitidos.length} horario(s) permitido(s) - El profesor puede dar clases en estos horarios
+              </p>
+            )}
+            {formData.horariosPermitidos.length === 0 && allHorarios.length > 0 && (
+              <p style={{ color: '#e74c3c', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: '500' }}>
+                ⚠ Ningún horario seleccionado - El profesor no podrá ser asignado a cursos hasta que seleccione al menos un horario
+              </p>
+            )}
           </div>
 
           {/* Botones */}

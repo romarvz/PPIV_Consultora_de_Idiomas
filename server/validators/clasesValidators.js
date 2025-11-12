@@ -81,18 +81,27 @@ exports.validarCreacionClase = [
 // Middleware personalizado para verificar disponibilidad del profesor
 exports.verificarDisponibilidadProfesor = async (req, res, next) => {
   try {
-    const { profesor, fechaHora, duracionMinutos } = req.body;
+    const { profesor, fechaHora, duracionMinutos, curso } = req.body;
     const claseId = req.params.id; // Si estamos editando
     
     if (!profesor || !fechaHora || !duracionMinutos) {
       return next(); // Los validators base se encargarán de estos errores
     }
     
+    let cursoId = curso;
+    if (!cursoId && claseId) {
+      const claseActual = await Clase.findById(claseId).select('curso');
+      if (claseActual) {
+        cursoId = claseActual.curso;
+      }
+    }
+    
     const disponible = await Clase.verificarDisponibilidadProfesor(
       profesor,
       new Date(fechaHora),
       duracionMinutos,
-      claseId
+      claseId,
+      cursoId
     );
     
     if (!disponible) {

@@ -12,10 +12,10 @@
 }
 
 .modal-content {
-  background: var(--card-background);
+  background: #ffffff;
   padding: 2rem;
-  border-radius: var(--card-border-radius);
-  box-shadow: var(--card-shadow-hover);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   max-width: 600px;
   width: 90%;
   position: relative;
@@ -54,17 +54,19 @@
   padding: 1rem;
   margin-top: 2rem;
   border: none;
-  border-radius: 4px;
-  background-color: var(--medium-blue);
-  color: var(--text-color-inverted);
+  border-radius: 8px;
+  background-color: #0F5C8C;
+  color: #ffffff;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color var(--transition-speed);
+  transition: all 0.3s ease;
 }
 
 .modal-cta-button:hover {
-  background: var(--success-color);
+  background-color: #0A2C59;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 92, 140, 0.3);
 }
 
 
