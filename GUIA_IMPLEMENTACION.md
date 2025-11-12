@@ -10,7 +10,7 @@
 # Ruta destino: client/src/services/facturaApi.js
 ```
 
-Copiar el contenido de `facturaApi.js` que te generé.
+Copiar el contenido de `facturaApi.js`.
 
 ### 1.2 Copiar cobroApi.js
 
@@ -18,11 +18,10 @@ Copiar el contenido de `facturaApi.js` que te generé.
 # Ruta destino: client/src/services/cobroApi.js
 ```
 
-Copiar el contenido de `cobroApi.js` que te generé.
+Copiar el contenido de `cobroApi.js`.
 
 ### 1.3 Verificar que api.js ya existe
-
-Ya tenés `client/src/services/api.js` configurado correctamente.
+ `client/src/services/api.js` configurado correctamente.
 
 ---
 

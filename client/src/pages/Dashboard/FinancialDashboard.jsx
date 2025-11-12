@@ -12,8 +12,8 @@ import {
   Filter,
   Download
 } from 'lucide-react'
-import facturaAPI from '../services/facturaApi'
-import cobroAPI from '../services/cobroApi'
+import facturaAPI from '../../services/facturaApi'
+import cobroAPI from '../../services/cobroApi'
 
 const FinancialDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview')
