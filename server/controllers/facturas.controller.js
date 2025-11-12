@@ -25,6 +25,30 @@ facturaCtrl.createFactura = async (req, res) => {
 };
 
 /**
+ * Obtener todas las facturas
+ * GET /api/facturas
+ */
+facturaCtrl.getAllFacturas = async (req, res) => {
+    try {
+        const Factura = require('../models/factura.model');
+        const facturas = await Factura.find()
+            .populate('estudiante', 'firstName lastName dni email')
+            .sort({ fechaEmision: -1 });
+
+        res.status(200).json({
+            success: true,
+            total: facturas.length,
+            data: facturas
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
  * Autorizar una factura para obtener cae o caea
  * PUT /api/facturas/id/autorizar
  */
@@ -88,6 +112,30 @@ facturaCtrl.getDeudaEstudiante = async (req, res) => {
         });
     } catch (error) {
         res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Obtener todas las facturas
+ * GET /api/facturas
+ */
+facturaCtrl.getAllFacturas = async (req, res) => {
+    try {
+        const Factura = require('../models/factura.model');
+        const facturas = await Factura.find()
+            .populate('estudiante', 'firstName lastName dni email')
+            .sort({ fechaEmision: -1 });
+
+        res.status(200).json({
+            success: true,
+            total: facturas.length,
+            data: facturas
+        });
+    } catch (error) {
+        res.status(500).json({
             success: false,
             message: error.message
         });

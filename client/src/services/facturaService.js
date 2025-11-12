@@ -21,7 +21,7 @@ const facturaService = {
 
   // Autorizar factura (solicitar CAE/CAEA)
   autorizarFactura: async (id) => {
-    const response = await api.post(`/facturas/${id}/autorizar`);
+    const response = await api.put(`/facturas/${id}/autorizar`);
     return response.data;
   },
 

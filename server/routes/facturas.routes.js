@@ -4,6 +4,11 @@ const facturaCtrl = require('../controllers/facturas.controller');
 const { authenticateToken, requireAdmin} = require('../middleware/authMiddlewareNew');
 const {validateCrearFactura, validateMongoId} = require('../middleware/financiero.validation');
 
+// Ruta para obtener todas las facturas
+router.get('/', 
+    [authenticateToken], 
+    facturaCtrl.getAllFacturas);
+
 // Ruta para crear una nueva factura
 router.post('/', 
     [authenticateToken, requireAdmin, validateCrearFactura], 
