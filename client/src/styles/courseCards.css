@@ -71,3 +71,27 @@
   width: 100%;
   cursor: pointer;
 }
+
+.course-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.course-card-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.course-card-badge--upcoming {
+  background: #fff4e5;
+  color: #b05b00;
+  border: 1px solid rgba(176, 91, 0, 0.35);
+  font-weight: 700;
+}

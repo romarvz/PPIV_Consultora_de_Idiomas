@@ -51,6 +51,7 @@ const normalizeCourse = (course) => {
       : null;
   const imageUrl = course.imageUrl || course.coverImage || '/images/Logo.png';
   const teacher = course.teacher || course.profesor || null;
+  const status = course.status || course.estado || 'planificado';
 
   return {
     ...course,
@@ -64,7 +65,8 @@ const normalizeCourse = (course) => {
     type,
     price,
     imageUrl,
-    teacher
+    teacher,
+    status
   };
 };
 
@@ -83,7 +85,7 @@ const CoursesPage = () => {
         setError(null);
 
         const coursesResponse = await apiAdapter.courses.getPublic({
-          activeOnly: true,
+          activeOnly: false,
           page: 1,
           limit: 100
         });

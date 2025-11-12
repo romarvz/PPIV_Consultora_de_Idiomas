@@ -60,6 +60,13 @@ const CursoSchema = new mongoose.Schema({
     default: '/assets/images/default-course.png' // Una imagen por defecto
   },
 
+  vacantesMaximas: {
+    type: Number,
+    min: 1,
+    max: 1000,
+    default: 30
+  },
+
 
   // Campo de Inscripción
   estudiantes: [{ 
@@ -80,5 +87,42 @@ CursoSchema.virtual('costoTotal').get(function() {
   }
   return null;
 });
+
+CursoSchema.methods.estaInscrito = function(estudianteId) {
+  if (!estudianteId) {
+    return false;
+  }
+  const idStr = estudianteId.toString();
+  return (this.estudiantes || []).some((est) => {
+    if (! est) {
+      return false;
+    }
+    const candidate = est._id ? est._id.toString() : est.toString();
+    return candidate === idStr;
+  });
+};
+
+CursoSchema.methods.agregarEstudiante = function(estudianteId) {
+  if (!estudianteId) {
+    return;
+  }
+  if (!this.estudiantes) {
+    this.estudiantes = [];
+  }
+  if (!this.estaInscrito(estudianteId)) {
+    this.estudiantes.push(estudianteId);
+  }
+};
+
+CursoSchema.methods.removerEstudiante = function(estudianteId) {
+  if (!estudianteId || !Array.isArray(this.estudiantes)) {
+    return;
+  }
+  const idStr = estudianteId.toString();
+  this.estudiantes = this.estudiantes.filter((est) => {
+    const candidate = est._id ? est._id.toString() : est.toString();
+    return candidate !== idStr;
+  });
+};
 
 module.exports = mongoose.model('Curso', CursoSchema);

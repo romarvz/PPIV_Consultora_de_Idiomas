@@ -23,7 +23,14 @@ const CourseCard = ({ course, onSelectCourse }) => {
         loading="lazy"
       />
       <div className="course-card-content">
-        <h3 className="course-card-title">{name}</h3>
+        <div className="course-card-header">
+          <h3 className="course-card-title">{name}</h3>
+          {course.status && course.status.toLowerCase() === 'planificado' && (
+            <span className="course-card-badge course-card-badge--upcoming">
+              Próximo lanzamiento · Inscripción abierta
+            </span>
+          )}
+        </div>
         <p className="course-card-description">
           {description.length > 100 ? `${description.substring(0, 100)}…` : description}
         </p>

@@ -6,17 +6,23 @@ const Footer = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Handle navigation - scroll on home page, route to home then scroll on other pages
+  const scrollToSection = (sectionId, attempt = 0) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+    if (attempt < 10) {
+      setTimeout(() => scrollToSection(sectionId, attempt + 1), 120)
+    }
+  }
+
+  // Handle navigation - scroll on home page, route to home then scroll to section
   const handleSectionClick = (sectionId) => {
     if (location.pathname === '/') {
-      // Already on home page, just scroll to section
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
+      scrollToSection(sectionId)
     } else {
-      // Navigate to home page first, then scroll to section
-      navigate('/')
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
-      }, 100)
+      navigate('/', { state: { scrollTo: sectionId } })
     }
   }
 
