@@ -26,8 +26,13 @@ const CourseManagementPage = () => {
     try {
       setLoading(true);
       // --- CAMBIO AQUÍ: Llamamos a la API real de profesores y cursos en español ---
+      const queryParams = {
+        page: 1,
+        limit: 100 // Evitamos quedarnos solo con los primeros 10 cursos por página
+      };
+
       const [coursesResponse, teachersResponse] = await Promise.all([
-        apiAdapter.cursos.getAll(), // Usamos 'cursos'
+        apiAdapter.cursos.getAll(queryParams), // Usamos 'cursos'
         apiAdapter.profesores.getAll({ status: 'activo' }) // Solo profesores activos
       ]);
 
