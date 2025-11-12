@@ -150,6 +150,11 @@ exports.createCurso = async (cursoData) => {
     }
   }
   
+  const capacidadCurso = Number(cursoData.vacantesMaximas);
+  cursoData.vacantesMaximas = Number.isFinite(capacidadCurso) && capacidadCurso >= 1
+    ? Math.min(capacidadCurso, 1000)
+    : 30;
+
   const selectedHorarioIdsRaw = Array.isArray(cursoData.horarios) && cursoData.horarios.length > 0
     ? cursoData.horarios
     : (cursoData.horario ? [cursoData.horario] : []);
@@ -236,6 +241,13 @@ exports.updateCurso = async (cursoId, updateData) => {
     }
   }
   
+  if (updateData.vacantesMaximas !== undefined) {
+    const capacidadActualizada = Number(updateData.vacantesMaximas);
+    updateData.vacantesMaximas = Number.isFinite(capacidadActualizada) && capacidadActualizada >= 1
+      ? Math.min(capacidadActualizada, 1000)
+      : curso.vacantesMaximas || 30;
+  }
+
   const existingHorarioIds = (curso.horarios || []).map((horario) => {
     if (!horario) return null;
     if (horario._id) return horario._id;
@@ -409,7 +421,7 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
     throw new Error('Estudiante no encontrado');
   }
   
-  if (estudiante.role !== 'student') {
+  if (estudiante.role !== 'estudiante') {
     throw new Error('El usuario especificado no es un estudiante');
   }
   
@@ -417,6 +429,17 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
   const inscripcionExistente = await Inscripcion.verificarInscripcion(estudianteId, cursoId);
   if (inscripcionExistente) {
     throw new Error('El estudiante ya está inscrito en este curso');
+  }
+
+  const limiteVacantes = Number(curso.vacantesMaximas);
+  if (Number.isFinite(limiteVacantes) && limiteVacantes > 0) {
+    const inscripcionesActivas = await Inscripcion.countDocuments({
+      curso: cursoId,
+      estado: { $in: ['pendiente', 'confirmada'] }
+    });
+    if (inscripcionesActivas >= limiteVacantes) {
+      throw new Error('No hay vacantes disponibles en este curso');
+    }
   }
   
   // Create enrollment

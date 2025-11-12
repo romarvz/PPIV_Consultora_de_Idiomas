@@ -37,6 +37,10 @@ exports.validarCreacionCurso = [
     .notEmpty().withMessage('La tarifa es obligatoria')
     .isFloat({ min: 0 }).withMessage('La tarifa no puede ser negativa'),
 
+  body('vacantesMaximas')
+    .optional()
+    .isInt({ min: 1, max: 1000 }).withMessage('Las vacantes deben estar entre 1 y 1000'),
+
   body('modalidad')
     .notEmpty().withMessage('La modalidad es obligatoria')
     .isIn(['presencial', 'online']).withMessage('Modalidad no válida'),
@@ -151,6 +155,10 @@ exports.validarEdicionCurso = [
   body('tarifa')
     .optional()
     .isFloat({ min: 0 }).withMessage('La tarifa no puede ser negativa'),
+
+  body('vacantesMaximas')
+    .optional()
+    .isInt({ min: 1, max: 1000 }).withMessage('Las vacantes deben estar entre 1 y 1000'),
 
   body('modalidad')
     .optional()

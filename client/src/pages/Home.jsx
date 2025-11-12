@@ -94,6 +94,7 @@ const normalizeCourse = (course) => {
     course.coverImage ||
     (Array.isArray(course.images) && course.images[0]) ||
     '/images/Logo.png';
+  const status = course.status || course.estado || 'planificado';
 
   return {
     id: course._id || course.id || name,
@@ -104,7 +105,8 @@ const normalizeCourse = (course) => {
     level,
     price,
     type,
-    imageUrl
+    imageUrl,
+    status
   };
 };
 
@@ -176,7 +178,7 @@ const Home = () => {
         setCoursesError(null);
 
         const response = await apiAdapter.courses.getPublic({
-          activeOnly: true,
+          activeOnly: false,
           page: 1,
           limit: 100
         });
@@ -191,7 +193,9 @@ const Home = () => {
           ? response.data.data
           : [];
 
-        const normalized = payload.map(normalizeCourse).filter(Boolean);
+        const normalized = payload
+          .map(normalizeCourse)
+          .filter(Boolean);
         setCourses(normalized);
       } catch (error) {
         console.error('Error al cargar cursos públicos:', error);
@@ -225,23 +229,42 @@ const Home = () => {
 
   // NUEVO useEffect para manejar el scroll al ancla (#contacto)
   useEffect(() => {
-    // Si hay un ancla en la URL (ej: #contacto)
-    if (location.hash) {
-      const id = location.hash.substring(1); // Quitamos el '#' para obtener el ID
-      const element = document.getElementById(id);
-      if (element) {
-        // Usamos un pequeño delay para asegurarnos de que el componente ya está en el DOM
-        setTimeout(() => {
-          const headerHeight = document.querySelector('header')?.offsetHeight || 0;
-          const elementTop = element.getBoundingClientRect().top + window.scrollY;
-          window.scrollTo({
-            top: elementTop - headerHeight - 40,
-            behavior: 'smooth'
-          });
-        }, 200); // delay suficiente para que Home montado
+    if (coursesLoading) return;
+
+    const stateTarget = location.state?.scrollTo;
+    const hashTarget = location.hash ? location.hash.replace('#', '') : null;
+    const target = stateTarget || hashTarget;
+
+    const performScroll = () => {
+      if (!target) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
       }
+      const element = document.getElementById(target);
+      if (element) {
+        const headerHeight = document.querySelector('header')?.offsetHeight || 0;
+        const y = element.getBoundingClientRect().top + window.pageYOffset - headerHeight - 20;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        return true;
+      }
+      return false;
+    };
+
+    if (!performScroll()) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts += 1;
+        if (performScroll() || attempts > 10) {
+          clearInterval(interval);
+        }
+      }, 120);
+      return () => clearInterval(interval);
     }
-  }, [location.hash]); // Se ejecuta cada vez que el ancla de la URL cambia
+
+    if (stateTarget) {
+      navigate(location.pathname + location.hash, { replace: true, state: {} });
+    }
+  }, [coursesLoading, location.hash, location.state, location.pathname, navigate]);
 
   return (
     <>
