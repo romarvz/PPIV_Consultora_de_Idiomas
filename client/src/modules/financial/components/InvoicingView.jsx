@@ -21,6 +21,8 @@ const InvoicingView = () => {
   const [estudiantes, setEstudiantes] = useState([]);
   const [conceptos, setConceptos] = useState([]);
   const [facturas, setFacturas] = useState([]);
+  const [cursos, setCursos] = useState([]);
+  const [cursosEstudiante, setCursosEstudiante] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [vistaActiva, setVistaActiva] = useState('lista');
@@ -52,15 +54,17 @@ const InvoicingView = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const [estudiantesRes, conceptosRes, facturasRes] = await Promise.all([
+      const [estudiantesRes, conceptosRes, facturasRes, cursosRes] = await Promise.all([
         facturaService.listarEstudiantes(),
         facturaService.listarConceptos(),
-        facturaService.listarFacturas()
+        facturaService.listarFacturas(),
+        facturaService.listarCursos()
       ]);
       
       setEstudiantes(estudiantesRes.data?.students || []);
       setConceptos(conceptosRes.data || []);
       setFacturas(facturasRes.data || []);
+      setCursos(cursosRes.data || []);
     } catch (error) {
       console.error('Error cargando datos:', error);
       mostrarMensaje('error', 'Error al cargar datos');
@@ -127,6 +131,79 @@ const InvoicingView = () => {
     setMostrarDetalle(true);
   };
 
+  // Función helper para encontrar curso automáticamente por nombre
+  const encontrarCursoPorConcepto = (concepto, cursosDisponibles) => {
+    if (!concepto || !cursosDisponibles || cursosDisponibles.length === 0) {
+      return null;
+    }
+
+    const nombreConcepto = concepto.name.toLowerCase();
+    
+    // Mapeo de idiomas (por si el concepto usa español y el curso inglés)
+    const mapeoIdiomas = {
+      'inglés': 'ingles',
+      'ingles': 'ingles',
+      'francés': 'frances',
+      'frances': 'frances',
+      'alemán': 'aleman',
+      'aleman': 'aleman',
+      'italiano': 'italiano',
+      'portugués': 'portugues',
+      'portugues': 'portugues'
+    };
+
+    // Intentar encontrar curso con múltiples estrategias
+    for (const curso of cursosDisponibles) {
+      const nombreCurso = curso.nombre.toLowerCase();
+      const idioma = curso.idioma.toLowerCase();
+      const nivel = curso.nivel.toLowerCase();
+
+      // Estrategia 1: Coincidencia exacta de idioma + nivel
+      let coincideIdioma = nombreConcepto.includes(idioma);
+      
+      // Verificar también con mapeo de idiomas
+      if (!coincideIdioma) {
+        for (const [key, value] of Object.entries(mapeoIdiomas)) {
+          if (nombreConcepto.includes(key) && idioma === value) {
+            coincideIdioma = true;
+            break;
+          }
+        }
+      }
+
+      const coincideNivel = nombreConcepto.includes(nivel.toLowerCase());
+
+      if (coincideIdioma && coincideNivel) {
+        return curso;
+      }
+
+      // Estrategia 2: El nombre del curso está contenido en el concepto
+      if (nombreConcepto.includes(nombreCurso) || nombreCurso.includes(nombreConcepto)) {
+        return curso;
+      }
+    }
+
+    return null;
+  };
+
+  const handleEstudianteChange = (estudianteId) => {
+    setFactura({ ...factura, estudiante: estudianteId });
+    
+    // Filtrar cursos donde el estudiante está inscrito
+    const cursosDelEstudiante = cursos.filter(curso => {
+      return curso.estudiantes && curso.estudiantes.some(est => {
+        const estId = typeof est === 'object' ? est._id : est;
+        return estId === estudianteId;
+      });
+    });
+    
+    setCursosEstudiante(cursosDelEstudiante);
+    
+    if (cursosDelEstudiante.length > 0) {
+      console.log('Cursos del estudiante:', cursosDelEstudiante);
+    }
+  };
+
   const agregarItem = () => {
     if (!itemTemp.descripcion || itemTemp.cantidad <= 0 || itemTemp.precioUnitario <= 0) {
       mostrarMensaje('error', 'Complete todos los campos del item');
@@ -166,17 +243,30 @@ const InvoicingView = () => {
     if (!concepto) return;
 
     let precioFinal = concepto.amount;
+    let cursoEncontrado = null;
 
-    // Si el concepto está vinculado a un curso, obtener tarifa actual
-    if (concepto.curso) {
+    // BÚSQUEDA AUTOMÁTICA: Intentar encontrar curso del estudiante
+    if (cursosEstudiante.length > 0) {
+      cursoEncontrado = encontrarCursoPorConcepto(concepto, cursosEstudiante);
+      
+      if (cursoEncontrado) {
+        precioFinal = cursoEncontrado.tarifa;
+        console.log(`✅ Curso encontrado: ${cursoEncontrado.nombre} - $${cursoEncontrado.tarifa}`);
+      } else {
+        console.log(`⚠️ No se encontró curso para: ${concepto.name}`);
+      }
+    }
+    
+    // Si concepto tiene curso vinculado manualmente (fallback)
+    if (!cursoEncontrado && concepto.curso) {
       try {
         const cursoResponse = await facturaService.obtenerTarifaCurso(concepto.curso);
         if (cursoResponse.success && cursoResponse.data?.tarifa) {
           precioFinal = cursoResponse.data.tarifa;
+          console.log(`✅ Curso vinculado manualmente - $${precioFinal}`);
         }
       } catch (error) {
         console.warn('Error obteniendo tarifa del curso:', error);
-        // Si falla, usar el amount del concepto
       }
     }
 
@@ -439,7 +529,8 @@ const InvoicingView = () => {
               </label>
               <select
                 value={factura.estudiante}
-                onChange={(e) => setFactura({ ...factura, estudiante: e.target.value })}
+                onChange={(e) => handleEstudianteChange(e.target.value)}
+                disabled={factura.id !== null}
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -447,7 +538,9 @@ const InvoicingView = () => {
                   border: '1px solid var(--input-border)',
                   backgroundColor: 'var(--input-bg)',
                   color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)'
+                  fontSize: 'var(--font-size-sm)',
+                  opacity: factura.id ? 0.6 : 1,
+                  cursor: factura.id ? 'not-allowed' : 'pointer'
                 }}
               >
                 <option value="">Seleccione estudiante</option>
@@ -457,6 +550,28 @@ const InvoicingView = () => {
                   </option>
                 ))}
               </select>
+              
+              {/* Mostrar cursos del estudiante */}
+              {cursosEstudiante.length > 0 && (
+                <div style={{ 
+                  marginTop: '0.75rem', 
+                  padding: '0.75rem', 
+                  backgroundColor: 'var(--info-light)', 
+                  borderRadius: 'var(--border-radius-sm)',
+                  border: '1px solid var(--info)'
+                }}>
+                  <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: 'var(--info-dark)' }}>
+                    📚 Cursos activos del estudiante:
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: '1.5rem', fontSize: 'var(--font-size-sm)' }}>
+                    {cursosEstudiante.map(curso => (
+                      <li key={curso._id} style={{ marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
+                        <strong>{curso.nombre}</strong> - ${curso.tarifa.toLocaleString()}/clase
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div>
@@ -552,11 +667,34 @@ const InvoicingView = () => {
                 }}
               >
                 <option value="">Seleccione concepto</option>
-                {conceptos.map(concepto => (
-                  <option key={concepto._id} value={concepto._id}>
-                    {concepto.name} - ${concepto.amount.toLocaleString()}
-                  </option>
-                ))}
+                {conceptos.map(concepto => {
+                  let precio = concepto.amount;
+                  let cursoVinculado = null;
+                  
+                  // Primero: Buscar curso vinculado manualmente
+                  if (concepto.curso) {
+                    cursoVinculado = cursos.find(c => c._id === concepto.curso);
+                  }
+                  
+                  // Segundo: Si no hay vinculación, buscar automáticamente
+                  if (!cursoVinculado && cursosEstudiante.length > 0) {
+                    cursoVinculado = encontrarCursoPorConcepto(concepto, cursosEstudiante);
+                  }
+                  
+                  if (cursoVinculado) {
+                    precio = cursoVinculado.tarifa;
+                  }
+                  
+                  const etiqueta = cursoVinculado ? 
+                    `${concepto.name} - $${precio.toLocaleString()} (${cursoVinculado.nombre})` :
+                    `${concepto.name} - $${concepto.amount.toLocaleString()}`;
+                  
+                  return (
+                    <option key={concepto._id} value={concepto._id}>
+                      {etiqueta}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
