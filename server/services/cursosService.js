@@ -540,16 +540,97 @@ exports.getCursosDisponibles = async (estudianteId) => {
  * Obtener cursos de un estudiante
  */
 exports.getCursosByEstudiante = async (estudianteId) => {
-  const inscripciones = await Inscripcion.findActivasByEstudiante(estudianteId);
+  console.log('getCursosByEstudiante - estudianteId:', estudianteId);
   
-  return inscripciones.map(ins => ({
-    ...ins.curso.toObject(),
-    inscripcion: {
-      fechaInscripcion: ins.fechaInscripcion,
-      progreso: ins.progreso,
-      estado: ins.estado
-    }
-  }));
+  // Convertir a string para comparación
+  const estudianteIdStr = estudianteId?.toString();
+  
+  // Buscar todas las inscripciones del estudiante (no solo confirmadas, para debug)
+  const todasInscripciones = await Inscripcion.find({ estudiante: estudianteIdStr });
+  console.log('getCursosByEstudiante - todas las inscripciones:', todasInscripciones.length);
+  todasInscripciones.forEach(ins => {
+    console.log(`  - Inscripción ${ins._id}: estado=${ins.estado}, curso=${ins.curso}`);
+  });
+  
+  const inscripciones = await Inscripcion.findActivasByEstudiante(estudianteIdStr);
+  console.log('getCursosByEstudiante - inscripciones confirmadas encontradas:', inscripciones.length);
+  
+  if (inscripciones.length === 0) {
+    console.log('getCursosByEstudiante - No se encontraron inscripciones confirmadas');
+    return [];
+  }
+  
+  // Populate curso con profesor y horarios
+  const cursosCompletos = await Promise.all(
+    inscripciones.map(async (ins) => {
+      try {
+        // El curso ya debería estar populado por findActivasByEstudiante
+        let curso = ins.curso;
+        
+        // Si curso no está populado o es solo un ID, hacer populate
+        if (!curso || (typeof curso === 'object' && !curso.nombre)) {
+          const cursoId = ins.curso?._id || ins.curso || ins.cursoId;
+          if (!cursoId) {
+            console.warn('Inscripción sin curso válido:', ins._id);
+            return null;
+          }
+          curso = await Curso.findById(cursoId)
+            .populate('profesor', 'firstName lastName email')
+            .populate({
+              path: 'horario',
+              select: 'dia horaInicio horaFin descripcion',
+              options: { strictPopulate: false }
+            })
+            .populate({
+              path: 'horarios',
+              select: 'dia horaInicio horaFin descripcion',
+              options: { strictPopulate: false }
+            });
+        } else {
+          // Si ya está populado pero falta profesor o horarios, hacer populate adicional
+          const cursoId = curso._id || curso;
+          if (cursoId && (!curso.profesor || !curso.horarios || (curso.horarios && curso.horarios.length === 0 && !curso.horario))) {
+            curso = await Curso.findById(cursoId)
+              .populate('profesor', 'firstName lastName email')
+              .populate({
+                path: 'horario',
+                select: 'dia horaInicio horaFin descripcion',
+                options: { strictPopulate: false }
+              })
+              .populate({
+                path: 'horarios',
+                select: 'dia horaInicio horaFin descripcion',
+                options: { strictPopulate: false }
+              });
+          }
+        }
+        
+        if (!curso) {
+          console.warn('Curso no encontrado para inscripción:', ins._id);
+          return null;
+        }
+        
+        console.log('getCursosByEstudiante - curso encontrado:', curso.nombre, 'profesor:', curso.profesor?.firstName);
+        
+        return {
+          ...curso.toObject(),
+          inscripcion: {
+            fechaInscripcion: ins.fechaInscripcion,
+            progreso: ins.progreso,
+            estado: ins.estado
+          }
+        };
+      } catch (error) {
+        console.error('Error procesando inscripción:', ins._id, error);
+        return null;
+      }
+    })
+  );
+  
+  // Filtrar nulls (cursos no encontrados)
+  const cursosFiltrados = cursosCompletos.filter(curso => curso !== null);
+  console.log('getCursosByEstudiante - cursos completos retornados:', cursosFiltrados.length);
+  return cursosFiltrados;
 };
 
 /**

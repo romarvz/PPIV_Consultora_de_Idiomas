@@ -141,13 +141,22 @@ router.delete(
 // RUTAS PARA ASISTENCIA
 // ============================================
 
-// Registrar asistencia de un estudiante (profesor del curso)
+// Registrar asistencia de un estudiante (profesor del curso o admin)
 router.put(
   '/:id/asistencia',
   requireRole(['profesor', 'admin']),
   validarRegistroAsistencia,
   handleValidationErrors,
   clasesController.registrarAsistencia
+);
+
+// Registrar mi propia asistencia como estudiante
+router.post(
+  '/:id/asistencia/estudiante',
+  requireRole(['estudiante']),
+  validarRegistroAsistencia,
+  handleValidationErrors,
+  clasesController.registrarMiAsistencia
 );
 
 // Registrar asistencia múltiple (toda la clase de una vez)

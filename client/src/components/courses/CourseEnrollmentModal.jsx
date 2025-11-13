@@ -134,14 +134,30 @@ const CourseEnrollmentModal = ({ course, onClose, onSuccess }) => {
   }, [course?._id]);
 
   const filteredStudents = useMemo(() => {
-    if (!searchTerm) {
-      return students;
+    let result = students;
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase().trim();
+      result = students.filter((student) => {
+        const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
+        const email = (student.email || '').toLowerCase();
+        const dni = (student.dni || '').toLowerCase();
+        return fullName.includes(term) || email.includes(term) || dni.includes(term);
+      });
     }
-    const term = searchTerm.toLowerCase();
-    return students.filter((student) => {
-      const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
-      const email = (student.email || '').toLowerCase();
-      return fullName.includes(term) || email.includes(term);
+    
+    // Ordenar por apellido en orden ascendente
+    return result.sort((a, b) => {
+      const apellidoA = (a.lastName || '').toLowerCase();
+      const apellidoB = (b.lastName || '').toLowerCase();
+      if (apellidoA < apellidoB) return -1;
+      if (apellidoA > apellidoB) return 1;
+      // Si los apellidos son iguales, ordenar por nombre
+      const nombreA = (a.firstName || '').toLowerCase();
+      const nombreB = (b.firstName || '').toLowerCase();
+      if (nombreA < nombreB) return -1;
+      if (nombreA > nombreB) return 1;
+      return 0;
     });
   }, [students, searchTerm]);
 
@@ -311,7 +327,7 @@ const CourseEnrollmentModal = ({ course, onClose, onSuccess }) => {
               <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.35rem' }}>Buscar estudiante</label>
               <input
                 type="text"
-                placeholder="Ingresá nombre, apellido o email"
+                placeholder="Ingresá nombre, apellido, DNI o email"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={inputStyles}
@@ -328,11 +344,19 @@ const CourseEnrollmentModal = ({ course, onClose, onSuccess }) => {
                 disabled={loading || submitting || cursoLleno}
               >
                 <option value="">Seleccioná un estudiante</option>
-                {filteredStudents.map((student) => (
-                  <option key={student._id || student.id} value={student._id || student.id}>
-                    {`${student.firstName || ''} ${student.lastName || ''}`.trim()} — {student.email}
-                  </option>
-                ))}
+                {filteredStudents.map((student) => {
+                  const nombreCompleto = `${student.firstName || ''} ${student.lastName || ''}`.trim();
+                  const dni = student.dni ? `DNI: ${student.dni}` : '';
+                  const email = student.email || '';
+                  const displayText = dni 
+                    ? `${nombreCompleto} — ${dni} — ${email}`
+                    : `${nombreCompleto} — ${email}`;
+                  return (
+                    <option key={student._id || student.id} value={student._id || student.id}>
+                      {displayText}
+                    </option>
+                  );
+                })}
               </select>
               {filteredStudents.length === 0 && !loading && (
                 <small style={{ display: 'block', marginTop: '0.5rem', color: '#6c757d' }}>

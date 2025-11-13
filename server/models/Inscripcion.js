@@ -118,15 +118,28 @@ inscripcionSchema.pre('save', async function(next) {
   next();
 });
 
-// Middleware post-save: agregar estudiante al array del curso
+// Middleware post-save: agregar estudiante al array del curso y a las clases existentes
 inscripcionSchema.post('save', async function(doc) {
   if (doc.estado === 'confirmada') {
     const Curso = mongoose.model('Curso');
+    const Clase = mongoose.model('Clase');
     const curso = await Curso.findById(doc.curso);
     
     if (curso && !curso.estaInscrito(doc.estudiante)) {
       curso.agregarEstudiante(doc.estudiante);
       await curso.save();
+      
+      // Agregar estudiante a todas las clases existentes del curso que aún no estén completadas
+      await Clase.updateMany(
+        { 
+          curso: doc.curso,
+          estado: { $ne: 'completada' },
+          estudiantes: { $ne: doc.estudiante }
+        },
+        { 
+          $addToSet: { estudiantes: doc.estudiante }
+        }
+      );
     }
   }
 });
@@ -201,17 +214,30 @@ inscripcionSchema.statics.findByCurso = function(cursoId, filtros = {}) {
 
 // Método estático para buscar inscripciones activas de un estudiante
 inscripcionSchema.statics.findActivasByEstudiante = function(estudianteId) {
+  console.log('findActivasByEstudiante - buscando inscripciones para estudiante:', estudianteId);
   return this.find({ 
     estudiante: estudianteId, 
     estado: 'confirmada' 
   })
-    .populate('curso', 'nombre idioma nivel fechaInicio fechaFin profesor')
     .populate({
       path: 'curso',
-      populate: {
-        path: 'profesor',
-        select: 'firstName lastName email'
-      }
+      select: 'nombre idioma nivel fechaInicio fechaFin estado profesor horario horarios modalidad',
+      populate: [
+        {
+          path: 'profesor',
+          select: 'firstName lastName email'
+        },
+        {
+          path: 'horario',
+          select: 'dia horaInicio horaFin descripcion',
+          options: { strictPopulate: false }
+        },
+        {
+          path: 'horarios',
+          select: 'dia horaInicio horaFin descripcion',
+          options: { strictPopulate: false }
+        }
+      ]
     })
     .sort({ fechaInscripcion: -1 });
 };

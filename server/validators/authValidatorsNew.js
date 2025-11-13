@@ -90,7 +90,12 @@ const estudianteSpecificValidation = [
   body('estadoAcademico')
     .optional()
     .isIn(['inscrito', 'en_curso', 'graduado', 'suspendido'])
-    .withMessage('Estado académico debe ser: inscrito, en_curso, graduado o suspendido')
+    .withMessage('Estado académico debe ser: inscrito, en_curso, graduado o suspendido'),
+  
+  body('condicion')
+    .optional()
+    .isIn(['inscrito', 'activo', 'inactivo', 'graduado'])
+    .withMessage('Condición debe ser: inscrito, activo, inactivo o graduado')
 ];
 
 // Validaciones para profesores

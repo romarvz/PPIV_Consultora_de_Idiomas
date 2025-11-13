@@ -331,14 +331,17 @@ exports.obtenerCursosPorProfesor = async (req, res) => {
  */
 exports.obtenerMisCursos = async (req, res) => {
   try {
-    const estudianteId = req.user._id;
+    const estudianteId = req.user._id || req.user.id;
+    console.log('obtenerMisCursos - estudianteId:', estudianteId);
     const cursos = await cursosService.getCursosByEstudiante(estudianteId);
+    console.log('obtenerMisCursos - cursos encontrados:', cursos.length);
     
     return res.status(200).json({
       success: true,
       data: cursos
     });
   } catch (error) {
+    console.error('Error en obtenerMisCursos:', error);
     return res.status(500).json({
       success: false,
       error: error.message

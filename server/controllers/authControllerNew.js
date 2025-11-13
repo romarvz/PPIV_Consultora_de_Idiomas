@@ -60,12 +60,19 @@ const register = async (req, res) => {
      
       nivel, 
       estadoAcademico,
+      condicion,
       especialidades, 
       tarifaPorHora, 
       disponibilidad,
       horariosPermitidos,
       permisos
     } = req.body;
+
+    // Capitalizar nombres y apellidos
+    const { capitalizeUserNames } = require('../utils/stringHelpers');
+    const capitalizedData = capitalizeUserNames({ firstName, lastName });
+    const normalizedFirstName = capitalizedData.firstName;
+    const normalizedLastName = capitalizedData.lastName;
 
   
     const existingUser = await findUserByEmail(email);
@@ -103,14 +110,14 @@ const register = async (req, res) => {
     const baseUserData = {
       email,
       password: password || dni, // for students, default password is dni
-      firstName,
-      lastName,
+      firstName: normalizedFirstName,
+      lastName: normalizedLastName,
       role,
       phone,
       dni,
       mustChangePassword: false,
       isActive: true,
-      condicion: 'activo'
+      condicion: condicion || (role === 'estudiante' ? 'inscrito' : 'activo')
     };
 
     // Create user based on role
@@ -118,10 +125,22 @@ const register = async (req, res) => {
     
     switch (role) {
       case 'estudiante':
+        // Mapear condicion a estadoAcademico si es necesario para compatibilidad
+        let estadoAcademicoFinal = estadoAcademico;
+        if (condicion && !estadoAcademico) {
+          // Mapear condicion a estadoAcademico
+          const condicionToEstadoMap = {
+            'inscrito': 'inscrito',
+            'activo': 'en_curso',
+            'inactivo': 'suspendido',
+            'graduado': 'graduado'
+          };
+          estadoAcademicoFinal = condicionToEstadoMap[condicion] || 'inscrito';
+        }
         newUser = new Estudiante({
           ...baseUserData,
           nivel,
-          estadoAcademico: estadoAcademico || 'inscrito'
+          estadoAcademico: estadoAcademicoFinal || 'inscrito'
         });
         break;
         

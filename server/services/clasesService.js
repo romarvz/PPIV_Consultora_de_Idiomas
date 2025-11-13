@@ -636,7 +636,34 @@ exports.getHorasCompletadasCurso = async (cursoId, estudianteId) => {
  * Obtener asistencia de un estudiante
  */
 exports.getAsistenciaEstudiante = async (estudianteId, cursoId = null) => {
-  return await Clase.getEstadisticasAsistencia(estudianteId, cursoId);
+  const estadisticas = await Clase.getEstadisticasAsistencia(estudianteId, cursoId);
+  
+  // Agregar validación de 85% para condición de alumno regular
+  const porcentajeMinimo = 85;
+  const esAlumnoRegular = estadisticas.porcentajeAsistencia >= porcentajeMinimo;
+  
+  // Obtener nombre del curso si se proporciona cursoId
+  let cursoNombre = null;
+  if (cursoId && cursoId !== 'null') {
+    try {
+      const curso = await Curso.findById(cursoId).select('nombre');
+      if (curso) {
+        cursoNombre = curso.nombre;
+      }
+    } catch (error) {
+      console.error('Error obteniendo nombre del curso:', error);
+    }
+  }
+  
+  return {
+    ...estadisticas,
+    porcentajeMinimo,
+    esAlumnoRegular,
+    cursoNombre,
+    mensaje: esAlumnoRegular 
+      ? `Cumples con el ${porcentajeMinimo}% de asistencia requerido`
+      : `No cumples con el ${porcentajeMinimo}% de asistencia requerido. Tu asistencia actual es ${estadisticas.porcentajeAsistencia.toFixed(1)}%`
+  };
 };
 
 /**

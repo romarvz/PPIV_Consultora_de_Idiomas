@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import apiAdapter from '../../services/apiAdapter';
+import ClassAttendanceForm from '../attendance/ClassAttendanceForm';
 
 const modalStyles = {
   overlay: {
@@ -118,6 +119,8 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [selectedClaseForAttendance, setSelectedClaseForAttendance] = useState(null);
+  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
   const professorId = useMemo(() => getProfessorId(course), [course]);
   const isEditable = !isReadOnly;
 
@@ -280,6 +283,17 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
       console.error('Error cancelando clase:', err);
       alert(err?.error || 'No se pudo cancelar la clase.');
     }
+  };
+
+  const handleRegistrarAsistencia = (clase) => {
+    setSelectedClaseForAttendance(clase);
+    setShowAttendanceForm(true);
+  };
+
+  const handleAsistenciaRegistrada = () => {
+    setShowAttendanceForm(false);
+    setSelectedClaseForAttendance(null);
+    loadClasses(); // Recargar clases para actualizar datos
   };
 
   return (
@@ -513,6 +527,7 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Contenido</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Modalidad</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Estado</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#495057' }}>Asistencia</th>
                       <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#495057' }}>Acciones</th>
                     </tr>
                   </thead>
@@ -540,6 +555,29 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                           }}>
                             {clase.estado}
                           </span>
+                        </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                          {clase.estado === 'cancelada' ? (
+                            <small style={{ color: '#6c757d' }}>—</small>
+                          ) : (
+                            <button
+                              onClick={() => handleRegistrarAsistencia(clase)}
+                              style={{
+                                background: '#0F5C8C',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '0.45rem 0.75rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap'
+                              }}
+                              title="Registrar asistencia de estudiantes"
+                            >
+                              Asistencia
+                            </button>
+                          )}
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                           {isEditable ? (
@@ -590,6 +628,18 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
           </section>
         </div>
       </div>
+
+      {/* Modal de registro de asistencia */}
+      {showAttendanceForm && selectedClaseForAttendance && (
+        <ClassAttendanceForm
+          clase={selectedClaseForAttendance}
+          onSuccess={handleAsistenciaRegistrada}
+          onClose={() => {
+            setShowAttendanceForm(false);
+            setSelectedClaseForAttendance(null);
+          }}
+        />
+      )}
     </div>
   );
 };
