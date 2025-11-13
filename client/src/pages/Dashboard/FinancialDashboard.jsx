@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import AuthNavbar from '../../components/common/AuthNavbar';
-import InvoicingView from '../../modules/financial/components/InvoicingView'
+import Footer from '../../components/layout/Footer';
+import InvoicingView from '../../modules/financial/components/InvoicingView';
 import '../../styles/variables.css';
 import '../../styles/auth.css';
 
@@ -77,6 +78,8 @@ const FinancialDashboard = () => {
           </p>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

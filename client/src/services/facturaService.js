@@ -47,6 +47,18 @@ const facturaService = {
   listarEstudiantes: async () => {
     const response = await api.get('/students');
     return response.data;
+  },
+
+  // Listar cursos
+  listarCursos: async () => {
+    const response = await api.get('/cursos');
+    return response.data;
+  },
+
+  // Obtener tarifa actual de un curso
+  obtenerTarifaCurso: async (cursoId) => {
+    const response = await api.get(`/cursos/${cursoId}`);
+    return response.data;
   }
 };
 

@@ -41,6 +41,10 @@ const InvoicingView = () => {
     conceptoCobro: ''
   });
 
+  // Estado para modal de detalle
+  const [mostrarDetalle, setMostrarDetalle] = useState(false);
+  const [facturaDetalle, setFacturaDetalle] = useState(null);
+
   useEffect(() => {
     cargarDatos();
   }, []);
@@ -118,6 +122,11 @@ const InvoicingView = () => {
     setVistaActiva('nueva');
   };
 
+  const verDetalle = (factura) => {
+    setFacturaDetalle(factura);
+    setMostrarDetalle(true);
+  };
+
   const agregarItem = () => {
     if (!itemTemp.descripcion || itemTemp.cantidad <= 0 || itemTemp.precioUnitario <= 0) {
       mostrarMensaje('error', 'Complete todos los campos del item');
@@ -152,16 +161,31 @@ const InvoicingView = () => {
     return factura.itemFacturaSchema.reduce((sum, item) => sum + item.subtotal, 0);
   };
 
-  const handleConceptoChange = (conceptoId) => {
+  const handleConceptoChange = async (conceptoId) => {
     const concepto = conceptos.find(c => c._id === conceptoId);
-    if (concepto) {
-      setItemTemp({
-        ...itemTemp,
-        conceptoCobro: conceptoId,
-        descripcion: concepto.name,
-        precioUnitario: concepto.amount
-      });
+    if (!concepto) return;
+
+    let precioFinal = concepto.amount;
+
+    // Si el concepto está vinculado a un curso, obtener tarifa actual
+    if (concepto.curso) {
+      try {
+        const cursoResponse = await facturaService.obtenerTarifaCurso(concepto.curso);
+        if (cursoResponse.success && cursoResponse.data?.tarifa) {
+          precioFinal = cursoResponse.data.tarifa;
+        }
+      } catch (error) {
+        console.warn('Error obteniendo tarifa del curso:', error);
+        // Si falla, usar el amount del concepto
+      }
     }
+
+    setItemTemp({
+      ...itemTemp,
+      conceptoCobro: conceptoId,
+      descripcion: concepto.name,
+      precioUnitario: precioFinal
+    });
   };
 
   const enviarFactura = async () => {
@@ -293,7 +317,7 @@ const InvoicingView = () => {
                     <td style={{ padding: '1rem', textAlign: 'center' }}>
                       {getEstadoBadge(fact.estado)}
                     </td>
-                    <td style={{ padding: '1rem', textAlign: 'center', fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
+                    <td style={{ padding: '1rem', textAlign: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--text-primary)' }}>
                       {fact.cae || fact.caea || '-'}
                     </td>
                     <td style={{ padding: '1rem', textAlign: 'center' }}>
@@ -351,6 +375,7 @@ const InvoicingView = () => {
                         )}
                         {fact.estado !== 'Borrador' && (
                           <button
+                            onClick={() => verDetalle(fact)}
                             title="Ver detalle"
                             style={{
                               padding: '0.5rem 0.75rem',
@@ -781,6 +806,189 @@ const InvoicingView = () => {
       )}
       
       {vistaActiva === 'lista' ? renderListaFacturas() : renderNuevaFactura()}
+
+      {/* Modal: Detalle de Factura */}
+      {mostrarDetalle && facturaDetalle && (
+        <div style={{ 
+          position: 'fixed', 
+          inset: 0, 
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          zIndex: 50 
+        }}>
+          <div style={{ 
+            backgroundColor: 'var(--card-bg)', 
+            borderRadius: 'var(--border-radius-lg)', 
+            padding: '2rem', 
+            maxWidth: '800px', 
+            width: '90%', 
+            maxHeight: '90vh', 
+            overflowY: 'auto' 
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--primary)' }}>
+                Detalle de Factura
+              </h2>
+              <button
+                onClick={() => setMostrarDetalle(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  fontSize: '1.5rem',
+                  padding: '0'
+                }}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Número de Factura
+                </label>
+                <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-bold)', color: 'var(--primary)' }}>
+                  {facturaDetalle.numeroFactura}
+                </p>
+              </div>
+              <div>
+                <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Estado
+                </label>
+                <div style={{ marginTop: '0.5rem' }}>
+                  {getEstadoBadge(facturaDetalle.estado)}
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Estudiante
+                </label>
+                <p style={{ fontSize: 'var(--font-size-base)', fontWeight: 'var(--font-weight-semibold)' }}>
+                  {facturaDetalle.estudiante?.firstName} {facturaDetalle.estudiante?.lastName}
+                </p>
+              </div>
+              <div>
+                <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Período
+                </label>
+                <p style={{ fontSize: 'var(--font-size-base)' }}>
+                  {facturaDetalle.periodoFacturado}
+                </p>
+              </div>
+              <div>
+                <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Fecha Emisión
+                </label>
+                <p style={{ fontSize: 'var(--font-size-base)' }}>
+                  {new Date(facturaDetalle.fechaEmision).toLocaleDateString()}
+                </p>
+              </div>
+              <div>
+                <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Fecha Vencimiento
+                </label>
+                <p style={{ fontSize: 'var(--font-size-base)' }}>
+                  {new Date(facturaDetalle.fechaVencimiento).toLocaleDateString()}
+                </p>
+              </div>
+              {facturaDetalle.cae && (
+                <>
+                  <div>
+                    <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                      CAE
+                    </label>
+                    <p style={{ fontSize: 'var(--font-size-base)', fontWeight: 'var(--font-weight-bold)', color: 'var(--success)' }}>
+                      {facturaDetalle.cae}
+                    </p>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>
+                      Vto. CAE
+                    </label>
+                    <p style={{ fontSize: 'var(--font-size-base)' }}>
+                      {new Date(facturaDetalle.fechaVencimientoCAE).toLocaleDateString()}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginTop: '2rem' }}>
+              <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', marginBottom: '1rem', color: 'var(--primary)' }}>
+                Items de la Factura
+              </h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>
+                      Descripción
+                    </th>
+                    <th style={{ padding: '0.75rem', textAlign: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>
+                      Cantidad
+                    </th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>
+                      Precio Unit.
+                    </th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>
+                      Subtotal
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {facturaDetalle.itemFacturaSchema?.map((item, index) => (
+                    <tr key={index} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                      <td style={{ padding: '0.75rem', fontSize: 'var(--font-size-sm)' }}>
+                        {item.descripcion}
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center', fontSize: 'var(--font-size-sm)' }}>
+                        {item.cantidad}
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: 'var(--font-size-sm)' }}>
+                        ${item.precioUnitario.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-sm)' }}>
+                        ${item.subtotal.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ borderTop: '2px solid var(--border-color)' }}>
+                    <td colSpan="3" style={{ padding: '1rem', textAlign: 'right', fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-lg)' }}>
+                      TOTAL:
+                    </td>
+                    <td style={{ padding: '1rem', textAlign: 'right', fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--primary)' }}>
+                      ${facturaDetalle.total.toLocaleString()}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+              <button
+                onClick={() => setMostrarDetalle(false)}
+                style={{
+                  padding: '0.75rem 2rem',
+                  borderRadius: 'var(--border-radius)',
+                  border: '2px solid var(--gray-300)',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-size-base)',
+                  cursor: 'pointer',
+                  fontWeight: 'var(--font-weight-semibold)'
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
