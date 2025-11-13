@@ -142,4 +142,26 @@ facturaCtrl.getAllFacturas = async (req, res) => {
     }
 };
 
+/**
+ * Editar una factura en borrador
+ * PUT /api/facturas/:id
+ */
+facturaCtrl.editarFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resultado = await facturaService.editarFactura(id, req.body);
+
+        res.status(200).json({
+            success: true,
+            message: resultado.mensaje,
+            data: resultado.factura
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = facturaCtrl;

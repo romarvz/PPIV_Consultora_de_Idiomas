@@ -10,9 +10,10 @@ import {
   FaCheckCircle,
   FaEye,
   FaList,
-  FaTimes
+  FaTimes,
+  FaEdit
 } from 'react-icons/fa';
-import facturaService from '../../../../src/services/facturaService';
+import facturaService from '../../../services/facturaService';
 import '../../../styles/auth.css';
 import '../../../styles/variables.css';
 
@@ -25,6 +26,7 @@ const InvoicingView = () => {
   const [vistaActiva, setVistaActiva] = useState('lista');
 
   const [factura, setFactura] = useState({
+    id: null,
     estudiante: '',
     condicionFiscal: 'Consumidor Final',
     periodoFacturado: '',
@@ -104,6 +106,18 @@ const InvoicingView = () => {
     }
   };
 
+  const editarFactura = (factura) => {
+    setFactura({
+      id: factura._id,
+      estudiante: factura.estudiante._id,
+      condicionFiscal: factura.condicionFiscal,
+      periodoFacturado: factura.periodoFacturado,
+      fechaVencimiento: factura.fechaVencimiento.split('T')[0],
+      itemFacturaSchema: factura.itemFacturaSchema || []
+    });
+    setVistaActiva('nueva');
+  };
+
   const agregarItem = () => {
     if (!itemTemp.descripcion || itemTemp.cantidad <= 0 || itemTemp.precioUnitario <= 0) {
       mostrarMensaje('error', 'Complete todos los campos del item');
@@ -170,10 +184,23 @@ const InvoicingView = () => {
 
     try {
       setLoading(true);
-      await facturaService.crearFactura(factura);
-      mostrarMensaje('success', 'Factura creada en borrador exitosamente');
+      
+      if (factura.id) {
+        // Editar factura existente
+        await facturaService.editarFactura(factura.id, {
+          itemFacturaSchema: factura.itemFacturaSchema,
+          fechaVencimiento: factura.fechaVencimiento,
+          periodoFacturado: factura.periodoFacturado
+        });
+        mostrarMensaje('success', 'Factura editada exitosamente');
+      } else {
+        // Crear nueva factura
+        await facturaService.crearFactura(factura);
+        mostrarMensaje('success', 'Factura creada en borrador exitosamente');
+      }
       
       setFactura({
+        id: null,
         estudiante: '',
         condicionFiscal: 'Consumidor Final',
         periodoFacturado: '',
@@ -184,8 +211,8 @@ const InvoicingView = () => {
       await cargarDatos();
       setVistaActiva('lista');
     } catch (error) {
-      console.error('Error creando factura:', error);
-      mostrarMensaje('error', error.response?.data?.message || 'Error al crear factura');
+      console.error('Error guardando factura:', error);
+      mostrarMensaje('error', error.response?.data?.message || 'Error al guardar factura');
     } finally {
       setLoading(false);
     }
@@ -274,6 +301,21 @@ const InvoicingView = () => {
                         {fact.estado === 'Borrador' && (
                           <>
                             <button
+                              onClick={() => editarFactura(fact)}
+                              title="Editar"
+                              style={{
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: 'var(--border-radius-sm)',
+                                border: 'none',
+                                backgroundColor: 'var(--info)',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontSize: 'var(--font-size-sm)'
+                              }}
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
                               onClick={() => autorizarFactura(fact._id)}
                               title="Autorizar (solicitar CAE)"
                               className="cta-btn"
@@ -339,7 +381,7 @@ const InvoicingView = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div className="dashboard-card__header" style={{ border: 'none', marginBottom: 0, paddingBottom: 0 }}>
           <FaFileInvoice className="dashboard-card__icon" />
-          <h2 className="dashboard-card__title">Nueva Factura</h2>
+          <h2 className="dashboard-card__title">{factura.id ? 'Editar Factura' : 'Nueva Factura'}</h2>
         </div>
         <button
           onClick={() => setVistaActiva('lista')}
@@ -639,7 +681,41 @@ const InvoicingView = () => {
           </div>
         )}
 
-        <div style={{ textAlign: 'right', marginTop: '1.5rem' }}>
+        <div style={{ textAlign: 'right', marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => {
+              setFactura({
+                id: null,
+                estudiante: '',
+                condicionFiscal: 'Consumidor Final',
+                periodoFacturado: '',
+                fechaVencimiento: '',
+                itemFacturaSchema: []
+              });
+              setVistaActiva('lista');
+            }}
+            style={{
+              padding: '0.875rem 2rem',
+              borderRadius: 'var(--border-radius)',
+              border: '2px solid var(--gray-300)',
+              backgroundColor: 'var(--bg-primary)',
+              color: 'var(--text-primary)',
+              fontSize: 'var(--font-size-base)',
+              cursor: 'pointer',
+              fontWeight: 'var(--font-weight-semibold)',
+              transition: 'all var(--transition-fast)'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = 'var(--gray-100)';
+              e.target.style.borderColor = 'var(--gray-400)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'var(--bg-primary)';
+              e.target.style.borderColor = 'var(--gray-300)';
+            }}
+          >
+            Cancelar
+          </button>
           <button
             onClick={enviarFactura}
             disabled={loading || factura.itemFacturaSchema.length === 0}
@@ -658,7 +734,7 @@ const InvoicingView = () => {
             }}
           >
             <FaSave />
-            {loading ? 'Guardando...' : 'Guardar Factura'}
+            {loading ? 'Guardando...' : (factura.id ? 'Actualizar Factura' : 'Guardar Factura')}
           </button>
         </div>
       </div>

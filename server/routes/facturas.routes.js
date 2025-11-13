@@ -14,6 +14,11 @@ router.post('/',
     [authenticateToken, requireAdmin, validateCrearFactura], 
     facturaCtrl.createFactura);
 
+// Ruta para editar una factura
+router.put('/:id', 
+[authenticateToken, requireAdmin], 
+facturaCtrl.editarFactura);
+
 // Ruta para autorizar una factura
 router.put('/:id/autorizar', 
     [authenticateToken, requireAdmin], 

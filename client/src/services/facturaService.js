@@ -31,6 +31,12 @@ const facturaService = {
     return response.data;
   },
 
+  // Editar factura (solo borradores)
+  editarFactura: async (id, datosActualizados) => {
+    const response = await api.put(`/facturas/${id}`, datosActualizados);
+    return response.data;
+  },
+
   // Listar conceptos para facturar
   listarConceptos: async () => {
     const response = await api.get('/conceptos-cobros');
