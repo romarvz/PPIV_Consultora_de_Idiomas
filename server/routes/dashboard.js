@@ -9,6 +9,7 @@ const router = express.Router()
 const dashboardController = require('../controllers/dashboardController')
 const { authenticateToken, requireRole } = require('../middleware/authMiddlewareNew')
 
+
 // All routes require authentication
 router.use(authenticateToken)
 

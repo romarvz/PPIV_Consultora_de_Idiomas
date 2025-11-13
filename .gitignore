@@ -18,3 +18,10 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+#documentacion
+PLAN_DE_ACCION_PROYECTO.md
+PLANTILLA_DOCUMENTACION_PRUEBAS.md
+HANDOFF_PARA_PROXIMO_CHAT.md
+resumenBorradorFacgtura.md
+GUIA_IMPLEMENTACION_CHAT.md

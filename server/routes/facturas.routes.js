@@ -4,10 +4,25 @@ const facturaCtrl = require('../controllers/facturas.controller');
 const { authenticateToken, requireAdmin} = require('../middleware/authMiddlewareNew');
 const {validateCrearFactura, validateMongoId} = require('../middleware/financiero.validation');
 
+// Ruta para obtener todas las facturas
+router.get('/', 
+    [authenticateToken], 
+    facturaCtrl.getAllFacturas);
+
 // Ruta para crear una nueva factura
 router.post('/', 
     [authenticateToken, requireAdmin, validateCrearFactura], 
     facturaCtrl.createFactura);
+
+// Ruta para editar una factura
+router.put('/:id', 
+[authenticateToken, requireAdmin], 
+facturaCtrl.editarFactura);
+
+// Ruta para autorizar una factura
+router.put('/:id/autorizar', 
+    [authenticateToken, requireAdmin], 
+    facturaCtrl.autorizarFactura);
 
 // Ruta para obtener facturas de un estudiante
 router.get('/estudiante/:idEstudiante', 
