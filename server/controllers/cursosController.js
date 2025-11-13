@@ -41,9 +41,14 @@ exports.listarCursosPublicos = async (req, res) => {
     const filtros = {
       idioma: req.query.idioma,
       nivel: req.query.nivel,
-      estado: 'activo', // Only show active courses publicly
       search: req.query.search
     };
+
+    if (req.query.estado) {
+      filtros.estado = req.query.estado;
+    } else {
+      filtros.estado = { $in: ['activo', 'planificado'] };
+    }
     
     const resultado = await cursosService.listarCursos(filtros, req.pagination || { page: 1, limit: 10 });
     
@@ -69,7 +74,7 @@ exports.verCursoPublico = async (req, res) => {
     const curso = await cursosService.getCursoById(req.params.id);
     
     // Only show if active
-    if (curso.estado !== 'activo') {
+    if (!['activo', 'planificado'].includes(curso.estado)) {
       return res.status(404).json({
         success: false,
         error: 'Curso no disponible'

@@ -2,6 +2,7 @@
 
 import api from './api' // Backend real existente
 import mockApi from './mockApi' // Mock para demo
+import { mockStudents } from './mockData'
 
 // SWITCH PRINCIPAL - Cambiar aquí para alternar entre mock y real
 // true = Usa datos mock (para demo sin backend)
@@ -167,7 +168,7 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.courses.getAll({
           ...params,
-          activeOnly: params.activeOnly ?? true
+          activeOnly: params.activeOnly ?? false
         });
       }
       return await api.get('/cursos/publico', { params });
@@ -238,6 +239,75 @@ const apiAdapter = {
         url += `?excludeCursoId=${excludeCursoId}`;
       }
       return await api.get(url);
+    },
+
+    /**
+     * Obtener estudiantes de un curso
+     * @param {String} cursoId
+     */
+    getStudents: async (cursoId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (!course || !course.estudiantes) {
+          return {
+            data: {
+              success: true,
+              data: []
+            }
+          };
+        }
+        const estudiantes = course.estudiantes.map((studentId) => {
+          const student = mockStudents.find((s) => s._id === studentId);
+          return {
+            estudiante: student,
+            fechaInscripcion: new Date().toISOString(),
+            progreso: { horasCompletadas: 0, porcentaje: 0 }
+          };
+        });
+        return {
+          data: {
+            success: true,
+            data: estudiantes
+          }
+        };
+      }
+      return await api.get(`/cursos/${cursoId}/estudiantes`);
+    },
+    removeStudent: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (course) {
+          course.estudiantes = (course.estudiantes || []).filter((id) => id !== estudianteId);
+        }
+        return {
+          data: {
+            success: true
+          }
+        };
+      }
+      return await api.delete(`/cursos/${cursoId}/estudiantes/${estudianteId}`);
+    },
+
+    /**
+     * Inscribir estudiante a un curso
+     * @param {String} cursoId - ID del curso
+     * @param {String} estudianteId - ID del estudiante
+     */
+    enroll: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        // Simular respuesta exitosa
+        return {
+          data: {
+            success: true,
+            message: 'Estudiante inscripto (mock)',
+            data: {
+              cursoId,
+              estudianteId
+            }
+          }
+        };
+      }
+      return await api.post(`/cursos/${cursoId}/inscribir`, { estudianteId });
     }
   },
 
@@ -263,6 +333,42 @@ const apiAdapter = {
         };
       }
       return response;
+    }
+  },
+
+  // ==================== ESTUDIANTES ====================
+  students: {
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        const search = params.search ? params.search.toLowerCase() : '';
+        let students = [...mockStudents];
+        if (search) {
+          students = students.filter((student) => {
+            const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
+            return (
+              fullName.includes(search) ||
+              (student.email || '').toLowerCase().includes(search)
+            );
+          });
+        }
+        return {
+          data: {
+            success: true,
+            data: {
+              students,
+              pagination: {
+                page: 1,
+                limit: students.length,
+                total: students.length,
+                pages: 1,
+                hasNext: false,
+                hasPrev: false
+              }
+            }
+          }
+        };
+      }
+      return await api.get('/students', { params });
     }
   },
 
@@ -323,6 +429,63 @@ const apiAdapter = {
         return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
       }
       return await api.get(`/cursos/profesor/${profesorId}/horarios-disponibles`);
+    },
+    getStudents: async (cursoId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (!course || !course.estudiantes) {
+          return {
+            data: {
+              success: true,
+              data: []
+            }
+          };
+        }
+        const estudiantes = course.estudiantes.map((studentId) => {
+          const student = mockStudents.find((s) => s._id === studentId);
+          return {
+            estudiante: student,
+            fechaInscripcion: new Date().toISOString(),
+            progreso: { horasCompletadas: 0, porcentaje: 0 }
+          };
+        });
+        return {
+          data: {
+            success: true,
+            data: estudiantes
+          }
+        };
+      }
+      return await api.get(`/cursos/${cursoId}/estudiantes`);
+    },
+    removeStudent: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (course) {
+          course.estudiantes = (course.estudiantes || []).filter((id) => id !== estudianteId);
+        }
+        return {
+          data: {
+            success: true
+          }
+        };
+      }
+      return await api.delete(`/cursos/${cursoId}/estudiantes/${estudianteId}`);
+    },
+    enroll: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        return {
+          data: {
+            success: true,
+            message: 'Estudiante inscripto (mock)',
+            data: {
+              cursoId,
+              estudianteId
+            }
+          }
+        };
+      }
+      return await api.post(`/cursos/${cursoId}/inscribir`, { estudianteId });
     }
   },
   profesores: {

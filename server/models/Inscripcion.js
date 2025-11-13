@@ -85,7 +85,7 @@ inscripcionSchema.virtual('estaCompleta').get(function() {
 inscripcionSchema.pre('save', async function(next) {
   // Validar estudiante
   if (this.isNew || this.isModified('estudiante')) {
-    const BaseUser = mongoose.model('User');
+    const BaseUser = mongoose.model('BaseUser');
     const estudiante = await BaseUser.findById(this.estudiante);
     
     if (!estudiante) {

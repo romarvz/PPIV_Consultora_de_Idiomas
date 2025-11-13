@@ -9,11 +9,17 @@ const CourseDetailModal = ({ course, onClose, teacher }) => {
 
   if (!course) return null;
 
+  const imageSrc =
+    course.imageUrl ||
+    course.coverImage ||
+    (course.images && course.images[0]) ||
+    '/images/Logo.png';
+
   const handleInscribeClick = () => {
     onClose(); // Cerramos el modal
 
     // Navegar a la ruta raíz con el ancla #contacto
-    navigate('/#contacto');
+    navigate('/#contacto', { replace: false });
   };
 
   // --- Lógica de datos  ---
@@ -66,6 +72,21 @@ const CourseDetailModal = ({ course, onClose, teacher }) => {
         <h2 className="modal-title">{course.name}</h2>
         <p className="modal-description">{course.description}</p>
         
+        <div className="modal-image-wrapper">
+          <img
+            src={imageSrc}
+            alt={course.name || 'Curso'}
+            className="modal-course-image"
+            onError={(event) => {
+              if (!event.target.dataset.fallbackApplied) {
+                event.target.dataset.fallbackApplied = 'true';
+                event.target.src = '/images/Logo.png';
+              }
+            }}
+            loading="lazy"
+          />
+        </div>
+
         <div className="modal-details">
           {/* El 'teacher' que se recibió como prop */}
           <p><strong>Profesor:</strong> {teacherName}</p>

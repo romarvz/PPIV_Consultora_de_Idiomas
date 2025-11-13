@@ -14,6 +14,45 @@ const idiomaLabels = {
   coreano: 'Coreano'
 };
 
+const serviceHighlights = [
+  {
+    title: 'Cursos Grupales',
+    description:
+      'Programas dinámicos para avanzar en equipo, con foco en conversación, gramática aplicada y proyectos colaborativos.',
+    tags: ['Grupos reducidos', 'Todos los niveles', 'Inicio mensual']
+  },
+  {
+    title: 'Clases Individuales',
+    description:
+      'Sesiones personalizadas para objetivos específicos: entrevistas, viajes, exámenes o práctica intensiva.',
+    tags: ['Agenda flexible', 'Plan a medida', 'Seguimiento 1:1']
+  },
+  {
+    title: 'Preparación de Certificaciones',
+    description:
+      'Entrenamiento para exámenes internacionales (Cambridge, TOEFL, DELF, TestDaF, CELI y más).',
+    tags: ['Simulacros', 'Estrategias de examen', 'Material oficial']
+  },
+  {
+    title: 'Inmersión Cultural',
+    description:
+      'Talleres temáticos para vivir el idioma: gastronomía, cine, literatura y experiencias conversacionales.',
+    tags: ['Workshops', 'Clubs de conversación', 'Eventos especiales']
+  },
+  {
+    title: 'Programas para Empresas',
+    description:
+      'Capacitación corporativa con reportes de avance, KPIs y contenido adaptado a cada industria.',
+    tags: ['In-Company', 'Bilingüismo profesional', 'Planes a medida']
+  },
+  {
+    title: 'Traducciones',
+    description:
+      'Traducciones técnicas, legales y académicas realizadas por traductores públicos certificados para empresas, profesionales y particulares.',
+    tags: ['Rapidez', 'Precisión', 'Eficiencia']
+  }
+];
+
 const capitalize = (value) =>
   typeof value === 'string' && value.length > 0
     ? value.charAt(0).toUpperCase() + value.slice(1)
@@ -50,6 +89,12 @@ const normalizeCourse = (course) => {
       ? course.tarifa
       : null;
   const type = course.type || 'Otros';
+  const imageUrl =
+    course.imageUrl ||
+    course.coverImage ||
+    (Array.isArray(course.images) && course.images[0]) ||
+    '/images/Logo.png';
+  const status = course.status || course.estado || 'planificado';
 
   return {
     id: course._id || course.id || name,
@@ -59,8 +104,63 @@ const normalizeCourse = (course) => {
     modality,
     level,
     price,
-    type
+    type,
+    imageUrl,
+    status
   };
+};
+
+const normalizeText = (text) =>
+  typeof text === 'string'
+    ? text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    : '';
+
+const selectFeaturedCourses = (courseList = []) => {
+  if (!Array.isArray(courseList) || courseList.length === 0) {
+    return [];
+  }
+
+  const preferredNames = [
+    'Alemán Intermedio B2 Online',
+    'Cambridge C1 Advanced (CAE)',
+    'Italiano intermedio',
+    'Portugués desde Cero',
+    'Francés conversacional',
+    'Inglés de Negocios para Empresas'
+  ];
+
+  const normalizedCourses = courseList.map((course) => ({
+    ...course,
+    normalizedName: normalizeText(course.name)
+  }));
+
+  const featured = [];
+  const used = new Set();
+
+  preferredNames.forEach((targetName) => {
+    const normalizedTarget = normalizeText(targetName);
+    const match = normalizedCourses.find((course) => {
+      if (!course || used.has(course.id)) return false;
+      return course.normalizedName === normalizedTarget;
+    });
+
+    if (match) {
+      featured.push(match);
+      used.add(match.id);
+    }
+  });
+
+  for (const course of normalizedCourses) {
+    if (featured.length >= 4) break;
+    if (!course || used.has(course.id)) continue;
+    featured.push(course);
+    used.add(course.id);
+  }
+
+  return featured.slice(0, 6);
 };
 
 // Home page with all sections for smooth scrolling navigation
@@ -78,9 +178,9 @@ const Home = () => {
         setCoursesError(null);
 
         const response = await apiAdapter.courses.getPublic({
-          activeOnly: true,
+          activeOnly: false,
           page: 1,
-          limit: 6
+          limit: 100
         });
 
         if (!response.data?.success) {
@@ -93,7 +193,9 @@ const Home = () => {
           ? response.data.data
           : [];
 
-        const normalized = payload.map(normalizeCourse).filter(Boolean).slice(0, 6);
+        const normalized = payload
+          .map(normalizeCourse)
+          .filter(Boolean);
         setCourses(normalized);
       } catch (error) {
         console.error('Error al cargar cursos públicos:', error);
@@ -127,18 +229,42 @@ const Home = () => {
 
   // NUEVO useEffect para manejar el scroll al ancla (#contacto)
   useEffect(() => {
-    // Si hay un ancla en la URL (ej: #contacto)
-    if (location.hash) {
-      const id = location.hash.substring(1); // Quitamos el '#' para obtener el ID
-      const element = document.getElementById(id);
-      if (element) {
-        // Usamos un pequeño delay para asegurarnos de que el componente ya está en el DOM
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100); // 100ms de delay
+    if (coursesLoading) return;
+
+    const stateTarget = location.state?.scrollTo;
+    const hashTarget = location.hash ? location.hash.replace('#', '') : null;
+    const target = stateTarget || hashTarget;
+
+    const performScroll = () => {
+      if (!target) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
       }
+      const element = document.getElementById(target);
+      if (element) {
+        const headerHeight = document.querySelector('header')?.offsetHeight || 0;
+        const y = element.getBoundingClientRect().top + window.pageYOffset - headerHeight - 20;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        return true;
+      }
+      return false;
+    };
+
+    if (!performScroll()) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts += 1;
+        if (performScroll() || attempts > 10) {
+          clearInterval(interval);
+        }
+      }, 120);
+      return () => clearInterval(interval);
     }
-  }, [location.hash]); // Se ejecuta cada vez que el ancla de la URL cambia
+
+    if (stateTarget) {
+      navigate(location.pathname + location.hash, { replace: true, state: {} });
+    }
+  }, [coursesLoading, location.hash, location.state, location.pathname, navigate]);
 
   return (
     <>
@@ -174,64 +300,119 @@ const Home = () => {
         <div className="container">
           <h2 className="section-title">Servicios</h2>
 
-          {coursesLoading && (
-            <p style={{ textAlign: 'center', margin: '2rem 0' }}>
-              Estamos preparando nuestra oferta académica...
-            </p>
-          )}
-
-          {coursesError && (
-            <p style={{ textAlign: 'center', margin: '2rem 0', color: '#e74c3c' }}>
-              {coursesError}
-            </p>
-          )}
-
-          {!coursesLoading && !coursesError && courses.length === 0 && (
-            <p style={{ textAlign: 'center', margin: '2rem 0' }}>
-              Aún no hay cursos publicados. ¡Vuelve pronto!
-            </p>
-          )}
-
-          {!coursesLoading && !coursesError && courses.length > 0 && (
-            <div className="services-grid">
-              {courses.map((course) => (
-                <Link
-                  key={course.id}
-                  to={`/cursos#${slugify(course.type)}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+          <div className="services-grid">
+            {serviceHighlights.map((service) => (
+              <div key={service.title} className="service-card service-card--highlight">
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '0.5rem',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    marginTop: '1rem',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: '#1f76d3'
+                  }}
                 >
-                  <div className="service-card">
-                    <h3>{course.name}</h3>
-                    <p>
-                      {course.description.length > 160
-                        ? `${course.description.slice(0, 157)}...`
-                        : course.description}
-                    </p>
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '0.5rem',
-                        flexWrap: 'wrap',
-                        marginTop: '1rem',
-                        fontSize: '0.9rem',
-                        fontWeight: 600,
-                        color: '#1f76d3'
-                      }}
-                    >
-                      <span>{course.language}</span>
-                      <span>{course.level}</span>
-                      {course.modality && <span>{course.modality}</span>}
-                    </div>
-                    {typeof course.price === 'number' && (
-                      <p style={{ marginTop: '0.75rem', fontWeight: 600, color: '#2c3e50' }}>
-                        Desde ${course.price.toLocaleString('es-AR')}
+                  {service.tags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: '3rem' }}>
+            <h3 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Cursos destacados</h3>
+
+            {coursesLoading && (
+              <p style={{ textAlign: 'center', margin: '2rem 0' }}>
+                Estamos preparando nuestra oferta académica...
+              </p>
+            )}
+
+            {coursesError && (
+              <p style={{ textAlign: 'center', margin: '2rem 0', color: '#e74c3c' }}>
+                {coursesError}
+              </p>
+            )}
+
+            {!coursesLoading && !coursesError && courses.length === 0 && (
+              <p style={{ textAlign: 'center', margin: '2rem 0' }}>
+                Estamos actualizando los cursos disponibles. ¡Volvé pronto!
+              </p>
+            )}
+
+            {!coursesLoading && !coursesError && courses.length > 0 && (
+              <div className="services-grid services-grid--featured">
+                {selectFeaturedCourses(courses).map((course) => (
+                  <Link
+                    key={course.id}
+                    to={`/cursos#${slugify(course.type)}`}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <div className="service-card service-card--course">
+                      <div
+                        className="service-card__image-wrapper"
+                        style={{
+                          width: '100%',
+                          height: '160px',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          marginBottom: '1rem'
+                        }}
+                      >
+                        <img
+                          src={course.imageUrl}
+                          alt={course.name}
+                          className="service-card__image"
+                          loading="lazy"
+                          onError={(event) => {
+                            if (!event.target.dataset.fallbackApplied) {
+                              event.target.dataset.fallbackApplied = 'true';
+                              event.target.src = '/images/Logo.png';
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      </div>
+                      <h3>{course.name}</h3>
+                      <p>
+                        {course.description.length > 160
+                          ? `${course.description.slice(0, 157)}...`
+                          : course.description}
                       </p>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                          justifyContent: 'center',
+                          textAlign: 'center',
+                          marginTop: '1rem',
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: '#1f76d3'
+                        }}
+                      >
+                        <span>{course.language}</span>
+                        <span>{course.level}</span>
+                        {course.modality && <span>{course.modality}</span>}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div style={{ textAlign: 'center', marginTop: '2rem' }}>
             <Link to="/cursos" className="cta-btn">

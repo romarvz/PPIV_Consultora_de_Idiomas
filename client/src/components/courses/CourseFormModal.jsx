@@ -16,6 +16,7 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
     nivel: 'A1',      // Default value
     duracionTotal: 10,
     tarifa: 0,
+    vacantesMaximas: 30,
     fechaInicio: new Date().toISOString().split('T')[0],
     fechaFin: new Date().toISOString().split('T')[0],
     profesor: '', // Teacher ID
@@ -265,6 +266,7 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
         nivel: course.nivel || 'A1',
         duracionTotal: course.duracionTotal || 10,
         tarifa: course.tarifa || 0,
+        vacantesMaximas: course.vacantesMaximas ?? 30,
         fechaInicio: course.fechaInicio ? new Date(course.fechaInicio).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         fechaFin: course.fechaFin ? new Date(course.fechaFin).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         profesor: profesorId,
@@ -551,6 +553,9 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
         horario: horariosSeleccionados.length > 0 ? horariosSeleccionados[0] : formData.horario, // Compatibility
         duracionTotal: Number(formData.duracionTotal),
         tarifa: Number(formData.tarifa),
+        vacantesMaximas: Number.isFinite(Number(formData.vacantesMaximas)) && Number(formData.vacantesMaximas) > 0
+          ? Number(formData.vacantesMaximas)
+          : 30,
         duracionClaseMinutos,
         horariosDuraciones: horariosDuraciones.map((item) => ({
           horario: item.horario,
@@ -687,7 +692,7 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
             <div>
               <label style={{
                 display: 'block',
@@ -1105,6 +1110,33 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
                   fontSize: '0.9rem',
                   boxSizing: 'border-box'
                 }} 
+              />
+            </div>
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                color: '#495057',
+                fontSize: '0.9rem'
+              }}>
+                Vacantes Máximas *
+              </label>
+              <input
+                name="vacantesMaximas"
+                type="number"
+                min="1"
+                value={formData.vacantesMaximas}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #ced4da',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  boxSizing: 'border-box'
+                }}
               />
             </div>
           </div>
