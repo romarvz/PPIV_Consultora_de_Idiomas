@@ -20,7 +20,7 @@ const FinancialDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
+      <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} />
 
       <div className="dashboard-info-card">
         <h3 className="dashboard-info-card__title">Dashboard Financiero</h3>

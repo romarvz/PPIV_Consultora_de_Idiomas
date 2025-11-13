@@ -131,61 +131,6 @@ const InvoicingView = () => {
     setMostrarDetalle(true);
   };
 
-  // Función helper para encontrar curso automáticamente por nombre
-  const encontrarCursoPorConcepto = (concepto, cursosDisponibles) => {
-    if (!concepto || !cursosDisponibles || cursosDisponibles.length === 0) {
-      return null;
-    }
-
-    const nombreConcepto = concepto.name.toLowerCase();
-    
-    // Mapeo de idiomas (por si el concepto usa español y el curso inglés)
-    const mapeoIdiomas = {
-      'inglés': 'ingles',
-      'ingles': 'ingles',
-      'francés': 'frances',
-      'frances': 'frances',
-      'alemán': 'aleman',
-      'aleman': 'aleman',
-      'italiano': 'italiano',
-      'portugués': 'portugues',
-      'portugues': 'portugues'
-    };
-
-    // Intentar encontrar curso con múltiples estrategias
-    for (const curso of cursosDisponibles) {
-      const nombreCurso = curso.nombre.toLowerCase();
-      const idioma = curso.idioma.toLowerCase();
-      const nivel = curso.nivel.toLowerCase();
-
-      // Estrategia 1: Coincidencia exacta de idioma + nivel
-      let coincideIdioma = nombreConcepto.includes(idioma);
-      
-      // Verificar también con mapeo de idiomas
-      if (!coincideIdioma) {
-        for (const [key, value] of Object.entries(mapeoIdiomas)) {
-          if (nombreConcepto.includes(key) && idioma === value) {
-            coincideIdioma = true;
-            break;
-          }
-        }
-      }
-
-      const coincideNivel = nombreConcepto.includes(nivel.toLowerCase());
-
-      if (coincideIdioma && coincideNivel) {
-        return curso;
-      }
-
-      // Estrategia 2: El nombre del curso está contenido en el concepto
-      if (nombreConcepto.includes(nombreCurso) || nombreCurso.includes(nombreConcepto)) {
-        return curso;
-      }
-    }
-
-    return null;
-  };
-
   const handleEstudianteChange = (estudianteId) => {
     setFactura({ ...factura, estudiante: estudianteId });
     
@@ -205,27 +150,34 @@ const InvoicingView = () => {
   };
 
   const agregarItem = () => {
-    if (!itemTemp.descripcion || itemTemp.cantidad <= 0 || itemTemp.precioUnitario <= 0) {
-      mostrarMensaje('error', 'Complete todos los campos del item');
+    if (
+      !itemTemp.descripcion ||
+      itemTemp.cantidad <= 0 ||
+      itemTemp.precioUnitario <= 0
+    ) {
+      mostrarMensaje("error", "Complete todos los campos del item");
       return;
     }
 
     const subtotal = itemTemp.cantidad * itemTemp.precioUnitario;
     const nuevoItem = {
-      ...itemTemp,
-      subtotal
+      descripcion: itemTemp.descripcion,
+      cantidad: itemTemp.cantidad,
+      precioUnitario: itemTemp.precioUnitario,
+      subtotal: subtotal,
+      conceptoCobro: itemTemp.conceptoCobro,
     };
 
     setFactura({
       ...factura,
-      itemFacturaSchema: [...factura.itemFacturaSchema, nuevoItem]
+      itemFacturaSchema: [...factura.itemFacturaSchema, nuevoItem],
     });
 
     setItemTemp({
-      descripcion: '',
+      descripcion: "",
       cantidad: 1,
       precioUnitario: 0,
-      conceptoCobro: ''
+      conceptoCobro: "",
     });
   };
 
@@ -236,46 +188,6 @@ const InvoicingView = () => {
 
   const calcularTotal = () => {
     return factura.itemFacturaSchema.reduce((sum, item) => sum + item.subtotal, 0);
-  };
-
-  const handleConceptoChange = async (conceptoId) => {
-    const concepto = conceptos.find(c => c._id === conceptoId);
-    if (!concepto) return;
-
-    let precioFinal = concepto.amount;
-    let cursoEncontrado = null;
-
-    // BÚSQUEDA AUTOMÁTICA: Intentar encontrar curso del estudiante
-    if (cursosEstudiante.length > 0) {
-      cursoEncontrado = encontrarCursoPorConcepto(concepto, cursosEstudiante);
-      
-      if (cursoEncontrado) {
-        precioFinal = cursoEncontrado.tarifa;
-        console.log(`✅ Curso encontrado: ${cursoEncontrado.nombre} - $${cursoEncontrado.tarifa}`);
-      } else {
-        console.log(`⚠️ No se encontró curso para: ${concepto.name}`);
-      }
-    }
-    
-    // Si concepto tiene curso vinculado manualmente (fallback)
-    if (!cursoEncontrado && concepto.curso) {
-      try {
-        const cursoResponse = await facturaService.obtenerTarifaCurso(concepto.curso);
-        if (cursoResponse.success && cursoResponse.data?.tarifa) {
-          precioFinal = cursoResponse.data.tarifa;
-          console.log(`✅ Curso vinculado manualmente - $${precioFinal}`);
-        }
-      } catch (error) {
-        console.warn('Error obteniendo tarifa del curso:', error);
-      }
-    }
-
-    setItemTemp({
-      ...itemTemp,
-      conceptoCobro: conceptoId,
-      descripcion: concepto.name,
-      precioUnitario: precioFinal
-    });
   };
 
   const enviarFactura = async () => {
@@ -463,21 +375,48 @@ const InvoicingView = () => {
                             </button>
                           </>
                         )}
+                        
                         {fact.estado !== 'Borrador' && (
-                          <button
-                            onClick={() => verDetalle(fact)}
-                            title="Ver detalle"
-                            style={{
-                              padding: '0.5rem 0.75rem',
-                              borderRadius: 'var(--border-radius-sm)',
-                              border: 'none',
-                              backgroundColor: 'var(--info)',
-                              color: 'white',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <FaEye />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => verDetalle(fact)}
+                              title="Ver detalle"
+                              style={{
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: 'var(--border-radius-sm)',
+                                border: 'none',
+                                backgroundColor: 'var(--info)',
+                                color: 'white',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <FaEye />
+                            </button>
+                            
+                            {(fact.estado === 'Pendiente' || fact.estado === 'Cobrada Parcialmente') && (
+                              <button
+                                onClick={() => {
+                                  // TODO: Agregar modal para cobro (lo trabajaremos hoy a la noche cuando trabajemos la funcionalidad cobros)
+                                  alert('Funcionalidad de cobro en desarrollo');
+                                }}
+                                title="Registrar cobro"
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  borderRadius: 'var(--border-radius-sm)',
+                                  border: 'none',
+                                  backgroundColor: 'var(--success)',
+                                  color: 'white',
+                                  cursor: 'pointer',
+                                  fontSize: 'var(--font-size-xs)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem'
+                                }}
+                              >
+                                <FaDollarSign /> Cobrar
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>
@@ -493,38 +432,67 @@ const InvoicingView = () => {
 
   const renderNuevaFactura = () => (
     <div className="dashboard-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div className="dashboard-card__header" style={{ border: 'none', marginBottom: 0, paddingBottom: 0 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "2rem",
+        }}
+      >
+        <div
+          className="dashboard-card__header"
+          style={{ border: "none", marginBottom: 0, paddingBottom: 0 }}
+        >
           <FaFileInvoice className="dashboard-card__icon" />
-          <h2 className="dashboard-card__title">{factura.id ? 'Editar Factura' : 'Nueva Factura'}</h2>
+          <h2 className="dashboard-card__title">
+            {factura.id ? "Editar Factura" : "Nueva Factura"}
+          </h2>
         </div>
         <button
-          onClick={() => setVistaActiva('lista')}
+          onClick={() => setVistaActiva("lista")}
           style={{
-            padding: '0.75rem 1.5rem',
-            borderRadius: 'var(--border-radius)',
-            border: '1px solid var(--border-color)',
-            backgroundColor: 'var(--bg-primary)',
-            color: 'var(--text-primary)',
-            cursor: 'pointer',
-            fontSize: 'var(--font-size-sm)',
-            fontWeight: 'var(--font-weight-semibold)'
+            padding: "0.75rem 1.5rem",
+            borderRadius: "var(--border-radius)",
+            border: "1px solid var(--border-color)",
+            backgroundColor: "var(--bg-primary)",
+            color: "var(--text-primary)",
+            cursor: "pointer",
+            fontSize: "var(--font-size-sm)",
+            fontWeight: "var(--font-weight-semibold)",
           }}
         >
           ← Volver a Lista
         </button>
       </div>
 
-      <div className="dashboard-cards-grid" style={{ gridTemplateColumns: '1fr' }}>
+      <div
+        className="dashboard-cards-grid"
+        style={{ gridTemplateColumns: "1fr" }}
+      >
         <div className="dashboard-card">
           <h4 className="dashboard-card__title">
-            <FaUser style={{ marginRight: '0.5rem' }} />
+            <FaUser style={{ marginRight: "0.5rem" }} />
             Datos del Cliente
           </h4>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1rem",
+              marginTop: "1rem",
+            }}
+          >
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "var(--font-weight-medium)",
+                  fontSize: "var(--font-size-sm)",
+                }}
+              >
                 Estudiante *
               </label>
               <select
@@ -532,41 +500,62 @@ const InvoicingView = () => {
                 onChange={(e) => handleEstudianteChange(e.target.value)}
                 disabled={factura.id !== null}
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius)',
-                  border: '1px solid var(--input-border)',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)',
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  border: "1px solid var(--input-border)",
+                  backgroundColor: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                  fontSize: "var(--font-size-sm)",
                   opacity: factura.id ? 0.6 : 1,
-                  cursor: factura.id ? 'not-allowed' : 'pointer'
+                  cursor: factura.id ? "not-allowed" : "pointer",
                 }}
               >
                 <option value="">Seleccione estudiante</option>
-                {estudiantes.map(est => (
+                {estudiantes.map((est) => (
                   <option key={est._id} value={est._id}>
                     {est.firstName} {est.lastName} - DNI: {est.dni}
                   </option>
                 ))}
               </select>
-              
-              {/* Mostrar cursos del estudiante */}
+
               {cursosEstudiante.length > 0 && (
-                <div style={{ 
-                  marginTop: '0.75rem', 
-                  padding: '0.75rem', 
-                  backgroundColor: 'var(--info-light)', 
-                  borderRadius: 'var(--border-radius-sm)',
-                  border: '1px solid var(--info)'
-                }}>
-                  <p style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: 'var(--info-dark)' }}>
+                <div
+                  style={{
+                    marginTop: "0.75rem",
+                    padding: "0.75rem",
+                    backgroundColor: "var(--info-light)",
+                    borderRadius: "var(--border-radius-sm)",
+                    border: "1px solid var(--info)",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "var(--font-size-sm)",
+                      fontWeight: "var(--font-weight-semibold)",
+                      marginBottom: "0.5rem",
+                      color: "var(--info-dark)",
+                    }}
+                  >
                     📚 Cursos activos del estudiante:
                   </p>
-                  <ul style={{ margin: 0, paddingLeft: '1.5rem', fontSize: 'var(--font-size-sm)' }}>
-                    {cursosEstudiante.map(curso => (
-                      <li key={curso._id} style={{ marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
-                        <strong>{curso.nombre}</strong> - ${curso.tarifa.toLocaleString()}/clase
+                  <ul
+                    style={{
+                      margin: 0,
+                      paddingLeft: "1.5rem",
+                      fontSize: "var(--font-size-sm)",
+                    }}
+                  >
+                    {cursosEstudiante.map((curso) => (
+                      <li
+                        key={curso._id}
+                        style={{
+                          marginBottom: "0.25rem",
+                          color: "var(--text-primary)",
+                        }}
+                      >
+                        <strong>{curso.nombre}</strong> - $
+                        {curso.tarifa.toLocaleString()}/clase
                       </li>
                     ))}
                   </ul>
@@ -575,20 +564,29 @@ const InvoicingView = () => {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "var(--font-weight-medium)",
+                  fontSize: "var(--font-size-sm)",
+                }}
+              >
                 Condición Fiscal *
               </label>
               <select
                 value={factura.condicionFiscal}
-                onChange={(e) => setFactura({ ...factura, condicionFiscal: e.target.value })}
+                onChange={(e) =>
+                  setFactura({ ...factura, condicionFiscal: e.target.value })
+                }
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius)',
-                  border: '1px solid var(--input-border)',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)'
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  border: "1px solid var(--input-border)",
+                  backgroundColor: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                  fontSize: "var(--font-size-sm)",
                 }}
               >
                 <option>Consumidor Final</option>
@@ -599,43 +597,61 @@ const InvoicingView = () => {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
-                <FaCalendar style={{ marginRight: '0.25rem' }} />
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "var(--font-weight-medium)",
+                  fontSize: "var(--font-size-sm)",
+                }}
+              >
+                <FaCalendar style={{ marginRight: "0.25rem" }} />
                 Período Facturado *
               </label>
               <input
                 type="month"
                 value={factura.periodoFacturado}
-                onChange={(e) => setFactura({ ...factura, periodoFacturado: e.target.value })}
+                onChange={(e) =>
+                  setFactura({ ...factura, periodoFacturado: e.target.value })
+                }
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius)',
-                  border: '1px solid var(--input-border)',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)'
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  border: "1px solid var(--input-border)",
+                  backgroundColor: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                  fontSize: "var(--font-size-sm)",
                 }}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
-                <FaCalendar style={{ marginRight: '0.25rem' }} />
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "var(--font-weight-medium)",
+                  fontSize: "var(--font-size-sm)",
+                }}
+              >
+                <FaCalendar style={{ marginRight: "0.25rem" }} />
                 Fecha Vencimiento *
               </label>
               <input
                 type="date"
                 value={factura.fechaVencimiento}
-                onChange={(e) => setFactura({ ...factura, fechaVencimiento: e.target.value })}
+                onChange={(e) =>
+                  setFactura({ ...factura, fechaVencimiento: e.target.value })
+                }
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius)',
-                  border: '1px solid var(--input-border)',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)'
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  border: "1px solid var(--input-border)",
+                  backgroundColor: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                  fontSize: "var(--font-size-sm)",
                 }}
               />
             </div>
@@ -644,83 +660,105 @@ const InvoicingView = () => {
 
         <div className="dashboard-card">
           <h4 className="dashboard-card__title">
-            <FaPlus style={{ marginRight: '0.5rem' }} />
+            <FaPlus style={{ marginRight: "0.5rem" }} />
             Agregar Item
           </h4>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.75rem', marginTop: '1rem' }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 1fr auto",
+              gap: "0.75rem",
+              marginTop: "1rem",
+            }}
+          >
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "var(--font-weight-medium)",
+                  fontSize: "var(--font-size-sm)",
+                }}
+              >
                 Concepto
               </label>
               <select
                 value={itemTemp.conceptoCobro}
-                onChange={(e) => handleConceptoChange(e.target.value)}
+                onChange={(e) => {
+                  const curso = cursosEstudiante.find(
+                    (c) => c._id === e.target.value
+                  );
+                  if (curso) {
+                    setItemTemp({
+                      ...itemTemp,
+                      conceptoCobro: e.target.value,
+                      descripcion: curso.nombre,
+                      precioUnitario: curso.tarifa,
+                    });
+                  }
+                }}
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius)',
-                  border: '1px solid var(--input-border)',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)'
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  border: "1px solid var(--input-border)",
+                  backgroundColor: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                  fontSize: "var(--font-size-sm)",
                 }}
               >
-                <option value="">Seleccione concepto</option>
-                {conceptos.map(concepto => {
-                  let precio = concepto.amount;
-                  let cursoVinculado = null;
-                  
-                  // Primero: Buscar curso vinculado manualmente
-                  if (concepto.curso) {
-                    cursoVinculado = cursos.find(c => c._id === concepto.curso);
-                  }
-                  
-                  // Segundo: Si no hay vinculación, buscar automáticamente
-                  if (!cursoVinculado && cursosEstudiante.length > 0) {
-                    cursoVinculado = encontrarCursoPorConcepto(concepto, cursosEstudiante);
-                  }
-                  
-                  if (cursoVinculado) {
-                    precio = cursoVinculado.tarifa;
-                  }
-                  
-                  const etiqueta = cursoVinculado ? 
-                    `${concepto.name} - $${precio.toLocaleString()} (${cursoVinculado.nombre})` :
-                    `${concepto.name} - $${concepto.amount.toLocaleString()}`;
-                  
-                  return (
-                    <option key={concepto._id} value={concepto._id}>
-                      {etiqueta}
-                    </option>
-                  );
-                })}
+                <option value="">Seleccione curso a facturar</option>
+                {cursosEstudiante.map((curso) => (
+                  <option key={curso._id} value={curso._id}>
+                    {curso.nombre} - ${curso.tarifa.toLocaleString()}/clase
+                  </option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "var(--font-weight-medium)",
+                  fontSize: "var(--font-size-sm)",
+                }}
+              >
                 Cantidad
               </label>
               <input
                 type="number"
                 min="1"
                 value={itemTemp.cantidad}
-                onChange={(e) => setItemTemp({ ...itemTemp, cantidad: parseInt(e.target.value) || 1 })}
+                onChange={(e) =>
+                  setItemTemp({
+                    ...itemTemp,
+                    cantidad: parseInt(e.target.value) || 1,
+                  })
+                }
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius)',
-                  border: '1px solid var(--input-border)',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)'
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  border: "1px solid var(--input-border)",
+                  backgroundColor: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                  fontSize: "var(--font-size-sm)",
                 }}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "var(--font-weight-medium)",
+                  fontSize: "var(--font-size-sm)",
+                }}
+              >
                 Precio Unit.
               </label>
               <input
@@ -728,15 +766,20 @@ const InvoicingView = () => {
                 min="0"
                 step="0.01"
                 value={itemTemp.precioUnitario}
-                onChange={(e) => setItemTemp({ ...itemTemp, precioUnitario: parseFloat(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setItemTemp({
+                    ...itemTemp,
+                    precioUnitario: parseFloat(e.target.value) || 0,
+                  })
+                }
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius)',
-                  border: '1px solid var(--input-border)',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  fontSize: 'var(--font-size-sm)'
+                  width: "100%",
+                  padding: "0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  border: "1px solid var(--input-border)",
+                  backgroundColor: "var(--input-bg)",
+                  color: "var(--text-primary)",
+                  fontSize: "var(--font-size-sm)",
                 }}
               />
             </div>
@@ -745,38 +788,47 @@ const InvoicingView = () => {
               onClick={agregarItem}
               className="cta-btn"
               style={{
-                padding: '0.75rem 1.25rem',
-                marginTop: '1.75rem',
-                borderRadius: 'var(--border-radius)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                fontSize: 'var(--font-size-sm)',
-                cursor: 'pointer'
+                padding: "0.75rem 1.25rem",
+                marginTop: "1.75rem",
+                borderRadius: "var(--border-radius)",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                fontSize: "var(--font-size-sm)",
+                cursor: "pointer",
               }}
             >
               <FaPlus /> Agregar
             </button>
           </div>
 
-          <div style={{ marginTop: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)' }}>
+          <div style={{ marginTop: "1rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "var(--font-weight-medium)",
+                fontSize: "var(--font-size-sm)",
+              }}
+            >
               Descripción
             </label>
             <input
               type="text"
               value={itemTemp.descripcion}
-              onChange={(e) => setItemTemp({ ...itemTemp, descripcion: e.target.value })}
+              onChange={(e) =>
+                setItemTemp({ ...itemTemp, descripcion: e.target.value })
+              }
               placeholder="Ej: Clase Particular 26/10"
               style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: 'var(--border-radius)',
-                border: '1px solid var(--input-border)',
-                backgroundColor: 'var(--input-bg)',
-                color: 'var(--text-primary)',
-                fontSize: 'var(--font-size-sm)'
+                width: "100%",
+                padding: "0.75rem",
+                borderRadius: "var(--border-radius)",
+                border: "1px solid var(--input-border)",
+                backgroundColor: "var(--input-bg)",
+                color: "var(--text-primary)",
+                fontSize: "var(--font-size-sm)",
               }}
             />
           </div>
@@ -785,42 +837,124 @@ const InvoicingView = () => {
         {factura.itemFacturaSchema.length > 0 && (
           <div className="dashboard-card">
             <h4 className="dashboard-card__title">
-              <FaDollarSign style={{ marginRight: '0.5rem' }} />
+              <FaDollarSign style={{ marginRight: "0.5rem" }} />
               Items de la Factura
             </h4>
 
-            <table style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
+            <table
+              style={{
+                width: "100%",
+                marginTop: "1rem",
+                borderCollapse: "collapse",
+              }}
+            >
               <thead>
-                <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Descripción</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Cantidad</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Precio Unit.</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Subtotal</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Acción</th>
+                <tr style={{ borderBottom: "2px solid var(--border-color)" }}>
+                  <th
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "left",
+                      fontSize: "var(--font-size-sm)",
+                      fontWeight: "var(--font-weight-semibold)",
+                    }}
+                  >
+                    Descripción
+                  </th>
+                  <th
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "center",
+                      fontSize: "var(--font-size-sm)",
+                      fontWeight: "var(--font-weight-semibold)",
+                    }}
+                  >
+                    Cantidad
+                  </th>
+                  <th
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "right",
+                      fontSize: "var(--font-size-sm)",
+                      fontWeight: "var(--font-weight-semibold)",
+                    }}
+                  >
+                    Precio Unit.
+                  </th>
+                  <th
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "right",
+                      fontSize: "var(--font-size-sm)",
+                      fontWeight: "var(--font-weight-semibold)",
+                    }}
+                  >
+                    Subtotal
+                  </th>
+                  <th
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "center",
+                      fontSize: "var(--font-size-sm)",
+                      fontWeight: "var(--font-weight-semibold)",
+                    }}
+                  >
+                    Acción
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {factura.itemFacturaSchema.map((item, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                    <td style={{ padding: '0.75rem', fontSize: 'var(--font-size-sm)' }}>{item.descripcion}</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'center', fontSize: 'var(--font-size-sm)' }}>{item.cantidad}</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: 'var(--font-size-sm)' }}>
+                  <tr
+                    key={index}
+                    style={{ borderBottom: "1px solid var(--border-light)" }}
+                  >
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        fontSize: "var(--font-size-sm)",
+                      }}
+                    >
+                      {item.descripcion}
+                    </td>
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        textAlign: "center",
+                        fontSize: "var(--font-size-sm)",
+                      }}
+                    >
+                      {item.cantidad}
+                    </td>
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        textAlign: "right",
+                        fontSize: "var(--font-size-sm)",
+                      }}
+                    >
                       ${item.precioUnitario.toLocaleString()}
                     </td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-sm)' }}>
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        textAlign: "right",
+                        fontWeight: "var(--font-weight-semibold)",
+                        fontSize: "var(--font-size-sm)",
+                      }}
+                    >
                       ${item.subtotal.toLocaleString()}
                     </td>
-                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                    <td style={{ padding: "0.75rem", textAlign: "center" }}>
                       <button
                         onClick={() => eliminarItem(index)}
                         style={{
-                          padding: '0.375rem 0.75rem',
-                          borderRadius: 'var(--border-radius-sm)',
-                          border: 'none',
-                          backgroundColor: 'var(--error)',
-                          color: 'white',
-                          cursor: 'pointer',
-                          fontSize: 'var(--font-size-sm)'
+                          padding: "0.375rem 0.75rem",
+                          borderRadius: "var(--border-radius-sm)",
+                          border: "none",
+                          backgroundColor: "var(--error)",
+                          color: "white",
+                          cursor: "pointer",
+                          fontSize: "var(--font-size-sm)",
                         }}
                       >
                         <FaTrash />
@@ -830,11 +964,27 @@ const InvoicingView = () => {
                 ))}
               </tbody>
               <tfoot>
-                <tr style={{ borderTop: '2px solid var(--border-color)' }}>
-                  <td colSpan="3" style={{ padding: '1rem', textAlign: 'right', fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-lg)' }}>
+                <tr style={{ borderTop: "2px solid var(--border-color)" }}>
+                  <td
+                    colSpan="3"
+                    style={{
+                      padding: "1rem",
+                      textAlign: "right",
+                      fontWeight: "var(--font-weight-semibold)",
+                      fontSize: "var(--font-size-lg)",
+                    }}
+                  >
                     TOTAL:
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'right', fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--primary)' }}>
+                  <td
+                    style={{
+                      padding: "1rem",
+                      textAlign: "right",
+                      fontSize: "var(--font-size-xl)",
+                      fontWeight: "var(--font-weight-bold)",
+                      color: "var(--primary)",
+                    }}
+                  >
                     ${calcularTotal().toLocaleString()}
                   </td>
                   <td></td>
@@ -844,37 +994,45 @@ const InvoicingView = () => {
           </div>
         )}
 
-        <div style={{ textAlign: 'right', marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+        <div
+          style={{
+            textAlign: "right",
+            marginTop: "1.5rem",
+            display: "flex",
+            gap: "1rem",
+            justifyContent: "flex-end",
+          }}
+        >
           <button
             onClick={() => {
               setFactura({
                 id: null,
-                estudiante: '',
-                condicionFiscal: 'Consumidor Final',
-                periodoFacturado: '',
-                fechaVencimiento: '',
-                itemFacturaSchema: []
+                estudiante: "",
+                condicionFiscal: "Consumidor Final",
+                periodoFacturado: "",
+                fechaVencimiento: "",
+                itemFacturaSchema: [],
               });
-              setVistaActiva('lista');
+              setVistaActiva("lista");
             }}
             style={{
-              padding: '0.875rem 2rem',
-              borderRadius: 'var(--border-radius)',
-              border: '2px solid var(--gray-300)',
-              backgroundColor: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: 'var(--font-size-base)',
-              cursor: 'pointer',
-              fontWeight: 'var(--font-weight-semibold)',
-              transition: 'all var(--transition-fast)'
+              padding: "0.875rem 2rem",
+              borderRadius: "var(--border-radius)",
+              border: "2px solid var(--gray-300)",
+              backgroundColor: "var(--bg-primary)",
+              color: "var(--text-primary)",
+              fontSize: "var(--font-size-base)",
+              cursor: "pointer",
+              fontWeight: "var(--font-weight-semibold)",
+              transition: "all var(--transition-fast)",
             }}
             onMouseOver={(e) => {
-              e.target.style.backgroundColor = 'var(--gray-100)';
-              e.target.style.borderColor = 'var(--gray-400)';
+              e.target.style.backgroundColor = "var(--gray-100)";
+              e.target.style.borderColor = "var(--gray-400)";
             }}
             onMouseOut={(e) => {
-              e.target.style.backgroundColor = 'var(--bg-primary)';
-              e.target.style.borderColor = 'var(--gray-300)';
+              e.target.style.backgroundColor = "var(--bg-primary)";
+              e.target.style.borderColor = "var(--gray-300)";
             }}
           >
             Cancelar
@@ -884,20 +1042,25 @@ const InvoicingView = () => {
             disabled={loading || factura.itemFacturaSchema.length === 0}
             className="cta-btn"
             style={{
-              padding: '0.875rem 2rem',
-              borderRadius: 'var(--border-radius)',
-              border: 'none',
-              backgroundColor: loading ? 'var(--gray-400)' : 'var(--success)',
-              fontSize: 'var(--font-size-base)',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              opacity: loading || factura.itemFacturaSchema.length === 0 ? 0.6 : 1
+              padding: "0.875rem 2rem",
+              borderRadius: "var(--border-radius)",
+              border: "none",
+              backgroundColor: loading ? "var(--gray-400)" : "var(--success)",
+              fontSize: "var(--font-size-base)",
+              cursor: loading ? "not-allowed" : "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              opacity:
+                loading || factura.itemFacturaSchema.length === 0 ? 0.6 : 1,
             }}
           >
             <FaSave />
-            {loading ? 'Guardando...' : (factura.id ? 'Actualizar Factura' : 'Guardar Factura')}
+            {loading
+              ? "Guardando..."
+              : factura.id
+              ? "Actualizar Factura"
+              : "Guardar Factura"}
           </button>
         </div>
       </div>
@@ -945,7 +1108,6 @@ const InvoicingView = () => {
       
       {vistaActiva === 'lista' ? renderListaFacturas() : renderNuevaFactura()}
 
-      {/* Modal: Detalle de Factura */}
       {mostrarDetalle && facturaDetalle && (
         <div style={{ 
           position: 'fixed', 
