@@ -1,4 +1,5 @@
-const facturaService = require('../services/factura.service');
+//const facturaService = require('../services/factura.service');
+const facturaService = require('../services/facturaBorrador.service');
 
 const facturaCtrl = {};
 
@@ -14,6 +15,57 @@ facturaCtrl.createFactura = async (req, res) => {
             success: true,
             message: resultado.mensaje,
             data: resultado.factura
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Obtener todas las facturas
+ * GET /api/facturas
+ */
+facturaCtrl.getAllFacturas = async (req, res) => {
+    try {
+        const Factura = require('../models/factura.model');
+        const facturas = await Factura.find()
+            .populate('estudiante', 'firstName lastName dni email')
+            .sort({ fechaEmision: -1 });
+
+        res.status(200).json({
+            success: true,
+            total: facturas.length,
+            data: facturas
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Autorizar una factura para obtener cae o caea
+ * PUT /api/facturas/id/autorizar
+ */
+
+facturaCtrl.autorizarFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resultado = await facturaService.autorizarFactura(id);
+        
+        res.status(200).json({
+            success: true,
+            message: resultado.mensaje,
+            data: {
+                factura: resultado.factura,
+                cae: resultado.cae,
+                caeVencimiento: resultado.caeVencimiento
+            }
         });
     } catch (error) {
         res.status(400).json({
@@ -60,6 +112,52 @@ facturaCtrl.getDeudaEstudiante = async (req, res) => {
         });
     } catch (error) {
         res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Obtener todas las facturas
+ * GET /api/facturas
+ */
+facturaCtrl.getAllFacturas = async (req, res) => {
+    try {
+        const Factura = require('../models/factura.model');
+        const facturas = await Factura.find()
+            .populate('estudiante', 'firstName lastName dni email')
+            .sort({ fechaEmision: -1 });
+
+        res.status(200).json({
+            success: true,
+            total: facturas.length,
+            data: facturas
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Editar una factura en borrador
+ * PUT /api/facturas/:id
+ */
+facturaCtrl.editarFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resultado = await facturaService.editarFactura(id, req.body);
+
+        res.status(200).json({
+            success: true,
+            message: resultado.mensaje,
+            data: resultado.factura
+        });
+    } catch (error) {
+        res.status(400).json({
             success: false,
             message: error.message
         });
