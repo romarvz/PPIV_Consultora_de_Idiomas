@@ -3,10 +3,8 @@ const facturaService = require('../services/facturaBorrador.service');
 
 const facturaCtrl = {};
 
-/**
- * Crear una nueva factura
- * POST /api/facturas
- */
+// Crear una nueva factura
+// POST /api/facturas
 facturaCtrl.createFactura = async (req, res) => {
     try {
         const resultado = await facturaService.crearFactura(req.body);
@@ -24,10 +22,8 @@ facturaCtrl.createFactura = async (req, res) => {
     }
 };
 
-/**
- * Obtener todas las facturas
- * GET /api/facturas
- */
+// Obtener todas las facturas
+// GET /api/facturas
 facturaCtrl.getAllFacturas = async (req, res) => {
     try {
         const Factura = require('../models/factura.model');
@@ -48,10 +44,8 @@ facturaCtrl.getAllFacturas = async (req, res) => {
     }
 };
 
-/**
- * Autorizar una factura para obtener cae o caea
- * PUT /api/facturas/id/autorizar
- */
+// Autorizar una factura para obtener cae o caea
+// PUT /api/facturas/id/autorizar
 
 facturaCtrl.autorizarFactura = async (req, res) => {
     try {
@@ -75,10 +69,8 @@ facturaCtrl.autorizarFactura = async (req, res) => {
     }
 };
 
-/**
- * Obtener facturas de un estudiante
- * GET /api/facturas/estudiante/:idEstudiante
- */
+// Obtener facturas de un estudiante
+// GET /api/facturas/estudiante/:idEstudiante
 facturaCtrl.getFacturasByEstudiante = async (req, res) => {
     try {
         const { idEstudiante } = req.params;
@@ -97,10 +89,8 @@ facturaCtrl.getFacturasByEstudiante = async (req, res) => {
     }
 };
 
-/**
- * Obtener deuda total de un estudiante
- * GET /api/facturas/estudiante/:idEstudiante/deuda
- */
+// Obtener deuda total de un estudiante
+// GET /api/facturas/estudiante/:idEstudiante/deuda
 facturaCtrl.getDeudaEstudiante = async (req, res) => {
     try {
         const { idEstudiante } = req.params;
@@ -118,10 +108,8 @@ facturaCtrl.getDeudaEstudiante = async (req, res) => {
     }
 };
 
-/**
- * Obtener todas las facturas
- * GET /api/facturas
- */
+// Obtener todas las facturas
+// GET /api/facturas
 facturaCtrl.getAllFacturas = async (req, res) => {
     try {
         const Factura = require('../models/factura.model');
@@ -142,10 +130,8 @@ facturaCtrl.getAllFacturas = async (req, res) => {
     }
 };
 
-/**
- * Editar una factura en borrador
- * PUT /api/facturas/:id
- */
+// Editar una factura en borrador
+// PUT /api/facturas/:id
 facturaCtrl.editarFactura = async (req, res) => {
     try {
         const { id } = req.params;
