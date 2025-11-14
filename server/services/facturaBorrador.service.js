@@ -32,6 +32,39 @@ class FacturaService {
             }
         }
 
+        // ========================================
+        // VALIDACIÓN i: Fecha de emisión no puede ser mayor a 10 días hacia atrás
+        // ========================================
+        const fechaEmision = new Date();
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
+        
+        const fechaLimite = new Date(hoy);
+        fechaLimite.setDate(hoy.getDate() - 10);
+        
+        const fechaEmisionNormalizada = new Date(fechaEmision);
+        fechaEmisionNormalizada.setHours(0, 0, 0, 0);
+        
+        if (fechaEmisionNormalizada < fechaLimite) {
+            throw new Error('La fecha de emisión no puede ser mayor a 10 días contados hacia atrás');
+        }
+
+        // ========================================
+        // VALIDACIÓN ii: Fecha debe ser >= última factura creada (con límite de 10 días)
+        // ========================================
+        const ultimaFactura = await Factura.findOne()
+            .sort({ fechaEmision: -1 })
+            .select('fechaEmision numeroFactura');
+
+        if (ultimaFactura) {
+            const ultimaFechaEmision = new Date(ultimaFactura.fechaEmision);
+            ultimaFechaEmision.setHours(0, 0, 0, 0);
+            
+            if (fechaEmisionNormalizada < ultimaFechaEmision) {
+                throw new Error(`La fecha de emisión no puede ser anterior a la última factura creada (${ultimaFactura.numeroFactura} - ${ultimaFechaEmision.toLocaleDateString()})`);
+            }
+        }
+
         // 4. Calcular subtotal y total
         const subtotal = itemFacturaSchema.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
         const total = subtotal; 
@@ -57,7 +90,7 @@ class FacturaService {
             estudiante,
             condicionFiscal,
             numeroFactura,
-            fechaEmision: new Date(),
+            fechaEmision: fechaEmision,
             fechaVencimiento: fechaVencimiento || new Date(),
             itemFacturaSchema,
             periodoFacturado,
@@ -102,6 +135,19 @@ class FacturaService {
         // 3. Validar que no tenga ya una autorización
         if (factura.estaAutorizada()) {
             throw new Error('La factura ya tiene una autorización (CAE o CAEA)');
+        }
+
+        // ========================================
+        // VALIDACIÓN iii: No autorizar si hay facturas anteriores sin autorizar (correlatividad)
+        // ========================================
+        const facturasAnterioresSinAutorizar = await Factura.find({
+            fechaEmision: { $lt: factura.fechaEmision },
+            estado: 'Borrador'
+        }).sort({ fechaEmision: 1 });
+
+        if (facturasAnterioresSinAutorizar.length > 0) {
+            const primeraNoAutorizada = facturasAnterioresSinAutorizar[0];
+            throw new Error(`No se puede autorizar. Existe una o más facturas anteriores sin autorizar: ${primeraNoAutorizada.numeroFactura} del ${new Date(primeraNoAutorizada.fechaEmision).toLocaleDateString()}. Las autorizaciones deben ser consecutivas y correlativas.`);
         }
 
         // ========================================
