@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import AuthNavbar from '../../components/common/AuthNavbar';
 import Footer from '../../components/layout/Footer';
 import InvoicingView from '../../modules/financial/components/InvoicingView';
+import CollectionsView from '../../modules/financial/components/CollectionsView';
 import '../../styles/variables.css';
 import '../../styles/auth.css';
 
@@ -69,15 +70,7 @@ const FinancialDashboard = () => {
       </div>
 
       {activeTab === 'facturas' && <InvoicingView />}
-      
-      {activeTab === 'cobros' && (
-        <div className="dashboard-card">
-          <h4 className="dashboard-card__title">Módulo de Cobros</h4>
-          <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            Funcionalidad de cobros en desarrollo
-          </p>
-        </div>
-      )}
+      {activeTab === 'cobros' && <CollectionsView />}
 
       <Footer />
     </div>

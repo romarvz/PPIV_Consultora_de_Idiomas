@@ -3,19 +3,55 @@ const cobroService = require('../services/cobro.service');
 const cobroCtrl = {};
 
 /**
- * Crear un cobro
+ * Crear un cobro (soporta una o múltiples facturas)
  * POST /api/cobros
+ * 
+ * Body para UNA factura:
+ * {
+ *   "estudiante": "id",
+ *   "factura": "id",
+ *   "monto": 5000,
+ *   "metodoCobro": "Efectivo",
+ *   "fechaCobro": "2025-11-14",
+ *   "notas": "..."
+ * }
+ * 
+ * Body para MÚLTIPLES facturas:
+ * {
+ *   "estudiante": "id",
+ *   "facturas": [
+ *     { "facturaId": "id1", "montoCobrado": 5000 },
+ *     { "facturaId": "id2", "montoCobrado": 3000 }
+ *   ],
+ *   "metodoCobro": "Efectivo",
+ *   "fechaCobro": "2025-11-14",
+ *   "notas": "..."
+ * }
  */
 cobroCtrl.createCobro = async (req, res) => {
     try {
-        const resultado = await cobroService.registrarCobro(req.body);
+        let resultado;
+
+        // Detectar si es cobro simple o múltiple
+        if (req.body.facturas && Array.isArray(req.body.facturas)) {
+            // Cobro múltiple
+            resultado = await cobroService.registrarCobroMultiple(req.body);
+        } else if (req.body.factura && req.body.monto) {
+            // Cobro simple (retrocompatibilidad)
+            resultado = await cobroService.registrarCobro(req.body);
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Formato inválido. Debe proporcionar "factura" y "monto" O "facturas" como array'
+            });
+        }
         
         res.status(201).json({
             success: true,
             message: resultado.mensaje,
             data: {
                 cobro: resultado.cobro,
-                factura: resultado.facturaActualizada
+                facturasActualizadas: resultado.facturasActualizadas || [resultado.facturaActualizada]
             }
         });
     } catch (error) {
@@ -42,6 +78,27 @@ cobroCtrl.getCobrosByEstudiante = async (req, res) => {
         });
     } catch (error) {
         res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Listar todos los cobros (con filtros opcionales)
+ * GET /api/cobros?estudiante=id&fechaDesde=2025-01-01&fechaHasta=2025-12-31&metodoCobro=Efectivo
+ */
+cobroCtrl.listarCobros = async (req, res) => {
+    try {
+        const cobros = await cobroService.listarCobros(req.query);
+        
+        res.status(200).json({
+            success: true,
+            total: cobros.length,
+            data: cobros
+        });
+    } catch (error) {
+        res.status(500).json({
             success: false,
             message: error.message
         });
