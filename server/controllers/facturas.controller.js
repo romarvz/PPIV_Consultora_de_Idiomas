@@ -144,7 +144,23 @@ facturaCtrl.autorizarFactura = async (req, res) => {
 facturaCtrl.getMisFacturas = async (req, res) => {
     try {
         const estudianteId = req.user._id || req.user.id;
-        const facturas = await facturaService.obtenerFacturasPorEstudiante(estudianteId);
+        console.log('getMisFacturas - ID del estudiante desde token:', estudianteId);
+        console.log('getMisFacturas - Usuario completo:', req.user);
+
+        // Buscar facturas directamente sin usar el servicio que lanza error
+        const Factura = require('../models/factura.model');
+        const facturas = await Factura.find({ estudiante: estudianteId })
+            .sort({ fechaEmision: -1 })
+            .populate('estudiante', 'firstName lastName email');
+
+        console.log('getMisFacturas - Facturas encontradas:', facturas.length);
+        if (facturas.length > 0) {
+            console.log('getMisFacturas - Primera factura:', {
+                numero: facturas[0].numeroFactura,
+                estado: facturas[0].estado,
+                estudianteId: facturas[0].estudiante?._id
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -152,7 +168,8 @@ facturaCtrl.getMisFacturas = async (req, res) => {
             data: facturas
         });
     } catch (error) {
-        res.status(404).json({
+        console.error('getMisFacturas - Error:', error);
+        res.status(500).json({
             success: false,
             message: error.message
         });

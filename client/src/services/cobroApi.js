@@ -7,7 +7,7 @@ import api from './api'
 
 const cobroAPI = {
   /**
-   * Registrar un nuevo cobro
+   * Registrar un nuevo cobro (ADMIN)
    * POST /api/cobros
    */
   registrarCobro: async (datosCobro) => {
@@ -16,6 +16,19 @@ const cobroAPI = {
       return response.data
     } catch (error) {
       throw error.response?.data || { message: 'Error al registrar cobro' }
+    }
+  },
+
+  /**
+   * Registrar mi propio pago (Estudiante)
+   * POST /api/cobros/mi-pago
+   */
+  registrarMiPago: async (datosPago) => {
+    try {
+      const response = await api.post('/cobros/mi-pago', datosPago)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || { message: 'Error al registrar pago' }
     }
   },
 
@@ -29,6 +42,19 @@ const cobroAPI = {
       return response.data
     } catch (error) {
       throw error.response?.data || { message: 'Error al obtener mis cobros' }
+    }
+  },
+
+  /**
+   * Obtener un cobro por ID
+   * GET /api/cobros/:id
+   */
+  obtenerCobroPorId: async (cobroId) => {
+    try {
+      const response = await api.get(`/cobros/${cobroId}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || { message: 'Error al obtener cobro' }
     }
   },
 

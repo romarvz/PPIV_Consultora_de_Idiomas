@@ -3,6 +3,8 @@ import { useAuth } from '../../hooks/useAuth.jsx'
 import ForcePasswordChange from '../../components/common/ForcePasswordChange'
 import AuthNavbar from '../../components/common/AuthNavbar'
 import StudentAttendanceForm from '../../components/attendance/StudentAttendanceForm'
+import StudentPaymentModal from '../../components/payment/StudentPaymentModal'
+import PaymentDetailModal from '../../components/payment/PaymentDetailModal'
 import apiAdapter from '../../services/apiAdapter'
 import cobroAPI from '../../services/cobroApi'
 import '../../styles/variables.css'
@@ -34,6 +36,8 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [selectedClase, setSelectedClase] = useState(null)
   const [showAttendanceForm, setShowAttendanceForm] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState(null)
   const [cursoCalificacionesAbierto, setCursoCalificacionesAbierto] = useState(null)
   
   console.log('StudentDashboard - user:', user)
@@ -127,7 +131,8 @@ const StudentDashboard = () => {
               amount: cobro.montoTotal,
               date: new Date(cobro.fechaCobro).toLocaleDateString('es-AR'),
               status: 'paid', // Los cobros siempre están pagados
-              concept: `${conceptos} - ${cobro.metodoCobro}`,
+              concept: conceptos,
+              metodoCobro: cobro.metodoCobro, // Separar el método de cobro
               numeroRecibo: cobro.numeroRecibo
             }
           })
@@ -168,6 +173,11 @@ const StudentDashboard = () => {
     setShowAttendanceForm(false)
     setSelectedClase(null)
     cargarDatos() // Recargar datos
+  }
+
+  const handlePagoExitoso = () => {
+    setShowPaymentModal(false)
+    cargarDatos() // Recargar datos para actualizar cobros
   }
 
   const formatDate = (dateString) => {
@@ -638,6 +648,35 @@ const StudentDashboard = () => {
             <FaDollarSign className="dashboard-card__icon" />
             <h4 className="dashboard-card__title">Mis Pagos</h4>
           </div>
+
+          {/* Botón para realizar pago */}
+          <div style={{ padding: '0 1rem 1rem 1rem' }}>
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1.5rem',
+                background: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.background = '#218838'}
+              onMouseLeave={(e) => e.target.style.background = '#28a745'}
+            >
+              <FaDollarSign />
+              Realizar Pago
+            </button>
+          </div>
+
           {loading ? (
             <div style={{ padding: '1rem', textAlign: 'center' }}>Cargando pagos...</div>
           ) : misPagos.length === 0 ? (
@@ -646,7 +685,14 @@ const StudentDashboard = () => {
             </div>
           ) : (
             misPagos.map((pago) => (
-              <div key={pago.id} className={`dashboard-card__item ${pago.status === 'paid' ? 'dashboard-card__item--completed' : 'dashboard-card__item--pending'}`}>
+              <div
+                key={pago.id}
+                className={`dashboard-card__item ${pago.status === 'paid' ? 'dashboard-card__item--completed' : 'dashboard-card__item--pending'}`}
+                onClick={() => setSelectedPayment(pago.id)}
+                style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
                 <div className="dashboard-card__item-header">
                   <span className="dashboard-card__item-title">
                     <FaDollarSign />
@@ -657,6 +703,21 @@ const StudentDashboard = () => {
                   </span>
                 </div>
                 <div className="dashboard-card__item-subtitle">{pago.concept}</div>
+                {pago.metodoCobro && (
+                  <div style={{
+                    marginTop: '0.5rem',
+                    display: 'inline-block',
+                    padding: '0.25rem 0.75rem',
+                    background: '#e7f3ff',
+                    border: '1px solid #0F5C8C',
+                    borderRadius: '12px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: '#0F5C8C'
+                  }}>
+                    {pago.metodoCobro}
+                  </div>
+                )}
                 <div className="dashboard-card__item-meta">
                   {pago.date}
                   {pago.numeroRecibo && (
@@ -664,6 +725,9 @@ const StudentDashboard = () => {
                       · Recibo #{pago.numeroRecibo}
                     </span>
                   )}
+                  <span style={{ marginLeft: '0.5rem', color: '#0F5C8C', fontWeight: 600 }}>
+                    · Ver detalle
+                  </span>
                 </div>
               </div>
             ))
@@ -762,6 +826,22 @@ const StudentDashboard = () => {
             setShowAttendanceForm(false)
             setSelectedClase(null)
           }}
+        />
+      )}
+
+      {/* Modal de pago */}
+      {showPaymentModal && (
+        <StudentPaymentModal
+          onSuccess={handlePagoExitoso}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
+
+      {/* Modal de detalle de pago */}
+      {selectedPayment && (
+        <PaymentDetailModal
+          cobroId={selectedPayment}
+          onClose={() => setSelectedPayment(null)}
         />
       )}
     </div>
