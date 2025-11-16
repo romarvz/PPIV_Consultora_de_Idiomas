@@ -697,6 +697,16 @@ const apiAdapter = {
         return await mockApi.reports.teachers()
       }
       return await api.get('/reports/teachers')
+    },
+
+    /**
+     * Listado global de estudiantes en riesgo por inasistencias
+     */
+    studentsAtRiskByAttendance: async () => {
+      if (USE_MOCK) {
+        return { data: { success: true, data: [] } }
+      }
+      return await api.get('/reportes-academicos/estudiantes-en-riesgo/asistencia')
     }
   },
 

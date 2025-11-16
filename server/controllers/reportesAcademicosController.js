@@ -104,6 +104,24 @@ exports.generarReportesAutomaticos = async (req, res) => {
 // ============================================
 
 /**
+ * GET /api/reportes-academicos/estudiantes-en-riesgo/asistencia
+ * Devuelve listado global de estudiantes en riesgo por inasistencias
+ */
+exports.obtenerEstudiantesEnRiesgoAsistencia = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return sendError(res, 'No tienes permiso para ver este reporte', 403);
+        }
+
+        const datos = await reportesAcademicosService.obtenerEstudiantesEnRiesgoAsistencia();
+        return sendSuccess(res, datos, 'Estudiantes en riesgo por inasistencias obtenidos exitosamente');
+    } catch (error) {
+        console.error('Error en obtenerEstudiantesEnRiesgoAsistencia:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
+/**
  * GET /api/reportes-academicos/:id
  * Gets specific report by ID
  */
