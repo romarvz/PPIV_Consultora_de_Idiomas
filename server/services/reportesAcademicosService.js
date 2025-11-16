@@ -1,6 +1,6 @@
 const ReporteAcademico = require('../models/ReporteAcademico');
 const PerfilEstudiante = require('../models/PerfilEstudiante');
-const { BaseUser } = require('../models');
+const { BaseUser, Curso } = require('../models');
 const cursosService = require('./cursosService');
 
 /**
@@ -369,6 +369,82 @@ exports.obtenerResumenCurso = async (cursoId) => {
         return resumen;
     } catch (error) {
         throw new Error(`Error al obtener resumen del curso: ${error.message}`);
+    }
+};
+
+/**
+ * Obtiene listado global de estudiantes en riesgo por inasistencias,
+ * reutilizando la misma lógica que ve el profesor en su curso.
+ */
+exports.obtenerEstudiantesEnRiesgoAsistencia = async () => {
+    try {
+        // Considerar cursos activos o planificados
+        const cursos = await Curso.find({
+            estado: { $in: ['activo', 'planificado'] }
+        })
+            .select('nombre idioma nivel profesor')
+            .populate('profesor', 'firstName lastName email');
+
+        console.log('obtenerEstudiantesEnRiesgoAsistencia - cursos candidatos:', cursos.length);
+
+        const resultados = [];
+
+        for (const curso of cursos) {
+            // Usa cursosService.getEstudiantesCurso para mantener lógica unificada
+            const estudiantes = await cursosService.getEstudiantesCurso(curso._id);
+            console.log(
+              'obtenerEstudiantesEnRiesgoAsistencia - curso',
+              curso.nombre,
+              '- estudiantes:', estudiantes.length
+            );
+
+            estudiantes.forEach((item) => {
+                const asistencia = item.asistencia || {};
+                if (asistencia.estaCercaDelLimite) {
+                    console.log(
+                      '  -> Estudiante en riesgo encontrado:',
+                      item.estudiante?.firstName,
+                      item.estudiante?.lastName,
+                      'faltas:',
+                      asistencia.clasesFaltadas,
+                      'límite:',
+                      asistencia.limiteMaximoInasistencias,
+                      'restantes:',
+                      asistencia.inasistenciasRestantes
+                    );
+                    const estudiante = item.estudiante || {};
+                    resultados.push({
+                        estudianteId: estudiante._id,
+                        estudianteNombre: `${estudiante.firstName || ''} ${estudiante.lastName || ''}`.trim(),
+                        estudianteEmail: estudiante.email || '',
+                        cursoId: curso._id,
+                        cursoNombre: curso.nombre,
+                        idioma: curso.idioma,
+                        nivel: curso.nivel,
+                        profesorNombre: curso.profesor
+                            ? `${curso.profesor.firstName || ''} ${curso.profesor.lastName || ''}`.trim()
+                            : '',
+                        porcentajeAsistencia: asistencia.porcentajeAsistencia ?? 0,
+                        clasesFaltadas: asistencia.clasesFaltadas ?? 0,
+                        limiteMaximoInasistencias: asistencia.limiteMaximoInasistencias ?? 0,
+                        inasistenciasRestantes: asistencia.inasistenciasRestantes ?? 0
+                    });
+                }
+            });
+        }
+
+        // Ordenar por "faltas restantes" (menos margen primero)
+        resultados.sort((a, b) => {
+            const aRest = a.inasistenciasRestantes ?? 0;
+            const bRest = b.inasistenciasRestantes ?? 0;
+            return aRest - bRest;
+        });
+
+        console.log('obtenerEstudiantesEnRiesgoAsistencia - total en riesgo:', resultados.length);
+
+        return resultados;
+    } catch (error) {
+        throw new Error(`Error al obtener estudiantes en riesgo: ${error.message}`);
     }
 };
 

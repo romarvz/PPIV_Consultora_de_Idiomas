@@ -41,6 +41,9 @@ const StudentsManagement = ({ onBack }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState({}); // { studentId: { porcentaje, esRegular } }
+  const [riskStudents, setRiskStudents] = useState([]);
+  const [loadingRisk, setLoadingRisk] = useState(false);
+  const [showRiskTable, setShowRiskTable] = useState(false);
 
   useEffect(() => {
     fetchStudents();
@@ -120,6 +123,24 @@ const StudentsManagement = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchRiskStudents = async () => {
+    try {
+      setLoadingRisk(true);
+      const response = await apiAdapter.reports.studentsAtRiskByAttendance();
+      if (response?.data?.success) {
+        const data = response.data.data || [];
+        setRiskStudents(data);
+      } else {
+        setRiskStudents([]);
+      }
+    } catch (error) {
+      console.error('Error fetching risk students:', error);
+      setRiskStudents([]);
+    } finally {
+      setLoadingRisk(false);
     }
   };
 
@@ -279,7 +300,7 @@ const StudentsManagement = ({ onBack }) => {
       </div>
       
       {/* Estadísticas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <h3 style={{ color: '#3498db', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Total de Estudiantes</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.total}</p>
@@ -299,6 +320,132 @@ const StudentsManagement = ({ onBack }) => {
           </p>
         </div>
       </div>
+
+      {/* Tarjeta de estudiantes en riesgo, centrada horizontalmente */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+        <div
+          onClick={async () => {
+            setShowRiskTable(prev => !prev);
+            if (!showRiskTable && riskStudents.length === 0 && !loadingRisk) {
+              await fetchRiskStudents();
+            }
+          }}
+          style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s ease, transform 0.1s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <h3 style={{ color: '#e67e22', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>
+            Estudiantes en riesgo
+          </h3>
+          {/* Truco: guion del mismo color que el fondo para mantener altura sin sugerir “0” */}
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'white' }}>—</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#6b7280' }}>
+            Ver listado
+          </p>
+        </div>
+      </div>
+
+      {/* Listado de estudiantes en riesgo por inasistencias */}
+      {showRiskTable && (
+        <div
+          style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            marginBottom: '2rem'
+          }}
+        >
+          <h4 style={{ margin: '0 0 1rem 0', color: '#111827', fontSize: '1rem', fontWeight: 600 }}>
+            Estudiantes en riesgo por inasistencias
+          </h4>
+          {loadingRisk ? (
+            <div style={{ padding: '1rem', color: '#6b7280' }}>Cargando listado...</div>
+          ) : riskStudents.length === 0 ? (
+            <div style={{ padding: '1rem', color: '#6b7280', fontSize: '0.9rem' }}>
+              No hay estudiantes en riesgo por inasistencias en este momento.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.9rem',
+                  minWidth: '900px'
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Alumno</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Email</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Curso</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Profesor</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Asistencia</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Faltas / límite</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Faltas antes del límite</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {riskStudents.map((item, index) => (
+                    <tr key={`${item.estudianteId}-${item.cursoId}-${index}`}>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+                        <div style={{ fontWeight: 600, color: '#111827' }}>{item.estudianteNombre || '—'}</div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', color: '#4b5563' }}>
+                        {item.estudianteEmail || '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+                        <div style={{ fontWeight: 500, color: '#111827' }}>{item.cursoNombre || '—'}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.1rem' }}>
+                          {item.idioma && item.nivel ? `${item.idioma.toUpperCase()} - ${item.nivel}` : ''}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', color: '#4b5563' }}>
+                        {item.profesorNombre || '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                        {typeof item.porcentajeAsistencia === 'number'
+                          ? `${item.porcentajeAsistencia.toFixed(1)}%`
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                        {item.limiteMaximoInasistencias > 0
+                          ? `${item.clasesFaltadas} / ${item.limiteMaximoInasistencias}`
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                        {item.inasistenciasRestantes != null
+                          ? item.inasistenciasRestantes === 0
+                            ? 'Límite alcanzado'
+                            : item.inasistenciasRestantes < 0
+                            ? 'Límite superado'
+                            : item.inasistenciasRestantes === 1
+                            ? '1 falta'
+                            : `${item.inasistenciasRestantes} faltas`
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filtros */}
       <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>

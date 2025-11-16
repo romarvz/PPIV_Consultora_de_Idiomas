@@ -40,6 +40,17 @@ router.post('/generar-automatico/:cursoId',
 // ============================================
 
 /**
+ * GET /api/reportes-academicos/estudiantes-en-riesgo/asistencia
+ * Lista global de estudiantes en riesgo por inasistencias
+ * Acceso: Admin
+ */
+router.get(
+  '/estudiantes-en-riesgo/asistencia',
+  requireRole(['admin']),
+  reportesAcademicosController.obtenerEstudiantesEnRiesgoAsistencia
+);
+
+/**
  * GET /api/reportes-academicos/:id
  * Gets specific report by ID
  * Acceso: Estudiante (propio), Profesor, Admin
