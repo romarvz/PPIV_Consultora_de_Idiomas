@@ -72,6 +72,19 @@ const facturaAPI = {
   },
 
   /**
+   * Obtener mis propias facturas (estudiante autenticado)
+   * GET /api/facturas/mis-facturas
+   */
+  getMisFacturas: async () => {
+    try {
+      const response = await api.get('/facturas/mis-facturas')
+      return response.data
+    } catch (error) {
+      throw error.response?.data || { message: 'Error al obtener mis facturas' }
+    }
+  },
+
+  /**
    * Obtener todas las facturas de un estudiante
    * GET /api/facturas/estudiante/:idEstudiante
    */

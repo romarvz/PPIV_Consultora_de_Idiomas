@@ -138,6 +138,45 @@ facturaCtrl.autorizarFactura = async (req, res) => {
 };
 
 /**
+ * Obtener mis propias facturas (estudiante autenticado)
+ * GET /api/facturas/mis-facturas
+ */
+facturaCtrl.getMisFacturas = async (req, res) => {
+    try {
+        const estudianteId = req.user._id || req.user.id;
+        console.log('getMisFacturas - ID del estudiante desde token:', estudianteId);
+        console.log('getMisFacturas - Usuario completo:', req.user);
+
+        // Buscar facturas directamente sin usar el servicio que lanza error
+        const Factura = require('../models/factura.model');
+        const facturas = await Factura.find({ estudiante: estudianteId })
+            .sort({ fechaEmision: -1 })
+            .populate('estudiante', 'firstName lastName email');
+
+        console.log('getMisFacturas - Facturas encontradas:', facturas.length);
+        if (facturas.length > 0) {
+            console.log('getMisFacturas - Primera factura:', {
+                numero: facturas[0].numeroFactura,
+                estado: facturas[0].estado,
+                estudianteId: facturas[0].estudiante?._id
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            total: facturas.length,
+            data: facturas
+        });
+    } catch (error) {
+        console.error('getMisFacturas - Error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
  * Obtener facturas de un estudiante
  * GET /api/facturas/estudiante/:idEstudiante
  */

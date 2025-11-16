@@ -21,19 +21,9 @@ router.get('/',
  * Crear una nueva factura en BORRADOR (sin autorización)
  * POST /api/facturas
  */
-router.post('/', 
-    [authenticateToken, requireAdmin, validateCrearFactura], 
+router.post('/',
+    [authenticateToken, requireAdmin, validateCrearFactura],
     facturaCtrl.createFactura
-);
-
-/**
- * Obtener una factura por ID
- * GET /api/facturas/:id
- * IMPORTANTE: Esta ruta DEBE ir ANTES de las rutas con parámetros específicos
- */
-router.get('/:id',
-    [authenticateToken],
-    facturaCtrl.getFacturaById
 );
 
 /**
@@ -54,25 +44,26 @@ router.delete('/:id',
     facturaCtrl.eliminarFactura
 );
 
-/**
- * Autorizar una factura (solicitar CAE a AFIP)
- * PUT /api/facturas/:id/autorizar
- */
-router.put('/:id/autorizar',
-    [authenticateToken, requireAdmin],
-    facturaCtrl.autorizarFactura
-);
-
 // ========================================
 // RUTAS DE CONSULTA POR ESTUDIANTE
 // ========================================
 
 /**
+ * Obtener mis propias facturas (estudiante autenticado)
+ * GET /api/facturas/mis-facturas
+ * IMPORTANTE: Esta ruta DEBE ir ANTES de /:id
+ */
+router.get('/mis-facturas',
+    authenticateToken,
+    facturaCtrl.getMisFacturas
+);
+
+/**
  * Obtener facturas de un estudiante
  * GET /api/facturas/estudiante/:idEstudiante
  */
-router.get('/estudiante/:idEstudiante', 
-    [authenticateToken, validateMongoId], 
+router.get('/estudiante/:idEstudiante',
+    [authenticateToken, validateMongoId],
     facturaCtrl.getFacturasByEstudiante
 );
 
@@ -96,6 +87,30 @@ router.get('/estudiante/:idEstudiante/deuda',
 router.get('/afip/estado',
     [authenticateToken, requireAdmin],
     facturaCtrl.verificarEstadoAFIP
+);
+
+// ========================================
+// RUTAS CON PARÁMETROS DINÁMICOS (DEBEN IR AL FINAL)
+// ========================================
+
+/**
+ * Autorizar una factura (solicitar CAE a AFIP)
+ * PUT /api/facturas/:id/autorizar
+ * IMPORTANTE: Esta ruta debe ir ANTES de PUT /:id
+ */
+router.put('/:id/autorizar',
+    [authenticateToken, requireAdmin],
+    facturaCtrl.autorizarFactura
+);
+
+/**
+ * Obtener una factura por ID
+ * GET /api/facturas/:id
+ * IMPORTANTE: Esta ruta DEBE ir AL FINAL para no interferir con rutas específicas
+ */
+router.get('/:id',
+    [authenticateToken],
+    facturaCtrl.getFacturaById
 );
 
 module.exports = router;

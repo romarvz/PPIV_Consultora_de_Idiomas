@@ -24,7 +24,7 @@ const FinancialDashboard = () => {
       <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} />
 
       <div className="dashboard-info-card">
-        <h3 className="dashboard-info-card__title">Dashboard Financiero</h3>
+        <h3 className="dashboard-info-card__title">Finanzas</h3>
         <p className="dashboard-info-card__text">Gestión de facturas y cobros</p>
       </div>
 

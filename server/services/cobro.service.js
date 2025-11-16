@@ -48,7 +48,7 @@ class CobroService {
                 }
 
                 // 4. Validar que la factura pertenece al estudiante
-                if (facturaDB.estudiante.toString() !== estudiante) {
+                if (facturaDB.estudiante.toString() !== estudiante.toString()) {
                     throw new Error(`La factura ${facturaDB.numeroFactura} no pertenece a este estudiante`);
                 }
 
@@ -177,6 +177,21 @@ class CobroService {
         }
 
         return cobros;
+    }
+
+    /**
+     * Obtiene un cobro por ID
+     */
+    async obtenerCobroPorId(cobroId) {
+        const cobro = await Cobro.findById(cobroId)
+            .populate('facturas.facturaId', 'numeroFactura total estado periodoFacturado')
+            .populate('estudiante', 'firstName lastName email dni');
+
+        if (!cobro) {
+            throw new Error('Cobro no encontrado');
+        }
+
+        return cobro;
     }
 
     /**
