@@ -5,8 +5,10 @@ import AuthNavbar from '../../components/common/AuthNavbar'
 import StudentAttendanceForm from '../../components/attendance/StudentAttendanceForm'
 import StudentPaymentModal from '../../components/payment/StudentPaymentModal'
 import PaymentDetailModal from '../../components/payment/PaymentDetailModal'
+import FacturaDetailModal from '../../components/payment/FacturaDetailModal'
 import apiAdapter from '../../services/apiAdapter'
 import cobroAPI from '../../services/cobroApi'
+import facturaAPI from '../../services/facturaApi'
 import '../../styles/variables.css'
 import '../../styles/auth.css'
 import '../../styles/charts.css'
@@ -32,12 +34,14 @@ const StudentDashboard = () => {
   const [misClases, setMisClases] = useState([])
   const [misCursos, setMisCursos] = useState([])
   const [misPagos, setMisPagos] = useState([])
+  const [misFacturas, setMisFacturas] = useState([])
   const [asistenciaStats, setAsistenciaStats] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedClase, setSelectedClase] = useState(null)
   const [showAttendanceForm, setShowAttendanceForm] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState(null)
+  const [selectedFactura, setSelectedFactura] = useState(null)
   const [cursoCalificacionesAbierto, setCursoCalificacionesAbierto] = useState(null)
   
   console.log('StudentDashboard - user:', user)
@@ -119,30 +123,87 @@ const StudentDashboard = () => {
         console.log('Respuesta de cobros:', cobrosResponse)
 
         if (cobrosResponse?.success && cobrosResponse?.data) {
-          // Transformar cobros al formato que espera el UI
-          const cobrosFormateados = cobrosResponse.data.map(cobro => {
-            // Crear descripción del concepto basado en las facturas
-            const conceptos = cobro.facturas?.map(f =>
-              `${f.facturaId?.numeroFactura || 'Factura'}`
-            ).join(', ') || 'Pago'
+          // Agrupar cobros por factura
+          const facturasCobrosMap = new Map()
+
+          cobrosResponse.data.forEach(cobro => {
+            cobro.facturas?.forEach(f => {
+              const facturaId = f.facturaId?._id || f.facturaId
+              const numeroFactura = f.facturaId?.numeroFactura || 'Factura'
+              const estadoFactura = f.facturaId?.estado || 'Desconocido'
+              const totalFactura = f.facturaId?.total || 0
+
+              if (!facturasCobrosMap.has(facturaId)) {
+                facturasCobrosMap.set(facturaId, {
+                  facturaId,
+                  numeroFactura,
+                  estadoFactura,
+                  totalFactura,
+                  cobros: [],
+                  totalCobrado: 0
+                })
+              }
+
+              const facturaData = facturasCobrosMap.get(facturaId)
+              facturaData.cobros.push({
+                cobroId: cobro._id,
+                numeroRecibo: cobro.numeroRecibo,
+                montoCobrado: f.montoCobrado,
+                metodoCobro: cobro.metodoCobro,
+                fechaCobro: cobro.fechaCobro
+              })
+              facturaData.totalCobrado += f.montoCobrado
+            })
+          })
+
+          // Convertir a array y formatear
+          const cobrosFormateados = Array.from(facturasCobrosMap.values()).map(factura => {
+            const saldoPendiente = factura.totalFactura - factura.totalCobrado
+            const esParcial = factura.estadoFactura === 'Cobrada Parcialmente'
+
+            // Ordenar cobros por fecha (más reciente primero)
+            factura.cobros.sort((a, b) => new Date(b.fechaCobro) - new Date(a.fechaCobro))
+
+            // Usar la fecha del último cobro
+            const ultimoCobro = factura.cobros[0]
 
             return {
-              id: cobro._id,
-              amount: cobro.montoTotal,
-              date: new Date(cobro.fechaCobro).toLocaleDateString('es-AR'),
-              status: 'paid', // Los cobros siempre están pagados
-              concept: conceptos,
-              metodoCobro: cobro.metodoCobro, // Separar el método de cobro
-              numeroRecibo: cobro.numeroRecibo
+              id: factura.facturaId,
+              facturaNumero: factura.numeroFactura,
+              amount: factura.totalCobrado,
+              totalFactura: factura.totalFactura,
+              saldoPendiente: saldoPendiente > 0 ? saldoPendiente : 0,
+              date: new Date(ultimoCobro.fechaCobro).toLocaleDateString('es-AR'),
+              status: esParcial ? 'partial' : 'paid',
+              concept: factura.numeroFactura,
+              metodoCobro: ultimoCobro.metodoCobro,
+              numeroRecibo: factura.cobros.length > 1
+                ? `${factura.cobros.length} recibos`
+                : ultimoCobro.numeroRecibo,
+              cobros: factura.cobros // Guardar todos los cobros para mostrar en detalle
             }
           })
-          console.log('Cobros formateados:', cobrosFormateados)
+
+          console.log('Cobros formateados agrupados:', cobrosFormateados)
           setMisPagos(cobrosFormateados)
         }
       } catch (error) {
         console.log('No se pudieron cargar los cobros:', error)
         // No es un error crítico, simplemente no mostramos pagos
         setMisPagos([])
+      }
+
+      // Cargar facturas del estudiante
+      try {
+        const facturasResponse = await facturaAPI.getMisFacturas()
+        console.log('Respuesta de facturas:', facturasResponse)
+
+        if (facturasResponse?.success && facturasResponse?.data) {
+          setMisFacturas(facturasResponse.data)
+        }
+      } catch (error) {
+        console.log('No se pudieron cargar las facturas:', error)
+        setMisFacturas([])
       }
     } catch (error) {
       console.error('Error cargando datos:', error)
@@ -307,6 +368,79 @@ const StudentDashboard = () => {
         {user?.nivel && <p className="dashboard-info-card__text"><strong>Nivel:</strong> {user.nivel.toUpperCase()}</p>}
         {user?.estadoAcademico && <p className="dashboard-info-card__text"><strong>Estado:</strong> {user.estadoAcademico}</p>}
       </div>
+
+      {/* Alerta de Facturas Pendientes */}
+      {(() => {
+        const facturasPendientes = misFacturas.filter(f =>
+          f.estado === 'Pendiente' ||
+          f.estado === 'Cobrada Parcialmente' ||
+          f.estado === 'Vencida'
+        );
+
+        const totalDeuda = facturasPendientes.reduce((sum, f) => {
+          // Si está parcialmente cobrada, usar el saldo pendiente, si no, el total
+          const monto = f.estado === 'Cobrada Parcialmente' && f.saldoPendiente !== undefined
+            ? f.saldoPendiente
+            : f.total;
+          return sum + monto;
+        }, 0);
+
+        if (facturasPendientes.length > 0) {
+          return (
+            <div
+              style={{
+                marginBottom: '1.5rem',
+                padding: '1.5rem',
+                borderRadius: '8px',
+                background: '#fff5f5',
+                border: '3px solid #dc3545',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                alignItems: 'center',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <FaExclamationTriangle style={{ fontSize: '2rem', color: '#dc3545' }} />
+                <strong style={{ color: '#dc3545', fontSize: '1.25rem' }}>
+                  Tienes facturas pendientes de pago
+                </strong>
+              </div>
+              <div style={{ fontSize: '1.1rem', color: '#721c24', lineHeight: '1.8' }}>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <strong style={{ fontSize: '1.3rem' }}>{facturasPendientes.length}</strong> factura{facturasPendientes.length > 1 ? 's' : ''} pendiente{facturasPendientes.length > 1 ? 's' : ''}
+                </div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#dc3545' }}>
+                  Total a pagar: ${totalDeuda.toLocaleString()}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                style={{
+                  marginTop: '0.5rem',
+                  padding: '0.75rem 2rem',
+                  background: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#c82333'}
+                onMouseLeave={(e) => e.target.style.background = '#dc3545'}
+              >
+                <FaDollarSign style={{ marginRight: '0.5rem' }} />
+                Pagar Ahora
+              </button>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Dashboard Cards */}
       <div className="dashboard-cards-grid">
@@ -687,9 +821,17 @@ const StudentDashboard = () => {
             misPagos.map((pago) => (
               <div
                 key={pago.id}
-                className={`dashboard-card__item ${pago.status === 'paid' ? 'dashboard-card__item--completed' : 'dashboard-card__item--pending'}`}
-                onClick={() => setSelectedPayment(pago.id)}
-                style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+                className={`dashboard-card__item ${pago.status === 'paid' ? 'dashboard-card__item--completed' : pago.status === 'partial' ? '' : 'dashboard-card__item--pending'}`}
+                onClick={() => {
+                  // Abrir modal de detalle de factura (que muestra todos los cobros)
+                  setSelectedFactura(pago.id)
+                }}
+                style={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  background: pago.status === 'partial' ? '#fff9e6' : '',
+                  border: pago.status === 'partial' ? '2px solid #ffc107' : ''
+                }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
@@ -697,12 +839,43 @@ const StudentDashboard = () => {
                   <span className="dashboard-card__item-title">
                     <FaDollarSign />
                     ${pago.amount.toLocaleString()}
+                    {pago.status === 'partial' && (
+                      <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '0.5rem' }}>
+                        de ${pago.totalFactura.toLocaleString()}
+                      </span>
+                    )}
                   </span>
-                  <span className={`status-badge ${pago.status === 'paid' ? 'status-badge--paid' : 'status-badge--pending'}`}>
-                    {pago.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                  <span
+                    className="status-badge"
+                    style={{
+                      background: pago.status === 'paid' ? '#d4edda' :
+                                 pago.status === 'partial' ? '#fff3cd' : '#f8d7da',
+                      color: pago.status === 'paid' ? '#155724' :
+                             pago.status === 'partial' ? '#856404' : '#721c24',
+                      border: pago.status === 'partial' ? '2px solid #ff9800' : ''
+                    }}
+                  >
+                    {pago.status === 'paid' ? 'Pagado Completo' : pago.status === 'partial' ? 'Pago Parcial' : 'Pendiente'}
                   </span>
                 </div>
                 <div className="dashboard-card__item-subtitle">{pago.concept}</div>
+
+                {/* Mostrar saldo pendiente en rojo para pagos parciales */}
+                {pago.status === 'partial' && pago.saldoPendiente > 0 && (
+                  <div style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem',
+                    background: '#fff5f5',
+                    border: '2px solid #dc3545',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: '#dc3545'
+                  }}>
+                    Saldo pendiente: ${pago.saldoPendiente.toLocaleString()}
+                  </div>
+                )}
+
                 {pago.metodoCobro && (
                   <div style={{
                     marginTop: '0.5rem',
@@ -716,13 +889,18 @@ const StudentDashboard = () => {
                     color: '#0F5C8C'
                   }}>
                     {pago.metodoCobro}
+                    {pago.cobros && pago.cobros.length > 1 && (
+                      <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem' }}>
+                        (+{pago.cobros.length - 1} más)
+                      </span>
+                    )}
                   </div>
                 )}
                 <div className="dashboard-card__item-meta">
                   {pago.date}
                   {pago.numeroRecibo && (
                     <span style={{ marginLeft: '0.5rem', color: '#6c757d' }}>
-                      · Recibo #{pago.numeroRecibo}
+                      · {pago.numeroRecibo}
                     </span>
                   )}
                   <span style={{ marginLeft: '0.5rem', color: '#0F5C8C', fontWeight: 600 }}>
@@ -842,6 +1020,14 @@ const StudentDashboard = () => {
         <PaymentDetailModal
           cobroId={selectedPayment}
           onClose={() => setSelectedPayment(null)}
+        />
+      )}
+
+      {/* Modal de detalle de factura */}
+      {selectedFactura && (
+        <FacturaDetailModal
+          facturaId={selectedFactura}
+          onClose={() => setSelectedFactura(null)}
         />
       )}
     </div>
