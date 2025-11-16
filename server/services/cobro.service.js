@@ -180,6 +180,20 @@ class CobroService {
     }
 
     /**
+     * Obtiene todos los cobros asociados a una factura específica
+     */
+    async obtenerCobrosPorFactura(facturaId) {
+        const cobros = await Cobro.find({
+            'facturas.facturaId': facturaId
+        })
+            .sort({ fechaCobro: -1 })
+            .populate('facturas.facturaId', 'numeroFactura total estado')
+            .populate('estudiante', 'firstName lastName');
+
+        return cobros;
+    }
+
+    /**
      * Obtiene todos los cobros (con filtros opcionales)
      */
     async listarCobros(filtros = {}) {

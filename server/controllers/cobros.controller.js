@@ -91,7 +91,29 @@ cobroCtrl.getCobrosByEstudiante = async (req, res) => {
 cobroCtrl.listarCobros = async (req, res) => {
     try {
         const cobros = await cobroService.listarCobros(req.query);
-        
+
+        res.status(200).json({
+            success: true,
+            total: cobros.length,
+            data: cobros
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Obtener cobros de una factura específica
+ * GET /api/cobros/factura/:idFactura
+ */
+cobroCtrl.getCobrosByFactura = async (req, res) => {
+    try {
+        const { idFactura } = req.params;
+        const cobros = await cobroService.obtenerCobrosPorFactura(idFactura);
+
         res.status(200).json({
             success: true,
             total: cobros.length,

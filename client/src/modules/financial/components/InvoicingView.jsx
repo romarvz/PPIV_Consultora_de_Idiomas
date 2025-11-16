@@ -16,6 +16,7 @@ import {
   FaSearch
 } from 'react-icons/fa';
 import facturaService from '../../../services/facturaService';
+import cobroAPI from '../../../services/cobroApi';
 import '../../../styles/auth.css';
 import '../../../styles/variables.css';
 
@@ -54,13 +55,30 @@ const InvoicingView = () => {
     conceptoCobro: ''
   });
 
+  // Estado para edición de items
+  const [itemEditandoIndex, setItemEditandoIndex] = useState(null);
+
   // Estado para modal de detalle
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [facturaDetalle, setFacturaDetalle] = useState(null);
+  const [cobrosFactura, setCobrosFactura] = useState([]);
 
   // Estado para modal de error/validación
   const [mostrarModalError, setMostrarModalError] = useState(false);
   const [errorModal, setErrorModal] = useState({ titulo: '', mensaje: '' });
+
+  // Estado para selección múltiple de facturas
+  const [facturasSeleccionadas, setFacturasSeleccionadas] = useState([]);
+
+  // Estados para modal de cobro
+  const [mostrarModalCobro, setMostrarModalCobro] = useState(false);
+  const [facturaParaCobro, setFacturaParaCobro] = useState(null);
+  const [datosCobro, setDatosCobro] = useState({
+    metodoCobro: 'Efectivo',
+    fechaCobro: new Date().toISOString().split('T')[0],
+    notas: '',
+    montoCobrar: 0
+  });
 
   useEffect(() => {
     cargarDatos();
@@ -131,6 +149,25 @@ const InvoicingView = () => {
     return cumpleNumero && cumpleEstudiante && cumplePeriodo && cumpleTotal && cumpleEstado;
   });
 
+  const toggleFacturaSeleccionada = (facturaId) => {
+    setFacturasSeleccionadas(prev => {
+      if (prev.includes(facturaId)) {
+        return prev.filter(id => id !== facturaId);
+      } else {
+        return [...prev, facturaId];
+      }
+    });
+  };
+
+  const seleccionarTodasFacturas = () => {
+    const facturasBorrador = facturasFiltradas.filter(f => f.estado === 'Borrador');
+    if (facturasSeleccionadas.length === facturasBorrador.length && facturasBorrador.length > 0) {
+      setFacturasSeleccionadas([]);
+    } else {
+      setFacturasSeleccionadas(facturasBorrador.map(f => f._id));
+    }
+  };
+
   const autorizarFactura = async (facturaId) => {
     if (!window.confirm('¿Autorizar esta factura? Una vez autorizada no podrá editarla ni eliminarla.')) {
       return;
@@ -150,7 +187,86 @@ const InvoicingView = () => {
     }
   };
 
+  const autorizarFacturasSeleccionadas = async () => {
+    if (facturasSeleccionadas.length === 0) {
+      mostrarMensaje('error', 'Seleccione al menos una factura');
+      return;
+    }
+
+    const cantidad = facturasSeleccionadas.length;
+    if (!window.confirm(`¿Autorizar ${cantidad} factura${cantidad > 1 ? 's' : ''}? Una vez autorizadas no podrá editarlas ni eliminarlas.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      let exitosas = 0;
+      let fallidas = 0;
+      const errores = [];
+
+      for (const facturaId of facturasSeleccionadas) {
+        try {
+          await facturaService.autorizarFactura(facturaId);
+          exitosas++;
+        } catch (error) {
+          fallidas++;
+          const factura = facturas.find(f => f._id === facturaId);
+          errores.push(`${factura?.numeroFactura}: ${error.response?.data?.message || error.message}`);
+        }
+      }
+
+      setFacturasSeleccionadas([]);
+
+      if (fallidas === 0) {
+        mostrarMensaje('success', `${exitosas} factura${exitosas > 1 ? 's autorizadas' : ' autorizada'} exitosamente`);
+      } else if (exitosas === 0) {
+        mostrarError('Error al Autorizar Facturas', errores.join('\n'));
+      } else {
+        mostrarError('Autorización Parcial', `${exitosas} factura${exitosas > 1 ? 's autorizadas' : ' autorizada'}. ${fallidas} fallida${fallidas > 1 ? 's' : ''}:\n${errores.join('\n')}`);
+      }
+
+      cargarDatos();
+    } catch (error) {
+      console.error('Error autorizando facturas:', error);
+      mostrarError('Error al Autorizar Facturas', 'Error inesperado durante el proceso');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const eliminarFactura = async (facturaId) => {
+    // Obtener la factura que se quiere eliminar
+    const facturaAEliminar = facturas.find(f => f._id === facturaId);
+
+    if (!facturaAEliminar) {
+      mostrarError('Error', 'No se encontró la factura');
+      return;
+    }
+
+    // Extraer el número correlativo de la factura (último número después del último guion)
+    const numeroFacturaAEliminar = facturaAEliminar.numeroFactura;
+    const partes = numeroFacturaAEliminar.split('-');
+    const correlativoAEliminar = parseInt(partes[partes.length - 1]);
+
+    // Verificar si hay facturas borradores con número posterior
+    const facturasPosteriores = facturas.filter(f => {
+      if (f._id === facturaId) return false; // No contar la misma factura
+
+      const partesOtra = f.numeroFactura.split('-');
+      const correlativoOtra = parseInt(partesOtra[partesOtra.length - 1]);
+
+      return correlativoOtra > correlativoAEliminar;
+    });
+
+    if (facturasPosteriores.length > 0) {
+      const numerosPosteriores = facturasPosteriores.map(f => f.numeroFactura).join(', ');
+      mostrarError(
+        'No se puede eliminar',
+        `No puede eliminar esta factura porque existen facturas con números posteriores: ${numerosPosteriores.substring(0, 100)}${numerosPosteriores.length > 100 ? '...' : ''}`
+      );
+      return;
+    }
+
     if (!window.confirm('¿Eliminar esta factura?')) {
       return;
     }
@@ -181,9 +297,100 @@ const InvoicingView = () => {
     setVistaActiva('nueva');
   };
 
-  const verDetalle = (factura) => {
+  const verDetalle = async (factura) => {
     setFacturaDetalle(factura);
     setMostrarDetalle(true);
+
+    // Cargar cobros de la factura
+    try {
+      const cobros = await cobroAPI.obtenerCobrosPorFactura(factura._id);
+      setCobrosFactura(cobros.data || []);
+    } catch (error) {
+      console.error('Error cargando cobros:', error);
+      setCobrosFactura([]);
+    }
+  };
+
+  const abrirModalCobro = async (factura) => {
+    setFacturaParaCobro(factura);
+    setMostrarModalCobro(true);
+
+    // Calcular saldo pendiente
+    let saldoPendiente = factura.total;
+    let totalCobrado = 0;
+
+    try {
+      const response = await cobroAPI.obtenerCobrosPorFactura(factura._id);
+      const cobros = response.data || [];
+
+      console.log('Cobros encontrados:', cobros);
+
+      totalCobrado = cobros.reduce((sum, cobro) => {
+        const facturaEnCobro = cobro.facturas.find(f => {
+          const facturaIdEnCobro = typeof f.facturaId === 'object' ? f.facturaId._id : f.facturaId;
+          return facturaIdEnCobro === factura._id;
+        });
+
+        if (facturaEnCobro) {
+          console.log('Monto cobrado en este recibo:', facturaEnCobro.montoCobrado);
+          return sum + facturaEnCobro.montoCobrado;
+        }
+        return sum;
+      }, 0);
+
+      saldoPendiente = factura.total - totalCobrado;
+      console.log('Total factura:', factura.total, 'Total cobrado:', totalCobrado, 'Saldo pendiente:', saldoPendiente);
+    } catch (error) {
+      console.error('Error calculando saldo:', error);
+    }
+
+    setDatosCobro({
+      metodoCobro: 'Efectivo',
+      fechaCobro: new Date().toISOString().split('T')[0],
+      notas: '',
+      montoCobrar: saldoPendiente
+    });
+  };
+
+  const registrarCobro = async () => {
+    try {
+      // Validar monto
+      if (!datosCobro.montoCobrar || datosCobro.montoCobrar <= 0) {
+        mostrarError('Error de Validación', 'El monto a cobrar debe ser mayor a cero');
+        return;
+      }
+
+      setLoading(true);
+
+      const estudianteId = facturaParaCobro.estudiante._id || facturaParaCobro.estudiante;
+
+      const cobro = {
+        estudiante: estudianteId,
+        facturas: [{
+          facturaId: facturaParaCobro._id,
+          montoCobrado: parseFloat(datosCobro.montoCobrar)
+        }],
+        metodoCobro: datosCobro.metodoCobro,
+        fechaCobro: datosCobro.fechaCobro,
+        notas: datosCobro.notas
+      };
+
+      const resultado = await cobroAPI.registrarCobro(cobro);
+
+      mostrarMensaje('success', resultado.message || 'Cobro registrado exitosamente');
+
+      setMostrarModalCobro(false);
+      setFacturaParaCobro(null);
+
+      cargarDatos();
+
+    } catch (error) {
+      console.error('Error registrando cobro:', error);
+      const mensajeError = error.message || 'Error al registrar cobro';
+      mostrarError('Error al Registrar Cobro', mensajeError);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEstudianteChange = (estudianteId) => {
@@ -222,10 +429,22 @@ const InvoicingView = () => {
       conceptoCobro: itemTemp.conceptoCobro,
     };
 
-    setFactura({
-      ...factura,
-      itemFacturaSchema: [...factura.itemFacturaSchema, nuevoItem],
-    });
+    if (itemEditandoIndex !== null) {
+      // Actualizar item existente
+      const nuevosItems = [...factura.itemFacturaSchema];
+      nuevosItems[itemEditandoIndex] = nuevoItem;
+      setFactura({
+        ...factura,
+        itemFacturaSchema: nuevosItems,
+      });
+      setItemEditandoIndex(null);
+    } else {
+      // Agregar nuevo item
+      setFactura({
+        ...factura,
+        itemFacturaSchema: [...factura.itemFacturaSchema, nuevoItem],
+      });
+    }
 
     setItemTemp({
       descripcion: "",
@@ -235,6 +454,29 @@ const InvoicingView = () => {
     });
   };
 
+  const editarItem = (index) => {
+    const item = factura.itemFacturaSchema[index];
+    setItemTemp({
+      descripcion: item.descripcion,
+      cantidad: item.cantidad,
+      precioUnitario: item.precioUnitario,
+      conceptoCobro: item.conceptoCobro || ''
+    });
+    setItemEditandoIndex(index);
+    // Scroll hacia el formulario de items
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelarEdicionItem = () => {
+    setItemTemp({
+      descripcion: "",
+      cantidad: 1,
+      precioUnitario: 0,
+      conceptoCobro: "",
+    });
+    setItemEditandoIndex(null);
+  };
+
   const eliminarItem = (index) => {
     const nuevosItems = factura.itemFacturaSchema.filter((_, i) => i !== index);
     setFactura({ ...factura, itemFacturaSchema: nuevosItems });
@@ -242,6 +484,32 @@ const InvoicingView = () => {
 
   const calcularTotal = () => {
     return factura.itemFacturaSchema.reduce((sum, item) => sum + item.subtotal, 0);
+  };
+
+  // Función para obtener la fecha mínima permitida de facturación
+  const obtenerFechaMinimaPermitida = () => {
+    if (facturas.length === 0) {
+      // Si no hay facturas, permitir hasta 10 días atrás
+      const hoy = new Date();
+      const hace10Dias = new Date(hoy);
+      hace10Dias.setDate(hoy.getDate() - 10);
+      return hace10Dias.toISOString().split('T')[0];
+    }
+
+    // Obtener la fecha de vencimiento más reciente de todas las facturas
+    const fechasVencimiento = facturas.map(f => new Date(f.fechaVencimiento));
+    const fechaMasReciente = new Date(Math.max(...fechasVencimiento));
+    return fechaMasReciente.toISOString().split('T')[0];
+  };
+
+  // Función para validar la fecha de vencimiento
+  const validarFechaVencimiento = (fecha) => {
+    if (!fecha) return true; // No validar si está vacío
+
+    const fechaSeleccionada = new Date(fecha);
+    const fechaMinima = new Date(obtenerFechaMinimaPermitida());
+
+    return fechaSeleccionada >= fechaMinima;
   };
 
   const enviarFactura = async () => {
@@ -255,6 +523,16 @@ const InvoicingView = () => {
     }
     if (!factura.fechaVencimiento) {
       mostrarMensaje('error', 'Ingrese la fecha de vencimiento');
+      return;
+    }
+    if (!validarFechaVencimiento(factura.fechaVencimiento)) {
+      const fechaMinima = obtenerFechaMinimaPermitida();
+      const fechaMinimaFormateada = new Date(fechaMinima).toLocaleDateString('es-AR');
+      if (facturas.length === 0) {
+        mostrarError('Fecha inválida', `La fecha de vencimiento debe ser como mínimo ${fechaMinimaFormateada} (no más de 10 días hacia atrás desde hoy)`);
+      } else {
+        mostrarError('Fecha inválida', `La fecha de vencimiento debe ser igual o posterior a ${fechaMinimaFormateada} (fecha de la última factura)`);
+      }
       return;
     }
     if (factura.itemFacturaSchema.length === 0) {
@@ -500,6 +778,15 @@ const InvoicingView = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                  <th style={{ padding: '1rem', textAlign: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-secondary)', width: '50px' }}>
+                    <input
+                      type="checkbox"
+                      checked={facturasSeleccionadas.length > 0 && facturasSeleccionadas.length === facturasFiltradas.filter(f => f.estado === 'Borrador').length && facturasFiltradas.filter(f => f.estado === 'Borrador').length > 0}
+                      onChange={seleccionarTodasFacturas}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      title="Seleccionar todas las facturas en borrador"
+                    />
+                  </th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-secondary)' }}>Número</th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-secondary)' }}>Estudiante</th>
                   <th style={{ padding: '1rem', textAlign: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-secondary)' }}>Período</th>
@@ -511,7 +798,26 @@ const InvoicingView = () => {
               </thead>
               <tbody>
                 {facturasFiltradas.map((fact) => (
-                  <tr key={fact._id} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                  <tr
+                    key={fact._id}
+                    style={{
+                      borderBottom: '1px solid var(--border-light)',
+                      backgroundColor: facturasSeleccionadas.includes(fact._id) ? 'var(--success-light)' : 'transparent',
+                      transition: 'background-color var(--transition-fast)'
+                    }}
+                  >
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      {fact.estado === 'Borrador' ? (
+                        <input
+                          type="checkbox"
+                          checked={facturasSeleccionadas.includes(fact._id)}
+                          onChange={() => toggleFacturaSeleccionada(fact._id)}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                      ) : (
+                        <span style={{ color: 'var(--text-disabled)' }}>-</span>
+                      )}
+                    </td>
                     <td style={{ padding: '1rem', fontWeight: 'var(--font-weight-medium)' }}>{fact.numeroFactura}</td>
                     <td style={{ padding: '1rem' }}>
                       {fact.estudiante?.firstName} {fact.estudiante?.lastName}
@@ -599,9 +905,7 @@ const InvoicingView = () => {
                             
                             {(fact.estado === 'Pendiente' || fact.estado === 'Cobrada Parcialmente') && (
                               <button
-                                onClick={() => {
-                                  alert('Funcionalidad de cobro en desarrollo');
-                                }}
+                                onClick={() => abrirModalCobro(fact)}
                                 title="Registrar cobro"
                                 style={{
                                   padding: '0.5rem 1rem',
@@ -630,6 +934,33 @@ const InvoicingView = () => {
           </div>
         )}
       </div>
+
+      {/* Botón de autorizar seleccionadas */}
+      {facturasSeleccionadas.length > 0 && (
+        <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
+          <button
+            onClick={autorizarFacturasSeleccionadas}
+            disabled={loading}
+            className="cta-btn"
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: 'var(--border-radius)',
+              border: 'none',
+              backgroundColor: 'var(--success)',
+              color: 'white',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-semibold)',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            <FaCheckCircle /> Autorizar Seleccionadas ({facturasSeleccionadas.length})
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -709,16 +1040,42 @@ const InvoicingView = () => {
                 <FaCalendar style={{ marginRight: "0.25rem" }} />
                 Fecha Vencimiento *
               </label>
-              <input type="date" value={factura.fechaVencimiento} onChange={(e) => setFactura({ ...factura, fechaVencimiento: e.target.value })} style={{ width: "100%", padding: "0.75rem", borderRadius: "var(--border-radius)", border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--text-primary)", fontSize: "var(--font-size-sm)" }} />
+              <input type="date" value={factura.fechaVencimiento} onChange={(e) => setFactura({ ...factura, fechaVencimiento: e.target.value })} min={obtenerFechaMinimaPermitida()} style={{ width: "100%", padding: "0.75rem", borderRadius: "var(--border-radius)", border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--text-primary)", fontSize: "var(--font-size-sm)" }} />
+              {facturas.length === 0 && (
+                <p style={{ fontSize: "var(--font-size-xs)", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                  Puede facturar hasta 10 días hacia atrás desde hoy
+                </p>
+              )}
+              {facturas.length > 0 && (
+                <p style={{ fontSize: "var(--font-size-xs)", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                  La fecha debe ser igual o posterior a {new Date(obtenerFechaMinimaPermitida()).toLocaleDateString('es-AR')}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
         <div className="dashboard-card">
-          <h4 className="dashboard-card__title">
-            <FaPlus style={{ marginRight: "0.5rem" }} />
-            Agregar Item
-          </h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h4 className="dashboard-card__title">
+              {itemEditandoIndex !== null ? (
+                <>
+                  <FaEdit style={{ marginRight: "0.5rem" }} />
+                  Editar Item
+                </>
+              ) : (
+                <>
+                  <FaPlus style={{ marginRight: "0.5rem" }} />
+                  Agregar Item
+                </>
+              )}
+            </h4>
+            {itemEditandoIndex !== null && (
+              <button onClick={cancelarEdicionItem} style={{ padding: "0.5rem 1rem", borderRadius: "var(--border-radius)", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)", fontSize: "var(--font-size-sm)", cursor: "pointer" }}>
+                <FaTimes style={{ marginRight: "0.25rem" }} /> Cancelar
+              </button>
+            )}
+          </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: "0.75rem", marginTop: "1rem" }}>
             <div>
@@ -749,8 +1106,16 @@ const InvoicingView = () => {
               <input type="number" min="0" step="0.01" value={itemTemp.precioUnitario} onChange={(e) => setItemTemp({ ...itemTemp, precioUnitario: parseFloat(e.target.value) || 0 })} style={{ width: "100%", padding: "0.75rem", borderRadius: "var(--border-radius)", border: "1px solid var(--input-border)", backgroundColor: "var(--input-bg)", color: "var(--text-primary)", fontSize: "var(--font-size-sm)" }} />
             </div>
 
-            <button onClick={agregarItem} className="cta-btn" style={{ padding: "0.75rem 1.25rem", marginTop: "1.75rem", borderRadius: "var(--border-radius)", border: "none", display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "var(--font-size-sm)", cursor: "pointer" }}>
-              <FaPlus /> Agregar
+            <button onClick={agregarItem} className="cta-btn" style={{ padding: "0.75rem 1.25rem", marginTop: "1.75rem", borderRadius: "var(--border-radius)", border: "none", display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "var(--font-size-sm)", cursor: "pointer", backgroundColor: itemEditandoIndex !== null ? "var(--warning)" : "var(--success)" }}>
+              {itemEditandoIndex !== null ? (
+                <>
+                  <FaSave /> Actualizar
+                </>
+              ) : (
+                <>
+                  <FaPlus /> Agregar
+                </>
+              )}
             </button>
           </div>
 
@@ -787,9 +1152,14 @@ const InvoicingView = () => {
                     <td style={{ padding: "0.75rem", textAlign: "right", fontSize: "var(--font-size-sm)" }}>${item.precioUnitario.toLocaleString()}</td>
                     <td style={{ padding: "0.75rem", textAlign: "right", fontWeight: "var(--font-weight-semibold)", fontSize: "var(--font-size-sm)" }}>${item.subtotal.toLocaleString()}</td>
                     <td style={{ padding: "0.75rem", textAlign: "center" }}>
-                      <button onClick={() => eliminarItem(index)} style={{ padding: "0.375rem 0.75rem", borderRadius: "var(--border-radius-sm)", border: "none", backgroundColor: "var(--error)", color: "white", cursor: "pointer", fontSize: "var(--font-size-sm)" }}>
-                        <FaTrash />
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <button onClick={() => editarItem(index)} style={{ padding: "0.375rem 0.75rem", borderRadius: "var(--border-radius-sm)", border: "none", backgroundColor: "var(--info)", color: "white", cursor: "pointer", fontSize: "var(--font-size-sm)" }} title="Editar item">
+                          <FaEdit />
+                        </button>
+                        <button onClick={() => eliminarItem(index)} style={{ padding: "0.375rem 0.75rem", borderRadius: "var(--border-radius-sm)", border: "none", backgroundColor: "var(--error)", color: "white", cursor: "pointer", fontSize: "var(--font-size-sm)" }} title="Eliminar item">
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -832,7 +1202,7 @@ const InvoicingView = () => {
       {vistaActiva === 'lista' ? renderListaFacturas() : renderNuevaFactura()}
 
       {mostrarModalError && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: 'var(--border-radius-lg)', padding: '2rem', maxWidth: '500px', width: '90%', boxShadow: 'var(--shadow-xl)', border: '2px solid var(--error)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--error-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -901,7 +1271,7 @@ const InvoicingView = () => {
                   </div>
                   <div>
                     <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--font-weight-medium)' }}>Vto. CAE</label>
-                    <p style={{ fontSize: 'var(--font-size-base)' }}>{new Date(facturaDetalle.fechaVencimientoCAE).toLocaleDateString()}</p>
+                    <p style={{ fontSize: 'var(--font-size-base)' }}>{facturaDetalle.caeVencimiento ? new Date(facturaDetalle.caeVencimiento).toLocaleDateString() : new Date(facturaDetalle.fechaEmision).toLocaleDateString()}</p>
                   </div>
                 </>
               )}
@@ -937,9 +1307,288 @@ const InvoicingView = () => {
               </table>
             </div>
 
+            {cobrosFactura.length > 0 && (
+              <div style={{ marginTop: '2rem' }}>
+                <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', marginBottom: '1rem', color: 'var(--primary)' }}>Cobros Registrados</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Recibo</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Fecha</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Método</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Monto</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>Notas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cobrosFactura.map((cobro) => {
+                      // Encontrar el monto cobrado de esta factura específica
+                      const facturaEnCobro = cobro.facturas.find(f => f.facturaId._id === facturaDetalle._id || f.facturaId === facturaDetalle._id);
+                      const montoCobrado = facturaEnCobro ? facturaEnCobro.montoCobrado : 0;
+
+                      return (
+                        <tr key={cobro._id} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                          <td style={{ padding: '0.75rem', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>{cobro.numeroRecibo}</td>
+                          <td style={{ padding: '0.75rem', fontSize: 'var(--font-size-sm)' }}>{new Date(cobro.fechaCobro).toLocaleDateString()}</td>
+                          <td style={{ padding: '0.75rem', fontSize: 'var(--font-size-sm)' }}>
+                            <span style={{
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: 'var(--border-radius-sm)',
+                              backgroundColor: 'var(--success-light)',
+                              color: 'var(--success-dark)',
+                              fontSize: 'var(--font-size-xs)',
+                              fontWeight: 'var(--font-weight-medium)'
+                            }}>
+                              {cobro.metodoCobro}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-sm)', color: 'var(--success)' }}>
+                            ${montoCobrado.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '0.75rem', fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>{cobro.notas || '-'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ borderTop: '2px solid var(--border-color)' }}>
+                      <td colSpan="3" style={{ padding: '1rem', textAlign: 'right', fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-base)' }}>TOTAL COBRADO:</td>
+                      <td style={{ padding: '1rem', textAlign: 'right', fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-bold)', color: 'var(--success)' }}>
+                        ${cobrosFactura.reduce((sum, cobro) => {
+                          const facturaEnCobro = cobro.facturas.find(f => f.facturaId._id === facturaDetalle._id || f.facturaId === facturaDetalle._id);
+                          return sum + (facturaEnCobro ? facturaEnCobro.montoCobrado : 0);
+                        }, 0).toLocaleString()}
+                      </td>
+                      <td></td>
+                    </tr>
+                    {facturaDetalle.estado === 'Cobrada Parcialmente' && (
+                      <tr>
+                        <td colSpan="3" style={{ padding: '0.5rem 1rem', textAlign: 'right', fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-base)', color: 'var(--error)' }}>SALDO PENDIENTE:</td>
+                        <td style={{ padding: '0.5rem 1rem', textAlign: 'right', fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-bold)', color: 'var(--error)' }}>
+                          ${(facturaDetalle.total - cobrosFactura.reduce((sum, cobro) => {
+                            const facturaEnCobro = cobro.facturas.find(f => f.facturaId._id === facturaDetalle._id || f.facturaId === facturaDetalle._id);
+                            return sum + (facturaEnCobro ? facturaEnCobro.montoCobrado : 0);
+                          }, 0)).toLocaleString()}
+                        </td>
+                        <td></td>
+                      </tr>
+                    )}
+                  </tfoot>
+                </table>
+              </div>
+            )}
+
             <div style={{ marginTop: '2rem', textAlign: 'right' }}>
               <button onClick={() => setMostrarDetalle(false)} style={{ padding: '0.75rem 2rem', borderRadius: 'var(--border-radius)', border: '2px solid var(--gray-300)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 'var(--font-size-base)', cursor: 'pointer', fontWeight: 'var(--font-weight-semibold)' }}>
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Cobro */}
+      {mostrarModalCobro && facturaParaCobro && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'var(--card-bg)',
+            borderRadius: 'var(--border-radius-lg)',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: 'var(--shadow-xl)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--success-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <FaDollarSign style={{ fontSize: '1.5rem', color: 'var(--success)' }} />
+              </div>
+              <h2 style={{
+                fontSize: 'var(--font-size-xl)',
+                fontWeight: 'var(--font-weight-bold)',
+                color: 'var(--primary)',
+                margin: 0
+              }}>
+                Cobrar Factura
+              </h2>
+            </div>
+
+            <div style={{
+              padding: '1rem',
+              backgroundColor: 'var(--info-light)',
+              borderRadius: 'var(--border-radius)',
+              marginBottom: '1.5rem',
+              border: '1px solid var(--info)'
+            }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)' }}>
+                <strong>Factura:</strong> {facturaParaCobro.numeroFactura}
+              </p>
+              <p style={{ margin: '0 0 0.5rem 0', fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)' }}>
+                <strong>Estudiante:</strong> {facturaParaCobro.estudiante?.firstName} {facturaParaCobro.estudiante?.lastName}
+              </p>
+              <p style={{ margin: '0.5rem 0 0 0', fontSize: 'var(--font-size-base)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-primary)' }}>
+                <strong>Total Factura:</strong> ${facturaParaCobro.total.toLocaleString()}
+              </p>
+              {facturaParaCobro.estado === 'Cobrada Parcialmente' && (
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: 'var(--font-size-base)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--error)' }}>
+                  <strong>Saldo Pendiente:</strong> ${datosCobro.montoCobrar.toLocaleString()}
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                  <FaDollarSign style={{ marginRight: '0.25rem' }} />
+                  Monto a Cobrar *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max={facturaParaCobro.total}
+                  step="0.01"
+                  value={datosCobro.montoCobrar}
+                  onChange={(e) => setDatosCobro({ ...datosCobro, montoCobrar: parseFloat(e.target.value) || 0 })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--border-radius)',
+                    border: '1px solid var(--input-border)',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    fontSize: 'var(--font-size-base)',
+                    fontWeight: 'var(--font-weight-semibold)'
+                  }}
+                />
+                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                  Puede cobrar parcialmente. Máximo: ${facturaParaCobro.total.toLocaleString()}
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Método de Cobro *
+                </label>
+                <select
+                  value={datosCobro.metodoCobro}
+                  onChange={(e) => setDatosCobro({ ...datosCobro, metodoCobro: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--border-radius)',
+                    border: '1px solid var(--input-border)',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    fontSize: 'var(--font-size-sm)'
+                  }}
+                >
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Transferencia">Transferencia</option>
+                  <option value="Mercado Pago">Mercado Pago</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                  <FaCalendar style={{ marginRight: '0.25rem' }} />
+                  Fecha de Cobro *
+                </label>
+                <input
+                  type="date"
+                  value={datosCobro.fechaCobro}
+                  onChange={(e) => setDatosCobro({ ...datosCobro, fechaCobro: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--border-radius)',
+                    border: '1px solid var(--input-border)',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    fontSize: 'var(--font-size-sm)'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Notas (opcional)
+                </label>
+                <textarea
+                  value={datosCobro.notas}
+                  onChange={(e) => setDatosCobro({ ...datosCobro, notas: e.target.value })}
+                  placeholder="Observaciones adicionales..."
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--border-radius)',
+                    border: '1px solid var(--input-border)',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    fontSize: 'var(--font-size-sm)',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setMostrarModalCobro(false)}
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 2rem',
+                  borderRadius: 'var(--border-radius)',
+                  border: '2px solid var(--gray-300)',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  fontSize: 'var(--font-size-base)',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  opacity: loading ? 0.6 : 1
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={registrarCobro}
+                disabled={loading}
+                className="cta-btn"
+                style={{
+                  padding: '0.75rem 2rem',
+                  borderRadius: 'var(--border-radius)',
+                  border: 'none',
+                  backgroundColor: loading ? 'var(--gray-400)' : 'var(--success)',
+                  color: 'white',
+                  fontSize: 'var(--font-size-base)',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  opacity: loading ? 0.6 : 1
+                }}
+              >
+                <FaCheckCircle />
+                {loading ? 'Registrando...' : 'Confirmar Cobro'}
               </button>
             </div>
           </div>
