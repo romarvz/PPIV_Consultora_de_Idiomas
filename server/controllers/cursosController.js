@@ -265,6 +265,34 @@ exports.desinscribirEstudiante = async (req, res) => {
 };
 
 /**
+ * Actualizar notas/calificación de una inscripción
+ * PATCH /api/cursos/:cursoId/inscripciones/:inscripcionId/notas
+ */
+exports.actualizarNotasInscripcion = async (req, res) => {
+  try {
+    const { cursoId, inscripcionId } = req.params;
+    const payloadNotas = req.body || {};
+
+    const inscripcion = await cursosService.updateNotasInscripcion(
+      cursoId,
+      inscripcionId,
+      payloadNotas
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Notas de la inscripción actualizadas correctamente',
+      data: inscripcion
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
  * Obtener estudiantes de un curso
  * GET /api/cursos/:id/estudiantes
  */

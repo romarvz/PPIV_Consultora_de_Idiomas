@@ -137,6 +137,16 @@ const apiAdapter = {
     },
 
     /**
+     * Marcar clase como completada (actualiza progreso de inscripciones)
+     */
+    completarClase: async (claseId) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Clase completada (mock)' } }
+      }
+      return await api.patch(`/clases/${claseId}/completar`)
+    },
+
+    /**
      * Obtener asistencia de una clase
      */
     obtenerAsistencia: async (claseId) => {
@@ -374,6 +384,32 @@ const apiAdapter = {
         };
       }
       return await api.get(`/cursos/${cursoId}/estudiantes`);
+    },
+    /**
+     * Actualizar notas/calificación de una inscripción de curso (alias en español)
+     */
+    updateEnrollmentNotes: async (cursoId, inscripcionId, payload) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Notas actualizadas (mock)', data: payload } };
+      }
+      return await api.patch(
+        `/cursos/${cursoId}/inscripciones/${inscripcionId}/notas`,
+        payload || {}
+      );
+    },
+
+    /**
+     * Actualizar notas/calificación de una inscripción de curso
+     * `payload` puede incluir: notasAdicionales, tp1, tp2, parcial1, parcial2, examenFinal
+     */
+    updateEnrollmentNotes: async (cursoId, inscripcionId, payload) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Notas actualizadas (mock)', data: payload } };
+      }
+      return await api.patch(
+        `/cursos/${cursoId}/inscripciones/${inscripcionId}/notas`,
+        payload || {}
+      );
     },
     removeStudent: async (cursoId, estudianteId) => {
       if (USE_MOCK) {

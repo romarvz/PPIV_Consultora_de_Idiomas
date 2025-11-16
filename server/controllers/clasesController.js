@@ -399,6 +399,7 @@ exports.obtenerClasesPorProfesor = async (req, res) => {
 exports.obtenerClasesEstudiante = async (req, res) => {
   try {
     const estudianteId = req.user.id || req.user._id;
+    console.log('obtenerClasesEstudiante - user en token:', req.user);
     const filtros = {
       estado: req.query.estado,
       fechaInicio: req.query.fechaInicio,

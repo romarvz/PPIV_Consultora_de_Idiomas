@@ -451,9 +451,21 @@ const TeachersManagement = ({ onBack }) => {
     );
   }, []);
 
-  // Memoizar datos filtrados para optimización
+  // Memoizar datos filtrados y ORDENADOS alfabéticamente
   const filteredTeachers = useMemo(() => {
-    return teachers;
+    const copia = Array.isArray(teachers) ? [...teachers] : [];
+    return copia.sort((a, b) => {
+      const lastA = (a.lastName || '').toLowerCase();
+      const lastB = (b.lastName || '').toLowerCase();
+      if (lastA < lastB) return -1;
+      if (lastA > lastB) return 1;
+
+      const firstA = (a.firstName || '').toLowerCase();
+      const firstB = (b.firstName || '').toLowerCase();
+      if (firstA < firstB) return -1;
+      if (firstA > firstB) return 1;
+      return 0;
+    });
   }, [teachers]);
 
   return (

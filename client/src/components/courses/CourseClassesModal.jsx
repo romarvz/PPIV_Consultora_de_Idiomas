@@ -18,7 +18,7 @@ const modalStyles = {
   },
   container: {
     width: '100%',
-    maxWidth: '960px',
+    maxWidth: '1100px',
     background: 'white',
     borderRadius: '12px',
     boxShadow: '0 15px 40px rgba(0,0,0,0.2)',
@@ -49,7 +49,8 @@ const modalStyles = {
   },
   content: {
     padding: '1.5rem',
-    overflowY: 'auto'
+    overflowY: 'auto',
+    overflowX: 'hidden'
   },
   sectionTitle: {
     fontSize: '1rem',
@@ -288,6 +289,27 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
   const handleRegistrarAsistencia = (clase) => {
     setSelectedClaseForAttendance(clase);
     setShowAttendanceForm(true);
+  };
+
+  const handleCompletarClase = async (clase) => {
+    if (!clase?._id) return;
+
+    const confirmed = window.confirm(
+      'Marcar esta clase como COMPLETADA actualizará el progreso de los alumnos según la asistencia registrada. ¿Querés continuar?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await apiAdapter.classes.completarClase(clase._id);
+      setSuccess('La clase fue marcada como completada y el progreso se actualizó.');
+      await loadClasses();
+    } catch (err) {
+      console.error('Error completando clase:', err);
+      const message =
+        err?.response?.data?.error || err?.message || 'No se pudo completar la clase.';
+      setError(message);
+    }
   };
 
   const handleAsistenciaRegistrada = () => {
@@ -584,7 +606,14 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                             clase.estado === 'cancelada' ? (
                               <small style={{ color: '#6c757d' }}>Cancelada</small>
                             ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'stretch' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '0.4rem',
+                                  alignItems: 'stretch'
+                                }}
+                              >
                                 <button
                                   onClick={() => handleEditClass(clase)}
                                   style={{
@@ -598,6 +627,21 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                                   }}
                                 >
                                   Editar
+                                </button>
+                                <button
+                                  onClick={() => handleCompletarClase(clase)}
+                                  style={{
+                                    background: '#1e3a8a', // azul más oscuro
+                                    color: '#fff',
+                                    border: 'none',
+                                    padding: '0.45rem 0.75rem',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem'
+                                  }}
+                                  title="Marcar esta clase como completada"
+                                >
+                                  Marcar completada
                                 </button>
                                 <button
                                   onClick={() => handleCancelClass(clase)}

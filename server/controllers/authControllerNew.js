@@ -227,7 +227,7 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // find user by email
+    // find user by email (la función ya normaliza el email)
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(401).json({
@@ -256,41 +256,57 @@ const login = async (req, res) => {
       });
     }
 
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    // Update last login (sin trigger del pre-save para evitar re-hashear password)
+    await BaseUser.updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: new Date() } }
+    );
 
     // Generate token
     const token = generateToken(user._id);
 
     // Check if must change password
     if (user.mustChangePassword) {
-      return res.json({
-        success: true,
-        message: 'Debe cambiar su contraseña',
-        mustChangePassword: true,
-        data: {
-          token,
-          user: user.toJSON()
-        }
-      });
+      try {
+        const userJSON = user.toJSON();
+        return res.json({
+          success: true,
+          message: 'Debe cambiar su contraseña',
+          mustChangePassword: true,
+          data: {
+            token,
+            user: userJSON
+          }
+        });
+      } catch (jsonError) {
+        console.error('Error convirtiendo usuario a JSON (mustChangePassword):', jsonError);
+        throw jsonError;
+      }
     }
 
-    res.json({
-      success: true,
-      message: 'Login exitoso',
-      data: {
-        token,
-        user: user.toJSON()
-      }
-    });
+    try {
+      const userJSON = user.toJSON();
+      res.json({
+        success: true,
+        message: 'Login exitoso',
+        data: {
+          token,
+          user: userJSON
+        }
+      });
+    } catch (jsonError) {
+      console.error('Error convirtiendo usuario a JSON:', jsonError);
+      throw jsonError;
+    }
 
   } catch (error) {
     console.error('Error en login:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

@@ -157,6 +157,13 @@ router.patch(
   cursosController.cambiarEstadoCurso
 );
 
+// Update enrollment notes (academic sheet) for a course
+router.patch(
+  '/:cursoId/inscripciones/:inscripcionId/notas',
+  requireRole(['admin', 'profesor']),
+  cursosController.actualizarNotasInscripcion
+);
+
 // ============================================
 // ROUTES FOR ADMIN
 // ============================================

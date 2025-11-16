@@ -84,6 +84,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [selectedClase, setSelectedClase] = useState(null)
   const [showAttendanceForm, setShowAttendanceForm] = useState(false)
+  const [cursoCalificacionesAbierto, setCursoCalificacionesAbierto] = useState(null)
   
   console.log('StudentDashboard - user:', user)
   console.log('StudentDashboard - mustChangePassword:', mustChangePassword)
@@ -107,6 +108,33 @@ const StudentDashboard = () => {
         const cursos = cursosResponse.data.data || []
         console.log('Cursos cargados:', cursos.length, cursos)
         setMisCursos(cursos)
+        
+        // Cargar estadísticas de asistencia para TODOS los cursos (no solo los que tienen clases)
+        const cursosIds = cursos.map(c => c._id || c.id).filter(Boolean)
+        console.log('Cargando estadísticas para cursos:', cursosIds)
+        
+        const statsPromises = cursosIds.map(cursoId => 
+          apiAdapter.classes.obtenerEstadisticasAsistencia(estudianteId, cursoId)
+            .catch(err => {
+              console.error(`Error cargando estadísticas para curso ${cursoId}:`, err)
+              return null
+            })
+        )
+        const statsResults = await Promise.all(statsPromises)
+        
+        const statsMap = {}
+        statsResults.forEach((result, index) => {
+          if (result?.data?.success && result.data.data) {
+            const cursoId = cursosIds[index]
+            const curso = cursos.find(c => (c._id || c.id) === cursoId)
+            statsMap[cursoId] = {
+              ...result.data.data,
+              cursoNombre: curso?.nombre || curso?.name || 'Curso'
+            }
+          }
+        })
+        console.log('Estadísticas cargadas:', statsMap)
+        setAsistenciaStats(statsMap)
       } else {
         console.error('Error obteniendo cursos:', cursosResponse?.data)
         setMisCursos([])
@@ -129,22 +157,6 @@ const StudentDashboard = () => {
           estado: c.estado
         })))
         setMisClases(clases)
-        
-        // Cargar estadísticas de asistencia por curso
-        const cursosUnicos = [...new Set(clases.map(c => c.curso?._id || c.curso).filter(Boolean))]
-        const statsPromises = cursosUnicos.map(cursoId => 
-          apiAdapter.classes.obtenerEstadisticasAsistencia(estudianteId, cursoId)
-        )
-        const statsResults = await Promise.all(statsPromises)
-        
-        const statsMap = {}
-        statsResults.forEach((result, index) => {
-          if (result?.data?.success && result.data.data) {
-            const cursoId = cursosUnicos[index]
-            statsMap[cursoId] = result.data.data
-          }
-        })
-        setAsistenciaStats(statsMap)
       }
     } catch (error) {
       console.error('Error cargando datos:', error)
@@ -218,6 +230,84 @@ const StudentDashboard = () => {
       {/* Header */}
         <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
 
+      {/* Alerta de Asistencia - Si está cerca del límite */}
+      {(() => {
+        const cursosEnRiesgo = Object.entries(asistenciaStats).filter(([cursoId, stats]) => 
+          stats.estaCercaDelLimite
+        );
+        
+        if (cursosEnRiesgo.length > 0) {
+          return (
+            <div
+              style={{
+                marginBottom: '1rem',
+                padding: '1rem 1.5rem',
+                borderRadius: '8px',
+                background: '#fff3cd',
+                border: '2px solid #ffc107',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <FaExclamationTriangle style={{ fontSize: '1.5rem', color: '#856404' }} />
+                <strong style={{ color: '#856404', fontSize: '1rem' }}>
+                  ⚠️ Alerta de Asistencia
+                </strong>
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#856404', lineHeight: '1.6' }}>
+                {cursosEnRiesgo.length === 1 ? (
+                  <div>
+                    Te estás acercando al límite de inasistencias en el curso{' '}
+                    <strong>{cursosEnRiesgo[0][1].cursoNombre || 'tu curso'}</strong>.
+                    {cursosEnRiesgo[0][1].inasistenciasRestantes !== undefined && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        {cursosEnRiesgo[0][1].inasistenciasRestantes === 0 ? (
+                          <span style={{ fontWeight: 600, color: '#721c24' }}>
+                            ⚠️ Has alcanzado el límite de inasistencias permitidas.
+                          </span>
+                        ) : cursosEnRiesgo[0][1].inasistenciasRestantes === 1 ? (
+                          <span>
+                            Te queda <strong>1 falta</strong> antes de alcanzar el límite.
+                          </span>
+                        ) : (
+                          <span>
+                            Te quedan <strong>{cursosEnRiesgo[0][1].inasistenciasRestantes} faltas</strong> antes de alcanzar el límite.
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    Te estás acercando al límite de inasistencias en {cursosEnRiesgo.length} cursos:
+                    <ul style={{ marginTop: '0.5rem', marginLeft: '1.5rem', padding: 0 }}>
+                      {cursosEnRiesgo.map(([cursoId, stats]) => (
+                        <li key={cursoId} style={{ marginBottom: '0.5rem' }}>
+                          <strong>{stats.cursoNombre || 'Curso'}</strong>
+                          {stats.inasistenciasRestantes !== undefined && (
+                            <span>
+                              {' '}
+                              {stats.inasistenciasRestantes === 0
+                                ? '(límite alcanzado)'
+                                : stats.inasistenciasRestantes === 1
+                                ? '(1 falta antes del límite)'
+                                : `(${stats.inasistenciasRestantes} faltas antes del límite)`}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       {/* User Info */}
       <div className="dashboard-info-card">
         <h3 className="dashboard-info-card__title">Información Personal</h3>
@@ -249,6 +339,18 @@ const StudentDashboard = () => {
                   ? curso.horarios 
                   : (curso.horario ? [curso.horario] : [])
                 
+                const inscripcion = curso.inscripcion || {}
+
+                const tieneCalificaciones =
+                  inscripcion.tp1 != null ||
+                  inscripcion.tp2 != null ||
+                  inscripcion.parcial1 != null ||
+                  inscripcion.parcial2 != null ||
+                  inscripcion.examenFinal != null ||
+                  (inscripcion.notasAdicionales && inscripcion.notasAdicionales.trim() !== '')
+
+                const esCursoSeleccionado = cursoCalificacionesAbierto === (curso._id || curso.id)
+
                 return (
                   <div 
                     key={curso._id || curso.id} 
@@ -335,6 +437,81 @@ const StudentDashboard = () => {
                         }}>
                           {curso.estado}
                         </span>
+                      </div>
+                    )}
+
+                    {tieneCalificaciones && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <button
+                          onClick={() =>
+                            setCursoCalificacionesAbierto((prev) =>
+                              prev === (curso._id || curso.id) ? null : (curso._id || curso.id)
+                            )
+                          }
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '6px',
+                            border: '1px solid #0F5C8C',
+                            background: esCursoSeleccionado ? '#0F5C8C' : 'white',
+                            color: esCursoSeleccionado ? 'white' : '#0F5C8C',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Mis calificaciones
+                        </button>
+
+                        {esCursoSeleccionado && (
+                          <div
+                            style={{
+                              marginTop: '0.75rem',
+                              padding: '0.75rem',
+                              borderRadius: '8px',
+                              border: '1px solid #e1e5e9',
+                              background: '#f9fafb',
+                              fontSize: '0.85rem',
+                              color: '#374151'
+                            }}
+                          >
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: '0.5rem' }}>
+                              <div>
+                                <strong>TP1:</strong>{' '}
+                                {inscripcion.tp1 != null ? inscripcion.tp1 : '—'}
+                              </div>
+                              <div>
+                                <strong>TP2:</strong>{' '}
+                                {inscripcion.tp2 != null ? inscripcion.tp2 : '—'}
+                              </div>
+                              <div>
+                                <strong>Parcial 1:</strong>{' '}
+                                {inscripcion.parcial1 != null ? inscripcion.parcial1 : '—'}
+                              </div>
+                              <div>
+                                <strong>Parcial 2:</strong>{' '}
+                                {inscripcion.parcial2 != null ? inscripcion.parcial2 : '—'}
+                              </div>
+                              <div>
+                                <strong>Examen final:</strong>{' '}
+                                {inscripcion.examenFinal != null ? inscripcion.examenFinal : '—'}
+                              </div>
+                              <div>
+                                <strong>Promedio:</strong>{' '}
+                                {typeof inscripcion.promedioFinal === 'number'
+                                  ? inscripcion.promedioFinal.toFixed(1)
+                                  : '—'}
+                              </div>
+                            </div>
+                            {inscripcion.notasAdicionales && inscripcion.notasAdicionales.trim() !== '' && (
+                              <div style={{ marginTop: '0.75rem' }}>
+                                <strong>Notas del profesor:</strong>
+                                <div style={{ marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>
+                                  {inscripcion.notasAdicionales}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -513,6 +690,7 @@ const StudentDashboard = () => {
             Object.entries(asistenciaStats).map(([cursoId, stats]) => {
               const porcentaje = stats.porcentajeAsistencia || 0
               const esRegular = stats.esAlumnoRegular || false
+              const estaCercaDelLimite = stats.estaCercaDelLimite || false
               const color = esRegular ? 'var(--success)' : porcentaje >= 70 ? 'var(--warning)' : 'var(--danger)'
               const fillClass = esRegular ? 'progress-bar__fill--success' : porcentaje >= 70 ? 'progress-bar__fill--warning' : 'progress-bar__fill--danger'
               
@@ -523,7 +701,7 @@ const StudentDashboard = () => {
                       {esRegular ? (
                         <FaCheckCircle style={{ color: 'var(--success)' }} />
                       ) : (
-                        <FaExclamationTriangle style={{ color: 'var(--warning)' }} />
+                        <FaExclamationTriangle style={{ color: estaCercaDelLimite ? '#ffc107' : 'var(--warning)' }} />
                       )}
                       {stats.cursoNombre || 'Curso'}
                     </span>
@@ -536,8 +714,31 @@ const StudentDashboard = () => {
                   </div>
                   <div className="progress-text">
                     {stats.clasesAsistidas || 0} de {stats.totalClases || 0} clases asistidas
+                    {stats.clasesFaltadas !== undefined && (
+                      <span style={{ marginLeft: '0.5rem', color: '#6c757d' }}>
+                        ({stats.clasesFaltadas} faltas)
+                      </span>
+                    )}
                   </div>
-                  {stats.mensaje && (
+                  {estaCercaDelLimite && stats.inasistenciasRestantes !== undefined && (
+                    <div style={{ 
+                      marginTop: '0.5rem', 
+                      padding: '0.75rem', 
+                      background: '#fff3cd',
+                      border: '1px solid #ffc107',
+                      borderRadius: '4px',
+                      fontSize: '0.85rem',
+                      color: '#856404',
+                      fontWeight: 500
+                    }}>
+                      ⚠️ {stats.inasistenciasRestantes === 0 
+                        ? 'Has alcanzado el límite de inasistencias permitidas (15% del total de clases)'
+                        : stats.inasistenciasRestantes === 1
+                        ? 'Te queda 1 falta antes de alcanzar el límite de inasistencias (15% del total)'
+                        : `Te quedan ${stats.inasistenciasRestantes} faltas antes de alcanzar el límite de inasistencias (15% del total)`}
+                    </div>
+                  )}
+                  {stats.mensaje && !estaCercaDelLimite && (
                     <div style={{ 
                       marginTop: '0.5rem', 
                       padding: '0.5rem', 

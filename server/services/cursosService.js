@@ -1,6 +1,6 @@
 // services/cursosService.js
 const mongoose = require('mongoose');
-const { Curso, Inscripcion, BaseUser, Horario } = require('../models');
+const { Curso, Inscripcion, BaseUser, Horario, Clase } = require('../models');
 
 const MIN_CLASS_DURATION = 30;
 const MAX_CLASS_DURATION = 180;
@@ -475,16 +475,139 @@ exports.desinscribirEstudiante = async (cursoId, estudianteId) => {
 };
 
 /**
- * Obtener estudiantes de un curso
+ * Obtener estudiantes de un curso con estadísticas de asistencia
+ * IMPORTANTE: usa la MISMA lógica de cálculo que ve el alumno en su dashboard
+ * (clasesService.getAsistenciaEstudiante / Clase.getEstadisticasAsistencia),
+ * para que profesor y estudiante vean las mismas alertas.
+ * Además incluye las notas académicas cargadas en la inscripción.
  */
 exports.getEstudiantesCurso = async (cursoId) => {
   const inscripciones = await Inscripcion.findByCurso(cursoId, { estado: 'confirmada' });
-  
-  return inscripciones.map(ins => ({
-    estudiante: ins.estudiante,
-    fechaInscripcion: ins.fechaInscripcion,
-    progreso: ins.progreso
-  }));
+
+  // Para cada inscripción, obtener estadísticas de asistencia usando la misma lógica
+  const estudiantesConAsistencia = await Promise.all(
+    inscripciones.map(async (ins) => {
+      const estudianteId = ins.estudiante._id || ins.estudiante;
+      const estadisticas = await Clase.getEstadisticasAsistencia(estudianteId, cursoId);
+
+      // Replicar exactamente la lógica de clasesService.getAsistenciaEstudiante
+      const porcentajeMinimo = 85;
+      const esAlumnoRegular = estadisticas.porcentajeAsistencia >= porcentajeMinimo;
+
+      // Límite de inasistencias basado en el TOTAL de clases del curso
+      let totalClasesCurso = estadisticas.totalClases;
+      try {
+        totalClasesCurso = await Clase.countDocuments({ curso: cursoId });
+      } catch (e) {
+        console.error('Error contando clases del curso para getEstudiantesCurso:', e);
+      }
+
+      let limiteMaximoInasistencias = 0;
+      if (totalClasesCurso > 0) {
+        const limitePorcentaje = Math.ceil(totalClasesCurso * 0.15);
+        limiteMaximoInasistencias =
+          totalClasesCurso <= 13 ? 2 : limitePorcentaje;
+      }
+
+      const inasistenciasActuales = estadisticas.clasesFaltadas;
+      const inasistenciasRestantes = limiteMaximoInasistencias - inasistenciasActuales;
+
+      let estaCercaDelLimite = false;
+      if (totalClasesCurso > 0 && limiteMaximoInasistencias > 0) {
+        const margen = 2;
+        const minFaltas = Math.max(1, limiteMaximoInasistencias - margen);
+        // En riesgo: tiene al menos 1 falta y está a 1–2 faltas del límite,
+        // en el límite o por encima del límite.
+        estaCercaDelLimite = inasistenciasActuales >= minFaltas;
+      }
+
+      return {
+        inscripcionId: ins._id,
+        estudiante: ins.estudiante,
+        fechaInscripcion: ins.fechaInscripcion,
+        progreso: ins.progreso,
+        notasAdicionales: ins.notasAdicionales || '',
+        tp1: ins.tp1 ?? null,
+        tp2: ins.tp2 ?? null,
+        parcial1: ins.parcial1 ?? null,
+        parcial2: ins.parcial2 ?? null,
+        examenFinal: ins.examenFinal ?? null,
+        promedioFinal: ins.promedioFinal ?? null,
+        asistencia: {
+          totalClases: estadisticas.totalClases,
+          clasesAsistidas: estadisticas.clasesAsistidas,
+          clasesFaltadas: estadisticas.clasesFaltadas,
+          porcentajeAsistencia: estadisticas.porcentajeAsistencia,
+          limiteMaximoInasistencias,
+          inasistenciasRestantes,
+          estaCercaDelLimite,
+          esRegular: esAlumnoRegular,
+          porcentajeMinimo
+        }
+      };
+    })
+  );
+
+  return estudiantesConAsistencia;
+};
+
+/**
+ * Actualizar notas/calificación de una inscripción de curso
+ * Incluye notas académicas (TP, parciales, examen final) y notasAdicionales.
+ */
+exports.updateNotasInscripcion = async (cursoId, inscripcionId, notasPayload = {}) => {
+  const inscripcion = await Inscripcion.findOne({
+    _id: inscripcionId,
+    curso: cursoId,
+    estado: 'confirmada'
+  });
+
+  if (!inscripcion) {
+    throw new Error('Inscripción no encontrada para este curso');
+  }
+
+  const {
+    notasAdicionales,
+    tp1,
+    tp2,
+    parcial1,
+    parcial2,
+    examenFinal
+  } = notasPayload;
+
+  inscripcion.notasAdicionales = notasAdicionales || '';
+
+  const parseNota = (valor) => {
+    if (valor === null || valor === undefined || valor === '') return undefined;
+    const num = Number(valor);
+    if (!Number.isFinite(num)) return undefined;
+    return num;
+  };
+
+  const nTp1 = parseNota(tp1);
+  const nTp2 = parseNota(tp2);
+  const nParcial1 = parseNota(parcial1);
+  const nParcial2 = parseNota(parcial2);
+  const nExamenFinal = parseNota(examenFinal);
+
+  if (nTp1 !== undefined) inscripcion.tp1 = nTp1;
+  if (nTp2 !== undefined) inscripcion.tp2 = nTp2;
+  if (nParcial1 !== undefined) inscripcion.parcial1 = nParcial1;
+  if (nParcial2 !== undefined) inscripcion.parcial2 = nParcial2;
+  if (nExamenFinal !== undefined) inscripcion.examenFinal = nExamenFinal;
+
+  // Calcular promedio simple de las notas numéricas presentes
+  const valores = [nTp1, nTp2, nParcial1, nParcial2, nExamenFinal].filter(
+    (v) => typeof v === 'number' && Number.isFinite(v)
+  );
+  if (valores.length > 0) {
+    const suma = valores.reduce((acc, v) => acc + v, 0);
+    inscripcion.promedioFinal = suma / valores.length;
+  }
+
+  await inscripcion.save();
+
+  return inscripcion;
 };
 
 /**
@@ -617,7 +740,14 @@ exports.getCursosByEstudiante = async (estudianteId) => {
           inscripcion: {
             fechaInscripcion: ins.fechaInscripcion,
             progreso: ins.progreso,
-            estado: ins.estado
+            estado: ins.estado,
+            tp1: ins.tp1 ?? null,
+            tp2: ins.tp2 ?? null,
+            parcial1: ins.parcial1 ?? null,
+            parcial2: ins.parcial2 ?? null,
+            examenFinal: ins.examenFinal ?? null,
+            promedioFinal: ins.promedioFinal ?? null,
+            notasAdicionales: ins.notasAdicionales || ''
           }
         };
       } catch (error) {

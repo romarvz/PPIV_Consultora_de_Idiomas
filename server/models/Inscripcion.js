@@ -49,6 +49,38 @@ const inscripcionSchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Las notas no pueden exceder 500 caracteres']
   },
+
+  // Notas académicas (planilla)
+  tp1: {
+    type: Number,
+    min: [0, 'La nota no puede ser negativa'],
+    max: [10, 'La nota no puede ser mayor que 10']
+  },
+  tp2: {
+    type: Number,
+    min: [0, 'La nota no puede ser negativa'],
+    max: [10, 'La nota no puede ser mayor que 10']
+  },
+  parcial1: {
+    type: Number,
+    min: [0, 'La nota no puede ser negativa'],
+    max: [10, 'La nota no puede ser mayor que 10']
+  },
+  parcial2: {
+    type: Number,
+    min: [0, 'La nota no puede ser negativa'],
+    max: [10, 'La nota no puede ser mayor que 10']
+  },
+  examenFinal: {
+    type: Number,
+    min: [0, 'La nota no puede ser negativa'],
+    max: [10, 'La nota no puede ser mayor que 10']
+  },
+  promedioFinal: {
+    type: Number,
+    min: [0, 'El promedio no puede ser negativo'],
+    max: [10, 'El promedio no puede ser mayor que 10']
+  },
   
   fechaCancelacion: {
     type: Date

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiAdapter from '../../services/apiAdapter';
 import CourseClassesModal from './CourseClassesModal';
 
@@ -105,7 +106,10 @@ const TeacherCourseClasses = ({ course, refreshToken, onRefresh }) => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [studentsNearLimit, setStudentsNearLimit] = useState([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
   const courseId = course?._id;
+  const navigate = useNavigate();
 
   const loadClasses = async () => {
     if (!courseId) return;
@@ -127,6 +131,30 @@ const TeacherCourseClasses = ({ course, refreshToken, onRefresh }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, refreshToken]);
 
+  useEffect(() => {
+    const loadStudents = async () => {
+      if (!courseId) return;
+      try {
+        setLoadingStudents(true);
+        const response = await apiAdapter.cursos.getStudents(courseId);
+        if (response?.data?.success) {
+          const alumnos = response.data.data || [];
+          const nearLimit = alumnos.filter((item) => item.asistencia?.estaCercaDelLimite);
+          setStudentsNearLimit(nearLimit);
+        } else {
+          setStudentsNearLimit([]);
+        }
+      } catch (error) {
+        console.error('Error al cargar estudiantes cerca del límite:', error);
+        setStudentsNearLimit([]);
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
+
+    loadStudents();
+  }, [courseId, refreshToken]);
+
   const handleModalClose = () => {
     setShowModal(false);
     loadClasses();
@@ -141,11 +169,72 @@ const TeacherCourseClasses = ({ course, refreshToken, onRefresh }) => {
     <div style={cardStyles.container}>
       <div style={cardStyles.header}>
         <h3 style={cardStyles.title}>Clases de {course.nombre}</h3>
-        <button style={cardStyles.button} onClick={() => setShowModal(true)}>
-          <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>＋</span>
-          Gestionar clases
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            style={cardStyles.button}
+            onClick={() => setShowModal(true)}
+          >
+            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>＋</span>
+            Gestionar clases
+          </button>
+          <button
+            style={{
+              ...cardStyles.button,
+              background: '#1e3a8a'
+            }}
+            onClick={() => navigate(`/dashboard/teacher/curso/${courseId}/planilla`)}
+          >
+            Planilla académica
+          </button>
+        </div>
       </div>
+
+      {studentsNearLimit.length > 0 && (
+        <div
+          style={{
+            marginBottom: '1rem',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            background: '#fff3cd',
+            border: '1px solid #ffc107',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+            <strong style={{ color: '#856404', fontSize: '0.9rem' }}>
+              Alerta de Asistencia: {studentsNearLimit.length} {studentsNearLimit.length === 1 ? 'estudiante se está acercando' : 'estudiantes se están acercando'} al límite de inasistencias
+            </strong>
+          </div>
+          <div style={{ fontSize: '0.85rem', color: '#856404' }}>
+            {studentsNearLimit.map((item, index) => {
+              const estudiante = item.estudiante || item;
+              const nombre = `${estudiante?.firstName || ''} ${estudiante?.lastName || ''}`.trim();
+              const inasistenciasRestantes = item.asistencia?.inasistenciasRestantes;
+              return (
+                <span key={item.estudiante?._id || item.estudiante?.id || index}>
+                  {nombre}
+                  {inasistenciasRestantes !== undefined && (
+                    <>
+                      {' '}
+                      ({inasistenciasRestantes === 0
+                        ? 'límite alcanzado'
+                        : inasistenciasRestantes === 1
+                        ? '1 falta antes del límite'
+                        : `${inasistenciasRestantes} faltas antes del límite`}
+                      )
+                    </>
+                  )}
+                  {index < studentsNearLimit.length - 1 ? ', ' : ''}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
 
       {loading ? (
         <div style={cardStyles.emptyState}>Cargando clases...</div>
@@ -153,7 +242,7 @@ const TeacherCourseClasses = ({ course, refreshToken, onRefresh }) => {
         <div style={cardStyles.emptyState}>
           Aún no hay clases programadas para este curso.
           <br />
-          Haz clic en “Gestionar clases” para agendar la primera sesión.
+          Haz clic en "Gestionar clases" para agendar la primera sesión.
         </div>
       ) : (
         <div style={cardStyles.list}>

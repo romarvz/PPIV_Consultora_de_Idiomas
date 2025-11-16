@@ -381,11 +381,21 @@ claseSchema.statics.findByProfesor = function(profesorId, filtros = {}) {
 };
 
 // Método estático para buscar clases por estudiante
+// Incluye clases donde el estudiante está en el array `estudiantes`
+// o al menos tiene un registro en `asistencia.estudiante`
 claseSchema.statics.findByEstudiante = function(estudianteId, filtros = {}) {
-  return this.find({ estudiantes: estudianteId, ...filtros })
+  const baseQuery = {
+    $or: [
+      { estudiantes: estudianteId },
+      { 'asistencia.estudiante': estudianteId }
+    ]
+  };
+
+  // Orden ascendente por fechaHora: las clases más próximas primero
+  return this.find({ ...baseQuery, ...filtros })
     .populate('curso', 'nombre idioma nivel')
     .populate('profesor', 'firstName lastName email')
-    .sort({ fechaHora: -1 });
+    .sort({ fechaHora: 1 });
 };
 
 // Método estático para buscar clases por curso
