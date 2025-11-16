@@ -51,6 +51,17 @@ router.get(
 );
 
 /**
+ * GET /api/reportes-academicos/dashboard/academico
+ * Resumen global para dashboard académico
+ * Acceso: Admin
+ */
+router.get(
+  '/dashboard/academico',
+  requireRole(['admin']),
+  reportesAcademicosController.obtenerResumenAcademicoDashboard
+);
+
+/**
  * GET /api/reportes-academicos/:id
  * Gets specific report by ID
  * Acceso: Estudiante (propio), Profesor, Admin

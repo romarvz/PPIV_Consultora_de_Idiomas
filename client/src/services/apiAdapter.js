@@ -700,6 +700,16 @@ const apiAdapter = {
     },
 
     /**
+     * Resumen académico para dashboard (usa backend real)
+     */
+    academicDashboard: async () => {
+      if (USE_MOCK) {
+        return await mockApi.reports.academic({})
+      }
+      return await api.get('/reportes-academicos/dashboard/academico')
+    },
+
+    /**
      * Listado global de estudiantes en riesgo por inasistencias
      */
     studentsAtRiskByAttendance: async () => {

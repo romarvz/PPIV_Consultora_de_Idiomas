@@ -448,6 +448,56 @@ exports.obtenerEstudiantesEnRiesgoAsistencia = async () => {
     }
 };
 
+/**
+ * Resumen académico global para el dashboard (asistencia por estudiante)
+ * Devuelve shape similar al que espera ReportsDashboard (academicData).
+ */
+exports.obtenerResumenAcademicoDashboard = async () => {
+    try {
+        // Traer todos los estudiantes activos
+        const estudiantes = await BaseUser.find({ role: 'estudiante', isActive: true })
+            .select('firstName lastName nivel email');
+
+        const items = [];
+
+        for (const est of estudiantes) {
+            // Usar la misma lógica de asistencia que el dashboard de estudiante,
+            // llamando a clasesService.getAsistenciaEstudiante sin cursoId
+            let attendance = 0;
+            try {
+                const asistenciaGlobal = await require('./clasesService').getAsistenciaEstudiante(
+                    est._id.toString(),
+                    null
+                );
+                attendance = asistenciaGlobal.porcentajeAsistencia || 0;
+            } catch (e) {
+                console.error('Error calculando asistencia global para estudiante', est._id.toString(), e.message);
+            }
+
+            items.push({
+                _id: est._id,
+                firstName: est.firstName,
+                lastName: est.lastName,
+                nivel: est.nivel || '',
+                attendance
+            });
+        }
+
+        const total = items.length;
+        const averageAttendance = total > 0
+            ? (items.reduce((sum, s) => sum + (s.attendance || 0), 0) / total).toFixed(1)
+            : 0;
+
+        return {
+            total,
+            averageAttendance,
+            students: items
+        };
+    } catch (error) {
+        throw new Error(`Error al obtener resumen académico para dashboard: ${error.message}`);
+    }
+};
+
 // ============================================
 // SECCIÓN 5: GENERACIÓN AUTOMÁTICA
 // ============================================

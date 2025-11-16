@@ -122,6 +122,24 @@ exports.obtenerEstudiantesEnRiesgoAsistencia = async (req, res) => {
 };
 
 /**
+ * GET /api/reportes-academicos/dashboard/academico
+ * Resumen global para el dashboard académico (admin)
+ */
+exports.obtenerResumenAcademicoDashboard = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return sendError(res, 'No tienes permiso para ver este resumen', 403);
+        }
+
+        const data = await reportesAcademicosService.obtenerResumenAcademicoDashboard();
+        return sendSuccess(res, data, 'Resumen académico obtenido exitosamente');
+    } catch (error) {
+        console.error('Error en obtenerResumenAcademicoDashboard:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
+/**
  * GET /api/reportes-academicos/:id
  * Gets specific report by ID
  */
