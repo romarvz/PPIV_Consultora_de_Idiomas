@@ -63,6 +63,28 @@ cobroCtrl.createCobro = async (req, res) => {
 };
 
 /**
+ * Obtener mis propios cobros (estudiante autenticado)
+ * GET /api/cobros/mis-cobros
+ */
+cobroCtrl.getMisCobros = async (req, res) => {
+    try {
+        const estudianteId = req.user._id || req.user.id;
+        const cobros = await cobroService.obtenerCobrosPorEstudiante(estudianteId);
+
+        res.status(200).json({
+            success: true,
+            total: cobros.length,
+            data: cobros
+        });
+    } catch (error) {
+        res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
  * Obtener cobros de un estudiante
  * GET /api/cobros/estudiante/:idEstudiante
  */
@@ -70,7 +92,7 @@ cobroCtrl.getCobrosByEstudiante = async (req, res) => {
     try {
         const { idEstudiante } = req.params;
         const cobros = await cobroService.obtenerCobrosPorEstudiante(idEstudiante);
-        
+
         res.status(200).json({
             success: true,
             total: cobros.length,

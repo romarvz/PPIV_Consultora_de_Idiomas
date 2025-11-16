@@ -20,6 +20,19 @@ const cobroAPI = {
   },
 
   /**
+   * Obtener mis propios cobros (estudiante autenticado)
+   * GET /api/cobros/mis-cobros
+   */
+  getMisCobros: async () => {
+    try {
+      const response = await api.get('/cobros/mis-cobros')
+      return response.data
+    } catch (error) {
+      throw error.response?.data || { message: 'Error al obtener mis cobros' }
+    }
+  },
+
+  /**
    * Obtener cobros de un estudiante
    * GET /api/cobros/estudiante/:idEstudiante
    */

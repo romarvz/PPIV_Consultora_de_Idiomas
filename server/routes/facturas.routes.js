@@ -68,11 +68,20 @@ router.put('/:id/autorizar',
 // ========================================
 
 /**
+ * Obtener mis propias facturas (estudiante autenticado)
+ * GET /api/facturas/mis-facturas
+ */
+router.get('/mis-facturas',
+    authenticateToken,
+    facturaCtrl.getMisFacturas
+);
+
+/**
  * Obtener facturas de un estudiante
  * GET /api/facturas/estudiante/:idEstudiante
  */
-router.get('/estudiante/:idEstudiante', 
-    [authenticateToken, validateMongoId], 
+router.get('/estudiante/:idEstudiante',
+    [authenticateToken, validateMongoId],
     facturaCtrl.getFacturasByEstudiante
 );
 

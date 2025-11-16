@@ -138,6 +138,28 @@ facturaCtrl.autorizarFactura = async (req, res) => {
 };
 
 /**
+ * Obtener mis propias facturas (estudiante autenticado)
+ * GET /api/facturas/mis-facturas
+ */
+facturaCtrl.getMisFacturas = async (req, res) => {
+    try {
+        const estudianteId = req.user._id || req.user.id;
+        const facturas = await facturaService.obtenerFacturasPorEstudiante(estudianteId);
+
+        res.status(200).json({
+            success: true,
+            total: facturas.length,
+            data: facturas
+        });
+    } catch (error) {
+        res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
  * Obtener facturas de un estudiante
  * GET /api/facturas/estudiante/:idEstudiante
  */

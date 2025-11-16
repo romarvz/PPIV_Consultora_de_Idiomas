@@ -13,6 +13,11 @@ router.get('/',
     [authenticateToken, requireAdmin], 
     cobroCtrl.listarCobros);
 
+// Ruta para obtener mis propios cobros (estudiante autenticado)
+router.get('/mis-cobros',
+    authenticateToken,
+    cobroCtrl.getMisCobros);
+
 // Ruta para obtener todos los cobros de un estudiante
 router.get('/estudiante/:idEstudiante',
     [authenticateToken, requireAdmin],
