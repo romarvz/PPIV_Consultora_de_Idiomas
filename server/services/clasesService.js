@@ -504,7 +504,56 @@ exports.getClasesByProfesor = async (profesorId, filtros = {}) => {
  * Obtener clases por estudiante
  */
 exports.getClasesByEstudiante = async (estudianteId, filtros = {}) => {
-  return await Clase.findByEstudiante(estudianteId, filtros);
+  console.log('clasesService.getClasesByEstudiante - estudianteId:', estudianteId, 'filtros:', filtros);
+
+  // 1) Buscar los cursos en los que el estudiante está inscripto
+  const inscripciones = await Inscripcion.find({
+    estudiante: estudianteId,
+    estado: 'confirmada'
+  }).select('curso');
+
+  const cursoIds = inscripciones.map((ins) => ins.curso);
+  console.log(
+    'clasesService.getClasesByEstudiante - cursos encontrados para estudiante:',
+    cursoIds.map((id) => id.toString())
+  );
+
+  if (cursoIds.length === 0) {
+    console.log('clasesService.getClasesByEstudiante - sin cursos activos, retornando []');
+    return [];
+  }
+
+  // 2) Traer TODAS las clases de esos cursos
+  const query = {
+    curso: { $in: cursoIds }
+  };
+
+  if (filtros.estado) {
+    query.estado = filtros.estado;
+  }
+
+  if (filtros.fechaInicio || filtros.fechaFin) {
+    query.fechaHora = {};
+    if (filtros.fechaInicio) {
+      query.fechaHora.$gte = new Date(filtros.fechaInicio);
+    }
+    if (filtros.fechaFin) {
+      query.fechaHora.$lte = new Date(filtros.fechaFin);
+    }
+  }
+
+  const clases = await Clase.find(query)
+    .populate('curso', 'nombre idioma nivel')
+    .populate('profesor', 'firstName lastName email')
+    // Orden ascendente: primero las clases más cercanas en el tiempo
+    .sort({ fechaHora: 1 });
+
+  console.log(
+    'clasesService.getClasesByEstudiante - clases encontradas (por cursos):',
+    Array.isArray(clases) ? clases.length : 'no-array'
+  );
+
+  return clases;
 };
 
 /**
@@ -636,7 +685,71 @@ exports.getHorasCompletadasCurso = async (cursoId, estudianteId) => {
  * Obtener asistencia de un estudiante
  */
 exports.getAsistenciaEstudiante = async (estudianteId, cursoId = null) => {
-  return await Clase.getEstadisticasAsistencia(estudianteId, cursoId);
+  const estadisticas = await Clase.getEstadisticasAsistencia(estudianteId, cursoId);
+  
+  // Agregar validación de 85% para condición de alumno regular
+  const porcentajeMinimo = 85;
+  const esAlumnoRegular = estadisticas.porcentajeAsistencia >= porcentajeMinimo;
+  
+  // Calcular límite de inasistencias basado en el TOTAL de clases del curso,
+  // no solo en las ya dictadas.
+  let totalClasesCurso = estadisticas.totalClases;
+  if (cursoId && cursoId !== 'null') {
+    try {
+      totalClasesCurso = await Clase.countDocuments({ curso: cursoId });
+    } catch (e) {
+      console.error('Error contando clases del curso para asistencia:', e);
+    }
+  }
+
+  // Regla de negocio:
+  // - Cursos con 13 clases o menos: máximo 2 inasistencias.
+  // - Cursos con más de 13 clases: límite = 15% de inasistencias (redondeado hacia arriba).
+  let limiteMaximoInasistencias = 0;
+  if (totalClasesCurso > 0) {
+    const limitePorcentaje = Math.ceil(totalClasesCurso * 0.15);
+    limiteMaximoInasistencias =
+      totalClasesCurso <= 13 ? 2 : limitePorcentaje;
+  }
+  
+  // Calcular si está cerca del límite (1 o 2 inasistencias antes, o en el propio límite)
+  const inasistenciasActuales = estadisticas.clasesFaltadas;
+  const inasistenciasRestantes = limiteMaximoInasistencias - inasistenciasActuales;
+
+  let estaCercaDelLimite = false;
+  if (totalClasesCurso > 0 && limiteMaximoInasistencias > 0) {
+    const margen = 2;
+    // Consideramos "en riesgo" a quienes tienen al menos 1 falta y
+    // están a 1–2 faltas del límite, en el límite o por encima del límite.
+    const minFaltas = Math.max(1, limiteMaximoInasistencias - margen);
+    estaCercaDelLimite = inasistenciasActuales >= minFaltas;
+  }
+  
+  // Obtener nombre del curso si se proporciona cursoId
+  let cursoNombre = null;
+  if (cursoId && cursoId !== 'null') {
+    try {
+      const curso = await Curso.findById(cursoId).select('nombre');
+      if (curso) {
+        cursoNombre = curso.nombre;
+      }
+    } catch (error) {
+      console.error('Error obteniendo nombre del curso:', error);
+    }
+  }
+  
+  return {
+    ...estadisticas,
+    porcentajeMinimo,
+    esAlumnoRegular,
+    cursoNombre,
+    limiteMaximoInasistencias,
+    inasistenciasRestantes,
+    estaCercaDelLimite,
+    mensaje: esAlumnoRegular 
+      ? `Cumples con el ${porcentajeMinimo}% de asistencia requerido`
+      : `No cumples con el ${porcentajeMinimo}% de asistencia requerido. Tu asistencia actual es ${estadisticas.porcentajeAsistencia.toFixed(1)}%`
+  };
 };
 
 /**

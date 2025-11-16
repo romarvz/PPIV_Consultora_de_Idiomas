@@ -211,6 +211,7 @@ const CourseStudentsModal = ({ course, onClose }) => {
                     <th style={thStyles}>Email</th>
                     <th style={thStyles}>Inscripto el</th>
                     <th style={thStyles}>Progreso</th>
+                    <th style={thStyles}>Asistencia</th>
                     <th style={thStyles}>Acciones</th>
                   </tr>
                 </thead>
@@ -222,6 +223,12 @@ const CourseStudentsModal = ({ course, onClose }) => {
                       estudiante?.id ||
                       item.estudianteId ||
                       `${estudiante?.email || 'student'}-${item.fechaInscripcion || Math.random()}`;
+                    
+                    const asistencia = item.asistencia;
+                    const estaCercaDelLimite = asistencia?.estaCercaDelLimite;
+                    const porcentajeAsistencia = asistencia?.porcentajeAsistencia || 0;
+                    const inasistenciasRestantes = asistencia?.inasistenciasRestantes;
+                    const totalClases = asistencia?.totalClases || 0;
 
                     return (
                       <tr key={key}>
@@ -231,6 +238,47 @@ const CourseStudentsModal = ({ course, onClose }) => {
                         <td style={tdStyles}>{estudiante?.email || item.email || '—'}</td>
                         <td style={tdStyles}>{formatDate(item.fechaInscripcion)}</td>
                         <td style={tdStyles}>{formatProgress(item.progreso)}</td>
+                        <td style={tdStyles}>
+                          {totalClases > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontWeight: 600, color: porcentajeAsistencia >= 85 ? '#16a34a' : porcentajeAsistencia >= 70 ? '#f59e0b' : '#e74c3c' }}>
+                                  {porcentajeAsistencia.toFixed(1)}%
+                                </span>
+                                {estaCercaDelLimite && (
+                                  <span
+                                    style={{
+                                      display: 'inline-block',
+                                      padding: '0.15rem 0.5rem',
+                                      borderRadius: '4px',
+                                      fontSize: '0.75rem',
+                                      fontWeight: 600,
+                                      background: '#fff3cd',
+                                      color: '#856404',
+                                      border: '1px solid #ffc107'
+                                    }}
+                                  >
+                                    ⚠️ Alerta
+                                  </span>
+                                )}
+                              </div>
+                              {estaCercaDelLimite && (
+                                <span style={{ fontSize: '0.75rem', color: '#856404' }}>
+                                  {inasistenciasRestantes === 0
+                                    ? 'Límite alcanzado'
+                                    : inasistenciasRestantes === 1
+                                    ? '1 falta antes del límite'
+                                    : `${inasistenciasRestantes} faltas antes del límite`}
+                                </span>
+                              )}
+                              <span style={{ fontSize: '0.75rem', color: '#6c757d' }}>
+                                {asistencia?.clasesAsistidas || 0}/{totalClases} clases
+                              </span>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#6c757d', fontSize: '0.85rem' }}>Sin clases completadas</span>
+                          )}
+                        </td>
                         <td style={{ ...tdStyles, textAlign: 'right' }}>
                           <button
                             type="button"

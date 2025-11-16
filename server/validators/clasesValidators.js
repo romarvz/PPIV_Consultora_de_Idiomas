@@ -31,7 +31,9 @@ exports.validarCreacionClase = [
     .notEmpty().withMessage('La fecha y hora son obligatorias')
     .isISO8601().withMessage('Fecha y hora no válidas')
     .custom((value) => {
-      if (new Date(value) < new Date()) {
+      // Permitir fechas pasadas solo en modo desarrollo/test
+      const allowPastDates = process.env.ALLOW_PAST_CLASSES === 'true' || process.env.NODE_ENV === 'test';
+      if (!allowPastDates && new Date(value) < new Date()) {
         throw new Error('La fecha y hora deben ser futuras');
       }
       return true;

@@ -7,11 +7,14 @@ import {
   FaUserTimes,
   FaGraduationCap,
   FaEye,
-  FaUserPlus
+  FaUserPlus,
+  FaChartLine
 } from 'react-icons/fa';
 import api from '../services/api';
+import apiAdapter from '../services/apiAdapter';
 import { mockStudents } from '../services/mockData';
 import RegisterStudent from './RegisterStudent';
+import { capitalizeUserNames } from '../utils/stringHelpers';
 
 const StudentsManagement = ({ onBack }) => {
   const [students, setStudents] = useState([]);
@@ -37,11 +40,12 @@ const StudentsManagement = ({ onBack }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [attendanceStats, setAttendanceStats] = useState({}); // { studentId: { porcentaje, esRegular } }
 
   useEffect(() => {
     fetchStudents();
     fetchStats();
-  }, [filters, pagination.page]);
+  }, [filters, pagination.page, pagination.limit]);
 
   const fetchStudents = async () => {
     try {
@@ -59,7 +63,34 @@ const StudentsManagement = ({ onBack }) => {
       const response = await api.get(`/students?${queryParams}`);
       
       if (response.data.success) {
-        setStudents(response.data.data.students);
+        // Ordenar estudiantes por apellido (y luego por nombre si hay apellidos iguales)
+        // IMPORTANTE: Ordenar siempre, incluso si el backend ya ordenó, para asegurar consistencia
+        const estudiantesRaw = response.data.data.students || [];
+        
+        const estudiantesOrdenados = [...estudiantesRaw].sort((a, b) => {
+          // Normalizar y limpiar apellidos - asegurarse de que sean strings
+          const apellidoA = String(a.lastName || '').trim().toLowerCase();
+          const apellidoB = String(b.lastName || '').trim().toLowerCase();
+          
+          // Comparar apellidos directamente (case-insensitive)
+          if (apellidoA && apellidoB) {
+            if (apellidoA < apellidoB) return -1;
+            if (apellidoA > apellidoB) return 1;
+          } else if (!apellidoA && apellidoB) {
+            return 1; // Sin apellido va al final
+          } else if (apellidoA && !apellidoB) {
+            return -1; // Con apellido va primero
+          }
+          
+          // Si los apellidos son iguales (o ambos vacíos), ordenar por nombre
+          const nombreA = String(a.firstName || '').trim().toLowerCase();
+          const nombreB = String(b.firstName || '').trim().toLowerCase();
+          if (nombreA < nombreB) return -1;
+          if (nombreA > nombreB) return 1;
+          return 0;
+        });
+        
+        setStudents(estudiantesOrdenados);
         setPagination(prev => ({
           ...prev,
           total: response.data.data.pagination.total,
@@ -67,6 +98,9 @@ const StudentsManagement = ({ onBack }) => {
           hasPrev: response.data.data.pagination.hasPrev,
           hasNext: response.data.data.pagination.hasNext
         }));
+        
+        // Cargar estadísticas de asistencia para los estudiantes de esta página
+        cargarEstadisticasAsistencia(estudiantesOrdenados);
       } else {
         setError('Error al cargar estudiantes');
       }
@@ -86,6 +120,43 @@ const StudentsManagement = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const cargarEstadisticasAsistencia = async (estudiantes) => {
+    try {
+      // Cargar estadísticas de asistencia para cada estudiante (sin curso específico)
+      const statsPromises = estudiantes.map(async (estudiante) => {
+        const estudianteId = estudiante._id || estudiante.id;
+        try {
+          const response = await apiAdapter.classes.obtenerEstadisticasAsistencia(estudianteId, null);
+          if (response?.data?.success && response.data.data) {
+            return {
+              estudianteId,
+              stats: response.data.data
+            };
+          }
+        } catch (error) {
+          console.error(`Error cargando estadísticas para estudiante ${estudianteId}:`, error);
+        }
+        return null;
+      });
+
+      const results = await Promise.all(statsPromises);
+      const statsMap = {};
+      results.forEach(result => {
+        if (result) {
+          statsMap[result.estudianteId] = {
+            porcentaje: result.stats.porcentajeAsistencia || 0,
+            esRegular: result.stats.esAlumnoRegular || false,
+            totalClases: result.stats.totalClases || 0,
+            clasesAsistidas: result.stats.clasesAsistidas || 0
+          };
+        }
+      });
+      setAttendanceStats(statsMap);
+    } catch (error) {
+      console.error('Error cargando estadísticas de asistencia:', error);
     }
   };
 
@@ -164,7 +235,7 @@ const StudentsManagement = ({ onBack }) => {
     if (student.estadoAcademico) {
       const estadoMap = {
         'en_curso': 'Activo',
-        'inscrito': 'Inscrito', 
+        'inscrito': 'Inscripto', 
         'graduado': 'Graduado',
         'suspendido': 'Suspendido'
       };
@@ -283,10 +354,10 @@ const StudentsManagement = ({ onBack }) => {
               style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
             >
               <option value="">Todas</option>
-              <option value="inscrito">Inscrito</option>
-              <option value="cursando">Cursando</option>
+              <option value="inscrito">Inscripto</option>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
               <option value="graduado">Graduado</option>
-              <option value="abandonado">Abandonado</option>
             </select>
           </div>
         </div>
@@ -321,6 +392,7 @@ const StudentsManagement = ({ onBack }) => {
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Email</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Nivel</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Estado</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Asistencia</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Fecha Registro</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Acciones</th>
                   </tr>
@@ -369,6 +441,52 @@ const StudentsManagement = ({ onBack }) => {
                         >
                           {getStatusText(student)}
                         </span>
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
+                        {(() => {
+                          const estudianteId = student._id || student.id;
+                          const stats = attendanceStats[estudianteId];
+                          if (!stats || stats.totalClases === 0) {
+                            return (
+                              <span style={{ color: '#6c757d', fontSize: '0.85rem' }}>
+                                Sin datos
+                              </span>
+                            );
+                          }
+                          const porcentaje = stats.porcentaje;
+                          const esRegular = stats.esRegular;
+                          const color = esRegular ? '#28a745' : porcentaje >= 70 ? '#ffc107' : '#dc3545';
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                              <span style={{ 
+                                fontWeight: '600', 
+                                color,
+                                fontSize: '0.9rem'
+                              }}>
+                                {porcentaje.toFixed(1)}%
+                              </span>
+                              <div style={{ 
+                                width: '60px', 
+                                height: '6px', 
+                                background: '#e9ecef', 
+                                borderRadius: '3px',
+                                overflow: 'hidden'
+                              }}>
+                                <div style={{ 
+                                  width: `${Math.min(100, porcentaje)}%`, 
+                                  height: '100%', 
+                                  background: color,
+                                  transition: 'width 0.3s ease'
+                                }}></div>
+                              </div>
+                              {esRegular && (
+                                <span style={{ fontSize: '0.7rem', color: '#28a745' }}>
+                                  Regular
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
                         {new Date(student.createdAt).toLocaleDateString('es-ES')}
@@ -510,7 +628,7 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
     phone: student?.phone || '',
     dni: student?.dni || '',
     nivel: student?.nivel || '',
-    condicion: student?.condicion || 'activo'
+    condicion: student?.condicion || 'inscrito'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -529,7 +647,19 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
     setError('');
 
     try {
-      await api.put(`/students/${student._id}`, formData);
+      // Capitalizar nombres y apellidos antes de enviar
+      const capitalizedData = capitalizeUserNames({
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
+      
+      const dataToSend = {
+        ...formData,
+        firstName: capitalizedData.firstName,
+        lastName: capitalizedData.lastName
+      };
+      
+      await api.put(`/students/${student._id}`, dataToSend);
       onSave();
     } catch (error) {
       console.error('Error updating student:', error);
@@ -741,6 +871,7 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}
               >
+                <option value="inscrito">Inscripto</option>
                 <option value="activo">Activo</option>
                 <option value="inactivo">Inactivo</option>
                 <option value="graduado">Graduado</option>

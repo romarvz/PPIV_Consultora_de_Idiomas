@@ -180,6 +180,63 @@ exports.registrarAsistencia = async (req, res) => {
 };
 
 /**
+ * Registrar mi propia asistencia como estudiante
+ * POST /api/clases/:id/asistencia/estudiante
+ */
+exports.registrarMiAsistencia = async (req, res) => {
+  try {
+    const { presente, minutosTarde, comentarios } = req.body;
+    const estudianteId = req.user.id || req.user._id;
+    const registradoPor = estudianteId;
+    
+    // Verificar que el estudiante pertenece a la clase
+    const clase = await clasesService.getClaseById(req.params.id);
+    const estudianteEnClase = clase.estudiantes.some(
+      est => (est._id || est).toString() === estudianteId.toString()
+    );
+    
+    if (!estudianteEnClase) {
+      return res.status(403).json({
+        success: false,
+        error: 'No estás inscrito en esta clase'
+      });
+    }
+    
+    // Verificar que la clase no haya pasado hace más de 24 horas
+    const ahora = new Date();
+    const fechaClase = new Date(clase.fechaHora);
+    const horasDesdeClase = (ahora - fechaClase) / (1000 * 60 * 60);
+    
+    if (horasDesdeClase > 24) {
+      return res.status(400).json({
+        success: false,
+        error: 'Solo puedes registrar asistencia hasta 24 horas después de la clase'
+      });
+    }
+    
+    const claseActualizada = await clasesService.registrarAsistencia(
+      req.params.id,
+      estudianteId,
+      presente,
+      minutosTarde || 0,
+      comentarios || '',
+      registradoPor
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Tu asistencia ha sido registrada exitosamente',
+      data: claseActualizada
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
  * Registrar asistencia múltiple
  * PUT /api/clases/:id/asistencia/multiple
  */
@@ -342,6 +399,7 @@ exports.obtenerClasesPorProfesor = async (req, res) => {
 exports.obtenerClasesEstudiante = async (req, res) => {
   try {
     const estudianteId = req.user.id || req.user._id;
+    console.log('obtenerClasesEstudiante - user en token:', req.user);
     const filtros = {
       estado: req.query.estado,
       fechaInicio: req.query.fechaInicio,

@@ -11,7 +11,9 @@ async function createUser(data) {
 
 // Buscar usuario por email
 async function findUserByEmail(email) {
-  return await BaseUser.findOne({ email });
+  // Normalizar email: lowercase y trim
+  const normalizedEmail = email ? email.toLowerCase().trim() : email;
+  return await BaseUser.findOne({ email: normalizedEmail });
 }
 
 // Validar contraseña

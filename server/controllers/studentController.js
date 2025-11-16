@@ -31,12 +31,13 @@ const getStudents = async (req, res) => {
 
     const filters = { role: 'estudiante' };
     
-    // Filtro por texto (nombre, apellido, email)
+    // Filtro por texto (nombre, apellido, email, DNI)
     if (search) {
       filters.$or = [
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { email: { $regex: search, $options: 'i' } },
+        { dni: { $regex: search, $options: 'i' } }
       ];
     }
 
@@ -62,7 +63,7 @@ const getStudents = async (req, res) => {
     const options = {
       page: parseInt(page),
       limit: parseInt(limit),
-      sort: { createdAt: -1 },
+      sort: { lastName: 1, firstName: 1 },
       select: '-password'
     };
 
@@ -158,9 +159,16 @@ const updateStudent = async (req, res) => {
       });
     }
 
+    // Capitalizar nombres y apellidos si se proporcionan
+    const { capitalizeUserNames } = require('../utils/stringHelpers');
+    
     const updateData = {};
-    if (firstName) updateData.firstName = firstName;
-    if (lastName) updateData.lastName = lastName;
+    if (firstName) {
+      updateData.firstName = capitalizeUserNames({ firstName }).firstName;
+    }
+    if (lastName) {
+      updateData.lastName = capitalizeUserNames({ lastName }).lastName;
+    }
     if (email) updateData.email = email;
     if (phone) updateData.phone = phone;
     if (dni) updateData.dni = dni;

@@ -60,12 +60,19 @@ const register = async (req, res) => {
      
       nivel, 
       estadoAcademico,
+      condicion,
       especialidades, 
       tarifaPorHora, 
       disponibilidad,
       horariosPermitidos,
       permisos
     } = req.body;
+
+    // Capitalizar nombres y apellidos
+    const { capitalizeUserNames } = require('../utils/stringHelpers');
+    const capitalizedData = capitalizeUserNames({ firstName, lastName });
+    const normalizedFirstName = capitalizedData.firstName;
+    const normalizedLastName = capitalizedData.lastName;
 
   
     const existingUser = await findUserByEmail(email);
@@ -103,14 +110,14 @@ const register = async (req, res) => {
     const baseUserData = {
       email,
       password: password || dni, // for students, default password is dni
-      firstName,
-      lastName,
+      firstName: normalizedFirstName,
+      lastName: normalizedLastName,
       role,
       phone,
       dni,
       mustChangePassword: false,
       isActive: true,
-      condicion: 'activo'
+      condicion: condicion || (role === 'estudiante' ? 'inscrito' : 'activo')
     };
 
     // Create user based on role
@@ -118,10 +125,22 @@ const register = async (req, res) => {
     
     switch (role) {
       case 'estudiante':
+        // Mapear condicion a estadoAcademico si es necesario para compatibilidad
+        let estadoAcademicoFinal = estadoAcademico;
+        if (condicion && !estadoAcademico) {
+          // Mapear condicion a estadoAcademico
+          const condicionToEstadoMap = {
+            'inscrito': 'inscrito',
+            'activo': 'en_curso',
+            'inactivo': 'suspendido',
+            'graduado': 'graduado'
+          };
+          estadoAcademicoFinal = condicionToEstadoMap[condicion] || 'inscrito';
+        }
         newUser = new Estudiante({
           ...baseUserData,
           nivel,
-          estadoAcademico: estadoAcademico || 'inscrito'
+          estadoAcademico: estadoAcademicoFinal || 'inscrito'
         });
         break;
         
@@ -208,7 +227,7 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // find user by email
+    // find user by email (la función ya normaliza el email)
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(401).json({
@@ -237,41 +256,57 @@ const login = async (req, res) => {
       });
     }
 
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    // Update last login (sin trigger del pre-save para evitar re-hashear password)
+    await BaseUser.updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: new Date() } }
+    );
 
     // Generate token
     const token = generateToken(user._id);
 
     // Check if must change password
     if (user.mustChangePassword) {
-      return res.json({
-        success: true,
-        message: 'Debe cambiar su contraseña',
-        mustChangePassword: true,
-        data: {
-          token,
-          user: user.toJSON()
-        }
-      });
+      try {
+        const userJSON = user.toJSON();
+        return res.json({
+          success: true,
+          message: 'Debe cambiar su contraseña',
+          mustChangePassword: true,
+          data: {
+            token,
+            user: userJSON
+          }
+        });
+      } catch (jsonError) {
+        console.error('Error convirtiendo usuario a JSON (mustChangePassword):', jsonError);
+        throw jsonError;
+      }
     }
 
-    res.json({
-      success: true,
-      message: 'Login exitoso',
-      data: {
-        token,
-        user: user.toJSON()
-      }
-    });
+    try {
+      const userJSON = user.toJSON();
+      res.json({
+        success: true,
+        message: 'Login exitoso',
+        data: {
+          token,
+          user: userJSON
+        }
+      });
+    } catch (jsonError) {
+      console.error('Error convirtiendo usuario a JSON:', jsonError);
+      throw jsonError;
+    }
 
   } catch (error) {
     console.error('Error en login:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

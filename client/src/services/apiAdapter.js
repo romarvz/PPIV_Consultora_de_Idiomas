@@ -76,16 +76,118 @@ const apiAdapter = {
       return await api.delete(`/clases/${id}`, { data })
     },
 
-    /**
-     * Obtener estadísticas de clases
-     */
-    getStats: async () => {
-      if (USE_MOCK) {
-        return await mockApi.classes.getStats()
-      }
-      // CAMBIO: Ruta en español
-      return await api.get('/clases/stats')
-    }
+    /**
+     * Obtener estadísticas de clases
+     */
+    getStats: async () => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getStats()
+      }
+      // CAMBIO: Ruta en español
+      return await api.get('/clases/stats')
+    },
+
+    /**
+     * Obtener clase por ID
+     */
+    getById: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getById(id)
+      }
+      return await api.get(`/clases/${id}`)
+    },
+
+    /**
+     * Registrar asistencia de un estudiante (profesor/admin)
+     */
+    registrarAsistencia: async (claseId, estudianteId, presente, minutosTarde = 0, comentarios = '') => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Asistencia registrada' } }
+      }
+      return await api.put(`/clases/${claseId}/asistencia`, {
+        estudiante: estudianteId,
+        presente,
+        minutosTarde,
+        comentarios
+      })
+    },
+
+    /**
+     * Registrar mi propia asistencia como estudiante
+     */
+    registrarMiAsistencia: async (claseId, presente, minutosTarde = 0, comentarios = '') => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Tu asistencia ha sido registrada' } }
+      }
+      return await api.post(`/clases/${claseId}/asistencia/estudiante`, {
+        presente,
+        minutosTarde,
+        comentarios
+      })
+    },
+
+    /**
+     * Registrar asistencia múltiple (toda la clase)
+     */
+    registrarAsistenciaMultiple: async (claseId, asistencias) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Asistencia registrada para todos' } }
+      }
+      return await api.put(`/clases/${claseId}/asistencia/multiple`, { asistencias })
+    },
+
+    /**
+     * Marcar clase como completada (actualiza progreso de inscripciones)
+     */
+    completarClase: async (claseId) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Clase completada (mock)' } }
+      }
+      return await api.patch(`/clases/${claseId}/completar`)
+    },
+
+    /**
+     * Obtener asistencia de una clase
+     */
+    obtenerAsistencia: async (claseId) => {
+      if (USE_MOCK) {
+        return { data: { success: true, data: { asistencia: [] } } }
+      }
+      return await api.get(`/clases/${claseId}/asistencia`)
+    },
+
+    /**
+     * Obtener estadísticas de asistencia de un estudiante
+     */
+    obtenerEstadisticasAsistencia: async (estudianteId, cursoId = null) => {
+      if (USE_MOCK) {
+        return { 
+          data: { 
+            success: true, 
+            data: { 
+              totalClases: 0, 
+              clasesAsistidas: 0, 
+              porcentajeAsistencia: 0,
+              esAlumnoRegular: false
+            } 
+          } 
+        }
+      }
+      const url = cursoId 
+        ? `/clases/asistencia/estudiante/${estudianteId}/curso/${cursoId}`
+        : `/clases/asistencia/estudiante/${estudianteId}/curso/null`
+      return await api.get(url)
+    },
+
+    /**
+     * Obtener mis clases como estudiante
+     */
+    getMisClases: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getAll(params)
+      }
+      return await api.get('/clases/estudiante/mis-clases', { params })
+    }
  },
 
   // ==================== PAGOS ====================
@@ -242,6 +344,16 @@ const apiAdapter = {
     },
 
     /**
+     * Obtener mis cursos como estudiante
+     */
+    getMyCourses: async () => {
+      if (USE_MOCK) {
+        return { data: { success: true, data: [] } };
+      }
+      return await api.get('/cursos/estudiante/mis-cursos');
+    },
+
+    /**
      * Obtener estudiantes de un curso
      * @param {String} cursoId
      */
@@ -272,6 +384,32 @@ const apiAdapter = {
         };
       }
       return await api.get(`/cursos/${cursoId}/estudiantes`);
+    },
+    /**
+     * Actualizar notas/calificación de una inscripción de curso (alias en español)
+     */
+    updateEnrollmentNotes: async (cursoId, inscripcionId, payload) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Notas actualizadas (mock)', data: payload } };
+      }
+      return await api.patch(
+        `/cursos/${cursoId}/inscripciones/${inscripcionId}/notas`,
+        payload || {}
+      );
+    },
+
+    /**
+     * Actualizar notas/calificación de una inscripción de curso
+     * `payload` puede incluir: notasAdicionales, tp1, tp2, parcial1, parcial2, examenFinal
+     */
+    updateEnrollmentNotes: async (cursoId, inscripcionId, payload) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Notas actualizadas (mock)', data: payload } };
+      }
+      return await api.patch(
+        `/cursos/${cursoId}/inscripciones/${inscripcionId}/notas`,
+        payload || {}
+      );
     },
     removeStudent: async (cursoId, estudianteId) => {
       if (USE_MOCK) {

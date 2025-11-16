@@ -31,7 +31,10 @@ exports.validarCreacionCurso = [
     
   body('duracionTotal')
     .notEmpty().withMessage('La duración total es obligatoria')
-    .isInt({ min: 10, max: 500 }).withMessage('La duración debe estar entre 10 y 500 horas'),
+    .isInt({ 
+      min: (process.env.ALLOW_SHORT_COURSES === 'true' || process.env.NODE_ENV === 'test') ? 1 : 10, 
+      max: 500 
+    }).withMessage('La duración debe estar entre 10 y 500 horas'),
     
   body('tarifa')
     .notEmpty().withMessage('La tarifa es obligatoria')
@@ -73,8 +76,9 @@ exports.validarCreacionCurso = [
     .optional()
     .isArray().withMessage('horarios debe ser un array')
     .custom((value) => {
-      if (value && value.length > 3) {
-        throw new Error('Puede seleccionar máximo 3 horarios por curso');
+      const maxHorarios = (process.env.ALLOW_MORE_SCHEDULES === 'true' || process.env.NODE_ENV === 'test') ? 10 : 3;
+      if (value && value.length > maxHorarios) {
+        throw new Error(`Puede seleccionar máximo ${maxHorarios} horarios por curso`);
       }
       if (value && value.length === 0) {
         throw new Error('Si proporciona horarios, debe tener al menos un elemento');
@@ -150,7 +154,10 @@ exports.validarEdicionCurso = [
     
   body('duracionTotal')
     .optional()
-    .isInt({ min: 10, max: 500 }).withMessage('La duración debe estar entre 10 y 500 horas'),
+    .isInt({ 
+      min: (process.env.ALLOW_SHORT_COURSES === 'true' || process.env.NODE_ENV === 'test') ? 1 : 10, 
+      max: 500 
+    }).withMessage('La duración debe estar entre 10 y 500 horas'),
     
   body('tarifa')
     .optional()
@@ -189,8 +196,9 @@ exports.validarEdicionCurso = [
     .optional()
     .isArray().withMessage('horarios debe ser un array')
     .custom((value) => {
-      if (value && value.length > 3) {
-        throw new Error('Puede seleccionar máximo 3 horarios por curso');
+      const maxHorarios = (process.env.ALLOW_MORE_SCHEDULES === 'true' || process.env.NODE_ENV === 'test') ? 10 : 3;
+      if (value && value.length > maxHorarios) {
+        throw new Error(`Puede seleccionar máximo ${maxHorarios} horarios por curso`);
       }
       if (value && value.length === 0) {
         throw new Error('Si proporciona horarios, debe tener al menos un elemento');

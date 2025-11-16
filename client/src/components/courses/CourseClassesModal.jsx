@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import apiAdapter from '../../services/apiAdapter';
+import ClassAttendanceForm from '../attendance/ClassAttendanceForm';
 
 const modalStyles = {
   overlay: {
@@ -17,7 +18,7 @@ const modalStyles = {
   },
   container: {
     width: '100%',
-    maxWidth: '960px',
+    maxWidth: '1100px',
     background: 'white',
     borderRadius: '12px',
     boxShadow: '0 15px 40px rgba(0,0,0,0.2)',
@@ -48,7 +49,8 @@ const modalStyles = {
   },
   content: {
     padding: '1.5rem',
-    overflowY: 'auto'
+    overflowY: 'auto',
+    overflowX: 'hidden'
   },
   sectionTitle: {
     fontSize: '1rem',
@@ -118,6 +120,8 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [selectedClaseForAttendance, setSelectedClaseForAttendance] = useState(null);
+  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
   const professorId = useMemo(() => getProfessorId(course), [course]);
   const isEditable = !isReadOnly;
 
@@ -280,6 +284,38 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
       console.error('Error cancelando clase:', err);
       alert(err?.error || 'No se pudo cancelar la clase.');
     }
+  };
+
+  const handleRegistrarAsistencia = (clase) => {
+    setSelectedClaseForAttendance(clase);
+    setShowAttendanceForm(true);
+  };
+
+  const handleCompletarClase = async (clase) => {
+    if (!clase?._id) return;
+
+    const confirmed = window.confirm(
+      'Marcar esta clase como COMPLETADA actualizará el progreso de los alumnos según la asistencia registrada. ¿Querés continuar?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await apiAdapter.classes.completarClase(clase._id);
+      setSuccess('La clase fue marcada como completada y el progreso se actualizó.');
+      await loadClasses();
+    } catch (err) {
+      console.error('Error completando clase:', err);
+      const message =
+        err?.response?.data?.error || err?.message || 'No se pudo completar la clase.';
+      setError(message);
+    }
+  };
+
+  const handleAsistenciaRegistrada = () => {
+    setShowAttendanceForm(false);
+    setSelectedClaseForAttendance(null);
+    loadClasses(); // Recargar clases para actualizar datos
   };
 
   return (
@@ -513,6 +549,7 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Contenido</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Modalidad</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Estado</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#495057' }}>Asistencia</th>
                       <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#495057' }}>Acciones</th>
                     </tr>
                   </thead>
@@ -542,11 +579,41 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                           </span>
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                          {clase.estado === 'cancelada' ? (
+                            <small style={{ color: '#6c757d' }}>—</small>
+                          ) : (
+                            <button
+                              onClick={() => handleRegistrarAsistencia(clase)}
+                              style={{
+                                background: '#0F5C8C',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '0.45rem 0.75rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap'
+                              }}
+                              title="Registrar asistencia de estudiantes"
+                            >
+                              Asistencia
+                            </button>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                           {isEditable ? (
                             clase.estado === 'cancelada' ? (
                               <small style={{ color: '#6c757d' }}>Cancelada</small>
                             ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'stretch' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '0.4rem',
+                                  alignItems: 'stretch'
+                                }}
+                              >
                                 <button
                                   onClick={() => handleEditClass(clase)}
                                   style={{
@@ -560,6 +627,21 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                                   }}
                                 >
                                   Editar
+                                </button>
+                                <button
+                                  onClick={() => handleCompletarClase(clase)}
+                                  style={{
+                                    background: '#1e3a8a', // azul más oscuro
+                                    color: '#fff',
+                                    border: 'none',
+                                    padding: '0.45rem 0.75rem',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem'
+                                  }}
+                                  title="Marcar esta clase como completada"
+                                >
+                                  Marcar completada
                                 </button>
                                 <button
                                   onClick={() => handleCancelClass(clase)}
@@ -590,6 +672,18 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
           </section>
         </div>
       </div>
+
+      {/* Modal de registro de asistencia */}
+      {showAttendanceForm && selectedClaseForAttendance && (
+        <ClassAttendanceForm
+          clase={selectedClaseForAttendance}
+          onSuccess={handleAsistenciaRegistrada}
+          onClose={() => {
+            setShowAttendanceForm(false);
+            setSelectedClaseForAttendance(null);
+          }}
+        />
+      )}
     </div>
   );
 };
