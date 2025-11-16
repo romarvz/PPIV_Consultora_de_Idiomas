@@ -149,23 +149,45 @@ facturaCtrl.getMisFacturas = async (req, res) => {
 
         // Buscar facturas directamente sin usar el servicio que lanza error
         const Factura = require('../models/factura.model');
+        const Cobro = require('../models/cobros.model');
+
         const facturas = await Factura.find({ estudiante: estudianteId })
             .sort({ fechaEmision: -1 })
             .populate('estudiante', 'firstName lastName email');
 
         console.log('getMisFacturas - Facturas encontradas:', facturas.length);
-        if (facturas.length > 0) {
-            console.log('getMisFacturas - Primera factura:', {
-                numero: facturas[0].numeroFactura,
-                estado: facturas[0].estado,
-                estudianteId: facturas[0].estudiante?._id
+
+        // Calcular saldo pendiente para cada factura
+        const facturasConSaldo = await Promise.all(facturas.map(async (factura) => {
+            const facturaObj = factura.toObject();
+
+            // Obtener todos los cobros de esta factura
+            const cobros = await Cobro.find({
+                'facturas.facturaId': factura._id
             });
-        }
+
+            // Calcular total cobrado
+            let totalCobrado = 0;
+            cobros.forEach(cobro => {
+                const facturaEnCobro = cobro.facturas.find(
+                    f => f.facturaId.toString() === factura._id.toString()
+                );
+                if (facturaEnCobro) {
+                    totalCobrado += facturaEnCobro.montoCobrado;
+                }
+            });
+
+            // Agregar información de cobros
+            facturaObj.totalCobrado = totalCobrado;
+            facturaObj.saldoPendiente = factura.total - totalCobrado;
+
+            return facturaObj;
+        }));
 
         res.status(200).json({
             success: true,
-            total: facturas.length,
-            data: facturas
+            total: facturasConSaldo.length,
+            data: facturasConSaldo
         });
     } catch (error) {
         console.error('getMisFacturas - Error:', error);

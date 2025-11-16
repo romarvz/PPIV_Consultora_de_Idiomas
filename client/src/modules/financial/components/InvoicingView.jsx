@@ -576,15 +576,36 @@ const InvoicingView = () => {
   };
 
   const getEstadoBadge = (estado) => {
-    const clases = {
-      'Borrador': 'status-badge',
-      'Pendiente': 'status-badge status-badge--scheduled',
-      'Cobrada': 'status-badge status-badge--paid',
-      'Cobrada Parcialmente': 'status-badge status-badge--pending',
-      'Vencida': 'status-badge'
+    const estilos = {
+      'Borrador': {
+        className: 'status-badge',
+        style: {}
+      },
+      'Pendiente': {
+        className: 'status-badge status-badge--scheduled',
+        style: {}
+      },
+      'Cobrada': {
+        className: 'status-badge status-badge--paid',
+        style: {}
+      },
+      'Cobrada Parcialmente': {
+        className: 'status-badge',
+        style: {
+          background: '#fff3cd',
+          color: '#856404',
+          border: '2px solid #ff9800',
+          fontWeight: 700
+        }
+      },
+      'Vencida': {
+        className: 'status-badge',
+        style: {}
+      }
     };
-    
-    return <span className={clases[estado] || 'status-badge'}>{estado}</span>;
+
+    const config = estilos[estado] || { className: 'status-badge', style: {} };
+    return <span className={config.className} style={config.style}>{estado}</span>;
   };
 
   const renderListaFacturas = () => (

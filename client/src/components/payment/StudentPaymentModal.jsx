@@ -246,9 +246,16 @@ const StudentPaymentModal = ({ onClose, onSuccess }) => {
                                 <div style={{
                                   fontSize: '0.75rem',
                                   fontWeight: 600,
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '12px',
+                                  marginTop: '0.25rem',
+                                  display: 'inline-block',
+                                  background: factura.estado === 'Vencida' ? '#fee' :
+                                             factura.estado === 'Cobrada Parcialmente' ? '#fff3cd' : '#d1ecf1',
                                   color: factura.estado === 'Vencida' ? '#dc3545' :
-                                         factura.estado === 'Cobrada Parcialmente' ? '#ffc107' : '#17a2b8',
-                                  marginTop: '0.25rem'
+                                         factura.estado === 'Cobrada Parcialmente' ? '#856404' : '#0c5460',
+                                  border: factura.estado === 'Vencida' ? '1px solid #dc3545' :
+                                         factura.estado === 'Cobrada Parcialmente' ? '2px solid #ff9800' : '1px solid #17a2b8'
                                 }}>
                                   {factura.estado}
                                 </div>
@@ -259,6 +266,24 @@ const StudentPaymentModal = ({ onClose, onSuccess }) => {
                               <div>Emisión: {formatFecha(factura.fechaEmision)}</div>
                               <div>Vencimiento: {formatFecha(factura.fechaVencimiento)}</div>
                             </div>
+
+                            {/* Mostrar saldo pendiente para facturas cobradas parcialmente */}
+                            {factura.estado === 'Cobrada Parcialmente' && factura.saldoPendiente !== undefined && (
+                              <div style={{
+                                marginTop: '0.75rem',
+                                padding: '0.5rem',
+                                background: '#fff5f5',
+                                border: '2px solid #dc3545',
+                                borderRadius: '6px'
+                              }}>
+                                <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>
+                                  Cobrado: ${factura.totalCobrado?.toLocaleString() || 0}
+                                </div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#dc3545' }}>
+                                  Saldo pendiente: ${factura.saldoPendiente.toLocaleString()}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
