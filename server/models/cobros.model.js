@@ -17,12 +17,20 @@ const CobroSchema = new Schema({
     ref: 'BaseUser',
     required: true
    },
-   factura:{
-    type: Schema.Types.ObjectId,
-    ref: 'Factura',
-    required: true
-   },
-    monto:{
+   // CAMBIO: Ahora soporta múltiples facturas
+   facturas:[{
+    facturaId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Factura',
+      required: true
+    },
+    montoCobrado: {
+      type: Number,
+      required: true
+    }
+   }],
+   // Monto total del recibo (suma de todos los montos)
+   montoTotal:{
         type: Number,
         required: true,
     },
@@ -30,13 +38,13 @@ const CobroSchema = new Schema({
         type: String,
         enum: ['Efectivo', 'Tarjeta', 'Transferencia', 'Mercado Pago', 'Otro'],
         required: true
-},
+   },
     notas:{
         type: String,
         trim: true
     },
 },  {
-    timestamps: true // Añade createdAt y updatedAt
+    timestamps: true
 });
 
 const Cobro = mongoose.model('Cobro', CobroSchema);

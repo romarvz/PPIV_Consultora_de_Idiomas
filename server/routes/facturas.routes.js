@@ -1,37 +1,101 @@
 const express = require('express');
 const router = express.Router();
 const facturaCtrl = require('../controllers/facturas.controller');
-const { authenticateToken, requireAdmin} = require('../middleware/authMiddlewareNew');
-const {validateCrearFactura, validateMongoId} = require('../middleware/financiero.validation');
+const { authenticateToken, requireAdmin } = require('../middleware/authMiddlewareNew');
+const { validateCrearFactura, validateMongoId } = require('../middleware/financiero.validation');
 
-// Ruta para obtener todas las facturas
+// ========================================
+// RUTAS DE GESTIÓN DE FACTURAS
+// ========================================
+
+/**
+ * Obtener todas las facturas
+ * GET /api/facturas
+ */
 router.get('/', 
     [authenticateToken], 
-    facturaCtrl.getAllFacturas);
+    facturaCtrl.getAllFacturas
+);
 
-// Ruta para crear una nueva factura
+/**
+ * Crear una nueva factura en BORRADOR (sin autorización)
+ * POST /api/facturas
+ */
 router.post('/', 
     [authenticateToken, requireAdmin, validateCrearFactura], 
-    facturaCtrl.createFactura);
+    facturaCtrl.createFactura
+);
 
-// Ruta para editar una factura
-router.put('/:id', 
-[authenticateToken, requireAdmin], 
-facturaCtrl.editarFactura);
+/**
+ * Obtener una factura por ID
+ * GET /api/facturas/:id
+ * IMPORTANTE: Esta ruta DEBE ir ANTES de las rutas con parámetros específicos
+ */
+router.get('/:id',
+    [authenticateToken],
+    facturaCtrl.getFacturaById
+);
 
-// Ruta para autorizar una factura
-router.put('/:id/autorizar', 
-    [authenticateToken, requireAdmin], 
-    facturaCtrl.autorizarFactura);
+/**
+ * Editar una factura en BORRADOR
+ * PUT /api/facturas/:id
+ */
+router.put('/:id',
+    [authenticateToken, requireAdmin],
+    facturaCtrl.editarFactura
+);
 
-// Ruta para obtener facturas de un estudiante
+/**
+ * Eliminar una factura en BORRADOR
+ * DELETE /api/facturas/:id
+ */
+router.delete('/:id',
+    [authenticateToken, requireAdmin],
+    facturaCtrl.eliminarFactura
+);
+
+/**
+ * Autorizar una factura (solicitar CAE a AFIP)
+ * PUT /api/facturas/:id/autorizar
+ */
+router.put('/:id/autorizar',
+    [authenticateToken, requireAdmin],
+    facturaCtrl.autorizarFactura
+);
+
+// ========================================
+// RUTAS DE CONSULTA POR ESTUDIANTE
+// ========================================
+
+/**
+ * Obtener facturas de un estudiante
+ * GET /api/facturas/estudiante/:idEstudiante
+ */
 router.get('/estudiante/:idEstudiante', 
     [authenticateToken, validateMongoId], 
-    facturaCtrl.getFacturasByEstudiante);
+    facturaCtrl.getFacturasByEstudiante
+);
 
-// Ruta para obtener deuda de un estudiante
+/**
+ * Obtener deuda de un estudiante
+ * GET /api/facturas/estudiante/:idEstudiante/deuda
+ */
 router.get('/estudiante/:idEstudiante/deuda', 
     [authenticateToken, validateMongoId], 
-    facturaCtrl.getDeudaEstudiante);
+    facturaCtrl.getDeudaEstudiante
+);
+
+// ========================================
+// RUTAS DE ESTADO DEL SERVICIO
+// ========================================
+
+/**
+ * Verificar estado del servicio AFIP
+ * GET /api/facturas/afip/estado
+ */
+router.get('/afip/estado',
+    [authenticateToken, requireAdmin],
+    facturaCtrl.verificarEstadoAFIP
+);
 
 module.exports = router;
