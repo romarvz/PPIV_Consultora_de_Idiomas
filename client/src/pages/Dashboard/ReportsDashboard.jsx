@@ -22,9 +22,8 @@ const ReportsDashboard = ({ onClose }) => {
   const loadReports = async () => {
     setLoading(true)
     try {
-      const response = await apiAdapter.classes.getAll()
       const [academicResponse, financialResponse] = await Promise.all([
-        apiAdapter.reports.academic(),
+        apiAdapter.reports.academicDashboard(),
         apiAdapter.reports.financial()
       ])
       
