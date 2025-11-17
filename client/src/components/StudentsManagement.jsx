@@ -306,7 +306,7 @@ const StudentsManagement = ({ onBack }) => {
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.total}</p>
         </div>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Activos</h3>
+          <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Activos e Inscriptos</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.active}</p>
         </div>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -316,7 +316,7 @@ const StudentsManagement = ({ onBack }) => {
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <h3 style={{ color: '#f39c12', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Graduados</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>
-            {stats.byCondition.find(c => c._id === 'graduado')?.count || 0}
+            {stats.overview.graduated || 0}
           </p>
         </div>
       </div>
@@ -501,8 +501,7 @@ const StudentsManagement = ({ onBack }) => {
               style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
             >
               <option value="">Todas</option>
-              <option value="inscrito">Inscripto</option>
-              <option value="activo">Activo</option>
+              <option value="activo">Activos e Inscriptos</option>
               <option value="inactivo">Inactivo</option>
               <option value="graduado">Graduado</option>
             </select>
