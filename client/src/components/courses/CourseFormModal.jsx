@@ -569,12 +569,22 @@ const CourseFormModal = ({ course, onClose, onSave, teachers }) => {
       };
 
       // Remove empty fields, undefined, or empty arrays
+      // BUT keep estado even if it's the default value, as it's important for course visibility
       Object.keys(dataToSave).forEach(key => {
         const value = dataToSave[key];
+        // Don't delete estado field - it's important for course visibility
+        if (key === 'estado') {
+          return; // Keep estado field
+        }
         if (value === '' || value === undefined || (Array.isArray(value) && value.length === 0)) {
           delete dataToSave[key];
         }
       });
+      
+      // Ensure estado is always included if it exists in formData
+      if (formData.estado) {
+        dataToSave.estado = formData.estado;
+      }
 
       console.log('Datos a enviar:', dataToSave);
 

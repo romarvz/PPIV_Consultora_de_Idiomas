@@ -27,6 +27,7 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0; /* Permite que flex funcione correctamente */
 }
 
 .course-card-title {
@@ -37,12 +38,15 @@
 .course-card-description {
   color: var(--text-color-light);
   font-size: 0.9rem;
+  flex-grow: 1; /* Permite que la descripción ocupe el espacio disponible */
+  margin-bottom: 0; /* Remover margen inferior para que el botón quede pegado abajo */
 }
 
 .course-card-tags {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  flex-shrink: 0; /* Evita que los tags se compriman */
 }
 
 .course-card-tag {
@@ -70,12 +74,14 @@
   font-weight: bold;
   width: 100%;
   cursor: pointer;
+  flex-shrink: 0; /* Evita que el botón se comprima */
 }
 
 .course-card-header {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex-shrink: 0; /* Evita que el header se comprima */
 }
 
 .course-card-badge {

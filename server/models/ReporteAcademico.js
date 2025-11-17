@@ -68,13 +68,13 @@ const reporteAcademicoSchema = new mongoose.Schema({
     evaluaciones: [{
         tipo: {
             type: String,
-            enum: ['examen', 'tarea', 'proyecto', 'oral', 'escrito', 'practica'],
+            enum: ['examen', 'tarea', 'proyecto', 'oral', 'escrito', 'practica', 'TP1', 'TP2', 'Parcial 1', 'Parcial 2', 'Examen Final'],
             required: true
         },
         nota: {
             type: Number,
             min: 0,
-            max: 100,
+            max: 10, // Escala 0-10, no 0-100
             required: true
         },
         fecha: {
@@ -177,24 +177,70 @@ reporteAcademicoSchema.index({ estado: 1 });
 // Automatically calculates percentages before saving
 // ============================================
 reporteAcademicoSchema.pre('save', function (next) {
-    // Calculate attendance percentage
-    if (this.horasTotales > 0) {
-        this.porcentajeAsistencia = (this.horasAsistidas / this.horasTotales) * 100;
+    // Asegurar que horasAsistidas y horasTotales sean números válidos
+    const horasAsistidas = Number(this.horasAsistidas) || 0;
+    const horasTotales = Number(this.horasTotales) || 0;
+    
+    // Calculate attendance percentage - SIEMPRE establecer un valor
+    if (horasTotales > 0) {
+        this.porcentajeAsistencia = Math.min(100, Math.max(0, (horasAsistidas / horasTotales) * 100));
+    } else {
+        // Si no hay horas totales, el porcentaje es 0 (no se puede calcular)
+        this.porcentajeAsistencia = 0;
     }
 
     // Calculate average grade from evaluations
-    if (this.evaluaciones && this.evaluaciones.length > 0) {
-        const sumaNotas = this.evaluaciones.reduce((sum, evaluacion) => sum + evaluacion.nota, 0);
-        this.calificacionPromedio = sumaNotas / this.evaluaciones.length;
+    if (this.evaluaciones && Array.isArray(this.evaluaciones) && this.evaluaciones.length > 0) {
+        // Filtrar evaluaciones válidas (con nota numérica)
+        const evaluacionesValidas = this.evaluaciones.filter(e => 
+            e && typeof e.nota === 'number' && !isNaN(e.nota) && e.nota >= 0 && e.nota <= 10
+        );
+        
+        if (evaluacionesValidas.length > 0) {
+            const sumaNotas = evaluacionesValidas.reduce((sum, evaluacion) => sum + evaluacion.nota, 0);
+            this.calificacionPromedio = parseFloat((sumaNotas / evaluacionesValidas.length).toFixed(2));
+        } else {
+            // Si no hay evaluaciones válidas, no hay promedio
+            this.calificacionPromedio = null;
+        }
+    } else {
+        // No hay evaluaciones
+        this.calificacionPromedio = null;
     }
 
-    // Determine if passed (criteria: >60% grade and >75% attendance)
-    if (this.calificacionPromedio >= 60 && this.porcentajeAsistencia >= 75) {
-        this.aprobado = true;
-        this.estado = 'aprobado';
-    } else if (this.calificacionPromedio < 60) {
-        this.aprobado = false;
-        this.estado = 'reprobado'; // failed
+    // Log para debugging
+    console.log(`[ReporteAcademico pre-save] Estudiante: ${this.estudiante}, Horas: ${horasAsistidas}/${horasTotales}, Porcentaje: ${this.porcentajeAsistencia?.toFixed(2)}%`);
+    console.log(`[ReporteAcademico pre-save] Evaluaciones: ${this.evaluaciones?.length || 0}, Promedio: ${this.calificacionPromedio?.toFixed(2) || 'N/A'}`);
+
+    // Determine if passed (criteria: >=6.0 grade (escala 0-10) and >=75% attendance)
+    // Solo determinar estado si hay evaluaciones (calificaciones)
+    const tieneEvaluaciones = this.calificacionPromedio !== null && this.calificacionPromedio !== undefined;
+    
+    if (tieneEvaluaciones) {
+        // Las calificaciones están en escala 0-10, no 0-100
+        const notaMinimaAprobacion = 6.0;
+        const porcentajeMinimoAsistencia = 75;
+        
+        const cumpleNota = this.calificacionPromedio >= notaMinimaAprobacion;
+        const cumpleAsistencia = this.porcentajeAsistencia >= porcentajeMinimoAsistencia;
+        
+        console.log(`[ReporteAcademico pre-save] Criterios: Nota ${this.calificacionPromedio.toFixed(2)} >= ${notaMinimaAprobacion}? ${cumpleNota}, Asistencia ${this.porcentajeAsistencia.toFixed(2)}% >= ${porcentajeMinimoAsistencia}%? ${cumpleAsistencia}`);
+        
+        if (cumpleNota && cumpleAsistencia) {
+            this.aprobado = true;
+            this.estado = 'aprobado';
+            console.log(`[ReporteAcademico pre-save] Estado: APROBADO`);
+        } else {
+            // No cumple criterios: reprobado
+            this.aprobado = false;
+            this.estado = 'reprobado';
+            console.log(`[ReporteAcademico pre-save] Estado: REPROBADO (nota: ${cumpleNota ? 'OK' : 'NO'}, asistencia: ${cumpleAsistencia ? 'OK' : 'NO'})`);
+        }
+    } else {
+        // Sin evaluaciones o sin calificación promedio, mantener en progreso
+        this.aprobado = undefined;
+        this.estado = 'en_progreso';
+        console.log(`[ReporteAcademico pre-save] Estado: EN_PROGRESO (sin evaluaciones o sin promedio)`);
     }
 
     next();

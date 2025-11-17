@@ -46,7 +46,7 @@ exports.generarReporteFinanciero = async (datosReporte) => {
             const cobros = await Cobro.find({
                 fechaCobro: { $gte: fechaInicio || calcularFechaInicioPeriodo(periodo), $lte: fechaFin || calcularFechaFinPeriodo(periodo) }
             });
-            totalIngresos = cobros.reduce((sum, c) => sum + c.monto, 0);
+            totalIngresos = cobros.reduce((sum, c) => sum + (c.montoTotal || 0), 0);
         }
 
         if (!saldoPendiente) {
@@ -463,7 +463,7 @@ exports.generarReporteAutomatico = async (generadoPorId) => {
         const cobros = await Cobro.find({
             fechaCobro: { $gte: fechaInicio, $lte: fechaFin }
         });
-        const totalIngresos = cobros.reduce((sum, c) => sum + (c.monto || 0), 0);
+        const totalIngresos = cobros.reduce((sum, c) => sum + (c.montoTotal || 0), 0);
 
         const facturasPendientes = await Factura.find({ estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] } });
         const saldoPendiente = facturasPendientes.reduce((sum, f) => sum + ((f.total || 0) - (f.totalCobrado || 0)), 0);
@@ -513,64 +513,118 @@ exports.generarReporteAutomatico = async (generadoPorId) => {
 /**
  * Obtiene un resumen financiero para el dashboard
  * Devuelve totalIncome, pendingIncome y topStudents
+ * Optimizado para evitar timeouts con agregaciones de MongoDB
  */
 exports.obtenerResumenFinancieroDashboard = async () => {
     try {
-        // Calcular ingresos totales (todos los cobros)
-        const cobros = await Cobro.find({});
-        const totalIncome = cobros.reduce((sum, c) => sum + (c.monto || 0), 0);
+        console.log('[obtenerResumenFinancieroDashboard] Iniciando cálculo...');
+        
+        // Calcular ingresos totales usando agregación (más eficiente)
+        // Usar montoTotal en lugar de monto
+        const totalIncomeResult = await Cobro.aggregate([
+            { $group: { _id: null, total: { $sum: { $ifNull: ['$montoTotal', 0] } } } }
+        ]);
+        const totalIncome = totalIncomeResult.length > 0 ? totalIncomeResult[0].total : 0;
 
-        // Calcular ingresos pendientes (facturas pendientes)
-        const facturasPendientes = await Factura.find({ 
-            estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] } 
-        });
-        const pendingIncome = facturasPendientes.reduce((sum, f) => {
-            const total = f.total || 0;
-            const cobrado = f.totalCobrado || 0;
-            return sum + (total - cobrado);
-        }, 0);
+        // Calcular ingresos pendientes usando agregación
+        const pendingIncomeResult = await Factura.aggregate([
+            { 
+                $match: { 
+                    estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] } 
+                } 
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { 
+                        $sum: { 
+                            $subtract: [
+                                { $ifNull: ['$total', 0] },
+                                { $ifNull: ['$totalCobrado', 0] }
+                            ]
+                        } 
+                    }
+                }
+            }
+        ]);
+        const pendingIncome = pendingIncomeResult.length > 0 ? pendingIncomeResult[0].total : 0;
 
-        // Obtener estudiantes con sus pagos
+        // Obtener estudiantes con sus pagos usando agregaciones (mucho más eficiente)
         const estudiantes = await BaseUser.find({ role: 'estudiante', isActive: true })
-            .select('firstName lastName email');
+            .select('firstName lastName email')
+            .limit(100); // Limitar a 100 estudiantes para evitar timeout
+
+        console.log(`[obtenerResumenFinancieroDashboard] Procesando ${estudiantes.length} estudiantes...`);
 
         const topStudents = [];
 
-        for (const estudiante of estudiantes) {
-            // Cobros del estudiante
-            const cobrosEstudiante = await Cobro.find({ estudiante: estudiante._id });
-            const total = cobrosEstudiante.reduce((sum, c) => sum + (c.monto || 0), 0);
+        // Procesar estudiantes en lotes para evitar timeout
+        for (let i = 0; i < estudiantes.length; i++) {
+            const estudiante = estudiantes[i];
+            
+            // Usar agregaciones para obtener totales de una vez
+            const [cobrosResult, facturasResult] = await Promise.all([
+                Cobro.aggregate([
+                    { $match: { estudiante: estudiante._id } },
+                    { $group: { _id: null, total: { $sum: { $ifNull: ['$montoTotal', 0] } } } }
+                ]),
+                Factura.aggregate([
+                    { 
+                        $match: { 
+                            estudiante: estudiante._id,
+                            estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] }
+                        } 
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            total: { 
+                                $sum: { 
+                                    $subtract: [
+                                        { $ifNull: ['$total', 0] },
+                                        { $ifNull: ['$totalCobrado', 0] }
+                                    ]
+                                } 
+                            }
+                        }
+                    }
+                ])
+            ]);
 
-            // Facturas pendientes del estudiante
-            const facturasEstudiante = await Factura.find({ 
-                estudiante: estudiante._id,
-                estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] }
-            });
-            const pending = facturasEstudiante.reduce((sum, f) => {
-                const totalFactura = f.total || 0;
-                const cobradoFactura = f.totalCobrado || 0;
-                return sum + (totalFactura - cobradoFactura);
-            }, 0);
+            const total = cobrosResult.length > 0 ? cobrosResult[0].total : 0;
+            const pending = facturasResult.length > 0 ? facturasResult[0].total : 0;
 
-            // Detalles mensuales (últimos 6 meses)
+            // Detalles mensuales simplificados (solo últimos 3 meses para evitar timeout)
             const monthlyDetails = [];
             const ahora = new Date();
             
-            for (let i = 5; i >= 0; i--) {
+            for (let i = 2; i >= 0; i--) {
                 const fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
                 const fechaFin = new Date(ahora.getFullYear(), ahora.getMonth() - i + 1, 0, 23, 59, 59);
                 
-                const cobrosMes = await Cobro.find({
-                    estudiante: estudiante._id,
-                    fechaCobro: { $gte: fechaInicio, $lte: fechaFin }
-                });
-                const received = cobrosMes.reduce((sum, c) => sum + (c.monto || 0), 0);
+                const [cobrosMesResult, facturasMesResult] = await Promise.all([
+                    Cobro.aggregate([
+                        {
+                            $match: {
+                                estudiante: estudiante._id,
+                                fechaCobro: { $gte: fechaInicio, $lte: fechaFin }
+                            }
+                        },
+                        { $group: { _id: null, total: { $sum: { $ifNull: ['$montoTotal', 0] } } } }
+                    ]),
+                    Factura.aggregate([
+                        {
+                            $match: {
+                                estudiante: estudiante._id,
+                                fechaEmision: { $gte: fechaInicio, $lte: fechaFin }
+                            }
+                        },
+                        { $group: { _id: null, total: { $sum: { $ifNull: ['$total', 0] } } } }
+                    ])
+                ]);
 
-                const facturasMes = await Factura.find({
-                    estudiante: estudiante._id,
-                    fechaEmision: { $gte: fechaInicio, $lte: fechaFin }
-                });
-                const expected = facturasMes.reduce((sum, f) => sum + (f.total || 0), 0);
+                const received = cobrosMesResult.length > 0 ? cobrosMesResult[0].total : 0;
+                const expected = facturasMesResult.length > 0 ? facturasMesResult[0].total : 0;
 
                 const nombreMes = fechaInicio.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
                 monthlyDetails.push({
@@ -592,12 +646,15 @@ exports.obtenerResumenFinancieroDashboard = async () => {
         // Ordenar por total pagado (descendente)
         topStudents.sort((a, b) => b.total - a.total);
 
+        console.log(`[obtenerResumenFinancieroDashboard] Completado: ${topStudents.length} estudiantes procesados`);
+
         return {
             totalIncome,
             pendingIncome,
             topStudents
         };
     } catch (error) {
+        console.error('[obtenerResumenFinancieroDashboard] Error:', error);
         throw new Error(`Error al obtener resumen financiero para dashboard: ${error.message}`);
     }
 };

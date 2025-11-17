@@ -62,6 +62,17 @@ router.get(
 );
 
 /**
+ * GET /api/reportes-academicos/recientes
+ * Obtiene reportes recientes para el dashboard
+ * Acceso: Admin
+ */
+router.get(
+  '/recientes',
+  requireRole(['admin']),
+  reportesAcademicosController.obtenerReportesRecientes
+);
+
+/**
  * GET /api/reportes-academicos/:id
  * Gets specific report by ID
  * Acceso: Estudiante (propio), Profesor, Admin
@@ -98,8 +109,18 @@ router.get('/periodo/:periodo',
 );
 
 // ============================================
-// SECTION 3: UPDATE REPORTS
+// SECTION 3: UPDATE AND DELETE REPORTS
 // ============================================
+
+/**
+ * DELETE /api/reportes-academicos/:id
+ * Elimina un reporte académico
+ * Acceso: Admin
+ */
+router.delete('/:id',
+    requireRole(['admin']),
+    reportesAcademicosController.eliminarReporte
+);
 
 /**
  * PUT /api/reportes-academicos/:id

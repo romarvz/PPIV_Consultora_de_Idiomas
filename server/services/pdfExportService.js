@@ -23,8 +23,18 @@ const generarReporteAcademicoPDF = (reporte) => {
   doc.fontSize(14).text('Estadísticas', { underline: true });
   doc.fontSize(10);
   doc.text(`Asistencia: ${reporte.porcentajeAsistencia?.toFixed(2) || 0}%`);
-  doc.text(`Clases Asistidas: ${reporte.clasesAsistidas || 0} / ${reporte.clasesTotales || 0}`);
-  doc.text(`Promedio General: ${reporte.promedioGeneral?.toFixed(2) || 0}`);
+  doc.text(`Horas Asistidas: ${reporte.horasAsistidas?.toFixed(2) || 0} / ${reporte.horasTotales?.toFixed(2) || 0} horas`);
+  
+  // Calcular clases asistidas/totales desde las horas (asumiendo duración promedio de clase)
+  // Si no hay horas, mostrar 0
+  const horasAsistidas = reporte.horasAsistidas || 0;
+  const horasTotales = reporte.horasTotales || 0;
+  const duracionPromedioClase = 1.0; // Asumir 1 hora por clase como promedio
+  const clasesAsistidas = Math.round(horasAsistidas / duracionPromedioClase);
+  const clasesTotales = Math.round(horasTotales / duracionPromedioClase);
+  doc.text(`Clases Asistidas: ${clasesAsistidas} / ${clasesTotales}`);
+  
+  doc.text(`Promedio General: ${reporte.calificacionPromedio?.toFixed(2) || 'N/A'}`);
   doc.moveDown();
   
   // Evaluaciones
@@ -33,13 +43,18 @@ const generarReporteAcademicoPDF = (reporte) => {
     doc.fontSize(10);
     
     reporte.evaluaciones.forEach((evaluacion, index) => {
-      doc.text(`${index + 1}. ${evaluacion.tipo} - ${evaluacion.nombre}`);
-      doc.text(`   Nota: ${evaluacion.nota} - Fecha: ${new Date(evaluacion.fecha).toLocaleDateString()}`);
-      if (evaluacion.observaciones) {
-        doc.text(`   Observaciones: ${evaluacion.observaciones}`);
+      doc.text(`${index + 1}. ${evaluacion.tipo || 'Evaluación'}`);
+      doc.text(`   Nota: ${evaluacion.nota?.toFixed(2) || 'N/A'} - Fecha: ${evaluacion.fecha ? new Date(evaluacion.fecha).toLocaleDateString() : 'N/A'}`);
+      if (evaluacion.comentarios) {
+        doc.text(`   Comentarios: ${evaluacion.comentarios}`);
       }
       doc.moveDown(0.5);
     });
+  } else {
+    doc.fontSize(14).text('Evaluaciones', { underline: true });
+    doc.fontSize(10);
+    doc.text('No hay evaluaciones registradas aún.');
+    doc.moveDown();
   }
   
   // Observaciones generales

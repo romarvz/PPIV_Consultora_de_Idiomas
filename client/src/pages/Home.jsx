@@ -171,6 +171,45 @@ const Home = () => {
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [coursesError, setCoursesError] = useState(null);
 
+  // Function to get navigation target for each service
+  const getServiceNavigation = (serviceTitle) => {
+    const navigationMap = {
+      'Clases Individuales': { type: 'contacto', path: '/#contacto' },
+      'Traducciones': { type: 'contacto', path: '/#contacto' },
+      'Cursos Grupales': { type: 'cursos', path: '/cursos#curso-grupal' },
+      'Preparación de Certificaciones': { type: 'cursos', path: '/cursos#certificacion' },
+      'Inmersión Cultural': { type: 'cursos', path: '/cursos#inmersion-cultural' },
+      'Programas para Empresas': { type: 'cursos', path: '/cursos#curso-corporativo' }
+    };
+    return navigationMap[serviceTitle] || null;
+  };
+
+  // Handle service card click
+  const handleServiceClick = (serviceTitle) => {
+    const nav = getServiceNavigation(serviceTitle);
+    if (!nav) return;
+
+    if (nav.type === 'contacto') {
+      // Navigate to contacto section
+      if (location.pathname === '/') {
+        const element = document.getElementById('contacto');
+        if (element) {
+          const headerHeight = document.querySelector('header')?.offsetHeight || 0;
+          const y = element.getBoundingClientRect().top + window.pageYOffset - headerHeight - 20;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      } else {
+        navigate('/#contacto', {
+          state: { scrollTo: 'contacto' },
+          replace: false
+        });
+      }
+    } else if (nav.type === 'cursos') {
+      // Navigate to cursos page with hash
+      navigate(nav.path);
+    }
+  };
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -227,6 +266,30 @@ const Home = () => {
     return () => observer.disconnect();
   }, []);
 
+  // COMENTADO: useEffect para igualar alturas de tarjetas de cursos destacados (NO SE USA - se aplica en CoursesPage)
+  // useEffect(() => {
+  //   if (coursesLoading || courses.length === 0) return;
+  //   const equalizeCardHeights = () => {
+  //     const courseCards = document.querySelectorAll('.service-card--course');
+  //     if (courseCards.length === 0) return;
+  //     courseCards.forEach(card => { card.style.height = 'auto'; });
+  //     let maxHeight = 0;
+  //     courseCards.forEach(card => {
+  //       const height = card.offsetHeight;
+  //       if (height > maxHeight) { maxHeight = height; }
+  //     });
+  //     if (maxHeight > 0) {
+  //       courseCards.forEach(card => { card.style.height = `${maxHeight}px`; });
+  //     }
+  //   };
+  //   const timeoutId = setTimeout(() => { equalizeCardHeights(); }, 100);
+  //   window.addEventListener('resize', equalizeCardHeights);
+  //   return () => {
+  //     clearTimeout(timeoutId);
+  //     window.removeEventListener('resize', equalizeCardHeights);
+  //   };
+  // }, [coursesLoading, courses]);
+
   // NUEVO useEffect para manejar el scroll al ancla (#contacto)
   useEffect(() => {
     if (coursesLoading) return;
@@ -235,11 +298,9 @@ const Home = () => {
     const hashTarget = location.hash ? location.hash.replace('#', '') : null;
     const target = stateTarget || hashTarget;
 
+    if (!target) return;
+
     const performScroll = () => {
-      if (!target) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
       const element = document.getElementById(target);
       if (element) {
         const headerHeight = document.querySelector('header')?.offsetHeight || 0;
@@ -250,19 +311,25 @@ const Home = () => {
       return false;
     };
 
+    // Try immediately
     if (!performScroll()) {
+      // If element not found, wait a bit and try again (for dynamic content)
       let attempts = 0;
       const interval = setInterval(() => {
         attempts += 1;
-        if (performScroll() || attempts > 10) {
+        if (performScroll() || attempts > 15) {
           clearInterval(interval);
         }
-      }, 120);
+      }, 100);
       return () => clearInterval(interval);
     }
 
+    // Clean up state after scrolling
     if (stateTarget) {
-      navigate(location.pathname + location.hash, { replace: true, state: {} });
+      // Use setTimeout to ensure scroll happens before navigation state cleanup
+      setTimeout(() => {
+        navigate(location.pathname + (hashTarget ? `#${hashTarget}` : ''), { replace: true, state: {} });
+      }, 500);
     }
   }, [coursesLoading, location.hash, location.state, location.pathname, navigate]);
 
@@ -301,29 +368,54 @@ const Home = () => {
           <h2 className="section-title">Servicios</h2>
 
           <div className="services-grid">
-            {serviceHighlights.map((service) => (
-              <div key={service.title} className="service-card service-card--highlight">
-                <h3>{service.title}</h3>
-                <p>{service.description}</p>
-                <div
+            {serviceHighlights.map((service) => {
+              const nav = getServiceNavigation(service.title);
+              const isClickable = nav !== null;
+              
+              return (
+                <div 
+                  key={service.title} 
+                  className="service-card service-card--highlight"
+                  onClick={() => isClickable && handleServiceClick(service.title)}
                   style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    marginTop: '1rem',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    color: '#1f76d3'
+                    cursor: isClickable ? 'pointer' : 'default',
+                    transition: isClickable ? 'transform 0.2s ease, box-shadow 0.2s ease' : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (isClickable) {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isClickable) {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '';
+                    }
                   }}
                 >
-                  {service.tags.map((tag) => (
-                    <span key={tag}>{tag}</span>
-                  ))}
+                  <h3>{service.title}</h3>
+                  <p>{service.description}</p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      marginTop: '1rem',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: '#1f76d3'
+                    }}
+                  >
+                    {service.tags.map((tag) => (
+                      <span key={tag}>{tag}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div style={{ marginTop: '3rem' }}>
@@ -353,9 +445,14 @@ const Home = () => {
                   <Link
                     key={course.id}
                     to={`/cursos#${slugify(course.type)}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
+                    style={{ 
+                      textDecoration: 'none', 
+                      color: 'inherit',
+                      display: 'flex',
+                      height: '100%'
+                    }}
                   >
-                    <div className="service-card service-card--course">
+                    <div className="service-card service-card--course" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
                       <div
                         className="service-card__image-wrapper"
                         style={{
@@ -363,7 +460,8 @@ const Home = () => {
                           height: '160px',
                           borderRadius: '10px',
                           overflow: 'hidden',
-                          marginBottom: '1rem'
+                          marginBottom: '1rem',
+                          flexShrink: 0
                         }}
                       >
                         <img
@@ -384,8 +482,8 @@ const Home = () => {
                           }}
                         />
                       </div>
-                      <h3>{course.name}</h3>
-                      <p>
+                      <h3 style={{ flexShrink: 0, marginBottom: '0.75rem' }}>{course.name}</h3>
+                      <p style={{ marginBottom: '1.5rem', flexGrow: 1 }}>
                         {course.description.length > 160
                           ? `${course.description.slice(0, 157)}...`
                           : course.description}
@@ -397,10 +495,11 @@ const Home = () => {
                           flexWrap: 'wrap',
                           justifyContent: 'center',
                           textAlign: 'center',
-                          marginTop: '1rem',
+                          marginTop: 'auto',
                           fontSize: '0.9rem',
                           fontWeight: 600,
-                          color: '#1f76d3'
+                          color: '#1f76d3',
+                          flexShrink: 0
                         }}
                       >
                         <span>{course.language}</span>

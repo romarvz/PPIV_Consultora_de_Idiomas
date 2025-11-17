@@ -198,6 +198,27 @@ exports.obtenerReportesPorEstudiante = async (req, res) => {
 };
 
 /**
+ * GET /api/reportes-academicos/recientes
+ * Gets recent reports (for dashboard)
+ * Acceso: Admin
+ */
+exports.obtenerReportesRecientes = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return sendError(res, 'No tienes permiso para ver estos reportes', 403);
+        }
+
+        const limite = parseInt(req.query.limite) || 50;
+        const reportes = await reportesAcademicosService.obtenerReportesRecientes(limite);
+
+        return sendSuccess(res, reportes, 'Reportes recientes obtenidos exitosamente');
+    } catch (error) {
+        console.error('Error en obtenerReportesRecientes:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
+/**
  * GET /api/reportes-academicos/curso/:cursoId
  * Gets all course reports
  */
@@ -248,6 +269,28 @@ exports.obtenerReportesPorPeriodo = async (req, res) => {
 // ============================================
 // SECTION 3: UPDATE REPORTS
 // ============================================
+
+/**
+ * DELETE /api/reportes-academicos/:id
+ * Elimina un reporte académico
+ * Acceso: Admin
+ */
+exports.eliminarReporte = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (req.user.role !== 'admin') {
+            return sendError(res, 'Solo los administradores pueden eliminar reportes', 403);
+        }
+
+        const reporte = await reportesAcademicosService.eliminarReporte(id);
+
+        return sendSuccess(res, reporte, 'Reporte eliminado exitosamente');
+    } catch (error) {
+        console.error('Error en eliminarReporte:', error);
+        return sendError(res, error.message, 500);
+    }
+};
 
 /**
  * PUT /api/reportes-academicos/:id
