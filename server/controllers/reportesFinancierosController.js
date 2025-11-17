@@ -365,4 +365,22 @@ exports.exportarExcel = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/reportes-financieros/dashboard/financiero
+ * Resumen global para el dashboard financiero (admin)
+ */
+exports.obtenerResumenFinancieroDashboard = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return sendError(res, 'No tienes permiso para ver este resumen', 403);
+        }
+
+        const data = await reportesFinancierosService.obtenerResumenFinancieroDashboard();
+        return sendSuccess(res, data, 'Resumen financiero obtenido exitosamente');
+    } catch (error) {
+        console.error('Error en obtenerResumenFinancieroDashboard:', error);
+        return sendError(res, error.message, 500);
+    }
+};
+
 module.exports = exports;

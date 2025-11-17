@@ -264,19 +264,29 @@
   padding: 1rem 2rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid var(--border-color);
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
   width: 100%;
   z-index: 1000;
+  margin-bottom: 0;
 }
 
 .dashboard-container {
-  margin-top: 120px;
   padding: 2rem;
+  padding-top: 1rem;
   background: var(--bg-primary);
   min-height: 100vh;
+}
+
+/* Asegurar que el navbar sticky funcione correctamente */
+.section.visible {
+  overflow: visible;
+}
+
+.section.visible .dashboard-container {
+  position: relative;
 }
 
 .dashboard-section {

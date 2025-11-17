@@ -485,7 +485,7 @@ exports.obtenerResumenAcademicoDashboard = async () => {
 
         const total = items.length;
         const averageAttendance = total > 0
-            ? (items.reduce((sum, s) => sum + (s.attendance || 0), 0) / total).toFixed(1)
+            ? parseFloat((items.reduce((sum, s) => sum + (s.attendance || 0), 0) / total).toFixed(1))
             : 0;
 
         return {

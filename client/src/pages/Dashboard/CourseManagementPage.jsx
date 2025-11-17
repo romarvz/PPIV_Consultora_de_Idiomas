@@ -46,13 +46,19 @@ const CourseManagementPage = () => {
       if (coursesResponse.data.success) {
         // El backend devuelve data como array directo de cursos
         const cursos = coursesResponse.data.data || [];
-        setCourses(cursos);
+        // Ordenar alfabéticamente por nombre
+        const cursosOrdenados = [...cursos].sort((a, b) => {
+          const nombreA = (a.nombre || '').toLowerCase();
+          const nombreB = (b.nombre || '').toLowerCase();
+          return nombreA.localeCompare(nombreB);
+        });
+        setCourses(cursosOrdenados);
 
         setEnrollmentCourse((prev) => {
           if (!prev) {
             return prev;
           }
-          const updated = cursos.find((c) => c._id === prev._id);
+          const updated = cursosOrdenados.find((c) => c._id === prev._id);
           return updated || prev;
         });
       } else {
@@ -453,7 +459,9 @@ const CourseManagementPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 10000,
+          padding: '20px',
+          overflowY: 'auto'
         }}>
           <CourseFormModal
             course={editingCourse}

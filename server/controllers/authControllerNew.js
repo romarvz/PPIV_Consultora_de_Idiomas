@@ -567,15 +567,26 @@ const getProfessors = async (req, res) => {
     // Pagination
     const skip = (page - 1) * limit;
 
-    // find professors
-    const professors = await Profesor.find(filters)
+    // Count total first
+    const total = await BaseUser.countDocuments(filters);
+    
+    // find professors - usar BaseUser para incluir todos los profesores
+    // independientemente de cómo fueron creados (discriminador o no)
+    const professors = await BaseUser.find(filters)
       .select('-password')
+      .populate({
+        path: 'especialidades',
+        select: 'code name nativeName isActive',
+        match: { isActive: { $ne: false } } // Solo incluir especialidades activas, pero no fallar si no hay
+        // No usar strictPopulate para evitar errores si no hay especialidades
+      })
       .limit(limit * 1)
       .skip(skip)
       .sort({ createdAt: -1 });
-
-    // Count total
-    const total = await Profesor.countDocuments(filters);
+    
+    // Log para debugging
+    console.log(`[getProfessors] Filtros:`, JSON.stringify(filters));
+    console.log(`[getProfessors] Encontrados ${professors.length} profesores de ${total} total`);
 
     res.json({
       success: true,
