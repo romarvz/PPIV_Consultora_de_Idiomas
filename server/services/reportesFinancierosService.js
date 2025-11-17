@@ -457,30 +457,148 @@ exports.generarReporteAutomatico = async (generadoPorId) => {
         const fechaInicio = calcularFechaInicioPeriodo(periodo);
         const fechaFin = calcularFechaFinPeriodo(periodo);
         
+        // Verificar si ya existe un reporte para este período
+        const reporteExistente = await ReporteFinanciero.findOne({ periodo });
+        
         const cobros = await Cobro.find({
             fechaCobro: { $gte: fechaInicio, $lte: fechaFin }
         });
-        const totalIngresos = cobros.reduce((sum, c) => sum + c.monto, 0);
+        const totalIngresos = cobros.reduce((sum, c) => sum + (c.monto || 0), 0);
 
-        const facturasPendientes = await Factura.find({ estado: { $in: ['Pendiente', 'Cobrada Parcialmente'] } });
-        const saldoPendiente = facturasPendientes.reduce((sum, f) => sum + (f.total - (f.totalCobrado || 0)), 0);
+        const facturasPendientes = await Factura.find({ estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] } });
+        const saldoPendiente = facturasPendientes.reduce((sum, f) => sum + ((f.total || 0) - (f.totalCobrado || 0)), 0);
 
         const estudiantesConDeuda = facturasPendientes.map(f => ({
             estudiante: f.estudiante,
-            montoDeuda: f.total - (f.totalCobrado || 0)
+            montoDeuda: (f.total || 0) - (f.totalCobrado || 0)
         }));
+
+        const pagosPendientes = await Factura.countDocuments({ estado: 'Pendiente' });
+        const pagosVencidos = await Factura.countDocuments({ estado: 'Vencida' });
         
+        // Si ya existe, actualizarlo en lugar de crear uno nuevo
+        if (reporteExistente) {
+            reporteExistente.totalIngresos = totalIngresos;
+            reporteExistente.saldoPendiente = saldoPendiente;
+            reporteExistente.pagosPendientes = pagosPendientes;
+            reporteExistente.pagosVencidos = pagosVencidos;
+            reporteExistente.estudiantesConDeuda = estudiantesConDeuda;
+            reporteExistente.fechaGeneracion = new Date();
+            reporteExistente.generadoPor = generadoPorId;
+            await reporteExistente.save();
+            return reporteExistente;
+        }
+        
+        // Si no existe, crear uno nuevo
         return await exports.generarReporteFinanciero({
             periodo,
             fechaInicio,
             fechaFin,
             totalIngresos,
             saldoPendiente,
+            pagosPendientes,
+            pagosVencidos,
             estudiantesConDeuda,
             generadoPorId
         });
     } catch (error) {
         throw new Error(`Error al generar reporte automático: ${error.message}`);
+    }
+};
+
+// ============================================
+// SECCIÓN: DASHBOARD
+// ============================================
+
+/**
+ * Obtiene un resumen financiero para el dashboard
+ * Devuelve totalIncome, pendingIncome y topStudents
+ */
+exports.obtenerResumenFinancieroDashboard = async () => {
+    try {
+        // Calcular ingresos totales (todos los cobros)
+        const cobros = await Cobro.find({});
+        const totalIncome = cobros.reduce((sum, c) => sum + (c.monto || 0), 0);
+
+        // Calcular ingresos pendientes (facturas pendientes)
+        const facturasPendientes = await Factura.find({ 
+            estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] } 
+        });
+        const pendingIncome = facturasPendientes.reduce((sum, f) => {
+            const total = f.total || 0;
+            const cobrado = f.totalCobrado || 0;
+            return sum + (total - cobrado);
+        }, 0);
+
+        // Obtener estudiantes con sus pagos
+        const estudiantes = await BaseUser.find({ role: 'estudiante', isActive: true })
+            .select('firstName lastName email');
+
+        const topStudents = [];
+
+        for (const estudiante of estudiantes) {
+            // Cobros del estudiante
+            const cobrosEstudiante = await Cobro.find({ estudiante: estudiante._id });
+            const total = cobrosEstudiante.reduce((sum, c) => sum + (c.monto || 0), 0);
+
+            // Facturas pendientes del estudiante
+            const facturasEstudiante = await Factura.find({ 
+                estudiante: estudiante._id,
+                estado: { $in: ['Pendiente', 'Cobrada Parcialmente', 'Vencida'] }
+            });
+            const pending = facturasEstudiante.reduce((sum, f) => {
+                const totalFactura = f.total || 0;
+                const cobradoFactura = f.totalCobrado || 0;
+                return sum + (totalFactura - cobradoFactura);
+            }, 0);
+
+            // Detalles mensuales (últimos 6 meses)
+            const monthlyDetails = [];
+            const ahora = new Date();
+            
+            for (let i = 5; i >= 0; i--) {
+                const fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+                const fechaFin = new Date(ahora.getFullYear(), ahora.getMonth() - i + 1, 0, 23, 59, 59);
+                
+                const cobrosMes = await Cobro.find({
+                    estudiante: estudiante._id,
+                    fechaCobro: { $gte: fechaInicio, $lte: fechaFin }
+                });
+                const received = cobrosMes.reduce((sum, c) => sum + (c.monto || 0), 0);
+
+                const facturasMes = await Factura.find({
+                    estudiante: estudiante._id,
+                    fechaEmision: { $gte: fechaInicio, $lte: fechaFin }
+                });
+                const expected = facturasMes.reduce((sum, f) => sum + (f.total || 0), 0);
+
+                const nombreMes = fechaInicio.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+                monthlyDetails.push({
+                    month: nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1),
+                    expected,
+                    received
+                });
+            }
+
+            topStudents.push({
+                id: estudiante._id.toString(),
+                studentName: `${estudiante.firstName} ${estudiante.lastName}`,
+                total,
+                pending,
+                monthlyDetails
+            });
+        }
+
+        // Ordenar por total pagado (descendente)
+        topStudents.sort((a, b) => b.total - a.total);
+
+        return {
+            totalIncome,
+            pendingIncome,
+            topStudents
+        };
+    } catch (error) {
+        throw new Error(`Error al obtener resumen financiero para dashboard: ${error.message}`);
     }
 };
 

@@ -61,6 +61,16 @@ router.get('/recientes',
 );
 
 /**
+ * GET /api/reportes-financieros/dashboard/financiero
+ * Resumen global para dashboard financiero
+ * Acceso: Admin
+ */
+router.get('/dashboard/financiero',
+    requireRole(['admin']),
+    reportesFinancierosController.obtenerResumenFinancieroDashboard
+);
+
+/**
  * GET /api/reportes-financieros
  * Gets all reports with optional filters
  * Optional query params: ?desde=2025-01-01&hasta=2025-12-31

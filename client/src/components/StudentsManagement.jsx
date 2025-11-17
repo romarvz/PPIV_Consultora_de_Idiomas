@@ -8,7 +8,8 @@ import {
   FaGraduationCap,
   FaEye,
   FaUserPlus,
-  FaChartLine
+  FaChartLine,
+  FaBook
 } from 'react-icons/fa';
 import api from '../services/api';
 import apiAdapter from '../services/apiAdapter';
@@ -778,6 +779,29 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [studentCourses, setStudentCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+
+  // Cargar cursos del estudiante cuando se abre el modal
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (!student?._id) return;
+      
+      try {
+        setLoadingCourses(true);
+        const response = await api.get(`/cursos/estudiante/${student._id}`);
+        if (response.data.success) {
+          setStudentCourses(response.data.data || []);
+        }
+      } catch (error) {
+        console.error('Error cargando cursos del estudiante:', error);
+        setStudentCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+    fetchCourses();
+  }, [student?._id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -827,7 +851,9 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        zIndex: 1000
+        zIndex: 10000,
+        padding: '20px',
+        overflowY: 'auto'
       }}
       onClick={onClose}
     >
@@ -839,7 +865,8 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
           maxWidth: '600px', 
           width: '90%',
           maxHeight: '90vh',
-          overflow: 'auto'
+          overflow: 'auto',
+          margin: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1023,6 +1050,83 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
                 <option value="graduado">Graduado</option>
               </select>
             </div>
+          </div>
+
+          {/* Cursos del Estudiante */}
+          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e1e5e9' }}>
+            <h4 style={{ margin: '0 0 1rem 0', color: '#333', display: 'flex', alignItems: 'center' }}>
+              <FaBook style={{ marginRight: '0.5rem', color: '#007bff' }} />
+              Cursos Inscriptos
+            </h4>
+            {loadingCourses ? (
+              <p style={{ color: '#666', fontSize: '0.9rem' }}>Cargando cursos...</p>
+            ) : studentCourses.length === 0 ? (
+              <p style={{ color: '#999', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                Este estudiante no está inscrito en ningún curso actualmente.
+              </p>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gap: '0.75rem',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                padding: '0.5rem',
+                border: '1px solid #e1e5e9',
+                borderRadius: '8px',
+                backgroundColor: '#f8f9fa'
+              }}>
+                {studentCourses.map((curso) => (
+                  <div
+                    key={curso._id}
+                    style={{
+                      padding: '0.75rem',
+                      border: '1px solid #e1e5e9',
+                      borderRadius: '6px',
+                      backgroundColor: 'white',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <div style={{ fontWeight: '600', color: '#333', marginBottom: '0.25rem' }}>
+                      {curso.nombre || 'Sin nombre'}
+                    </div>
+                    <div style={{ color: '#666', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                      {curso.idioma && (
+                        <span style={{ marginRight: '0.5rem' }}>
+                          Idioma: {curso.idioma}
+                        </span>
+                      )}
+                      {curso.nivel && (
+                        <span>
+                          Nivel: {curso.nivel}
+                        </span>
+                      )}
+                    </div>
+                    {curso.profesor && (
+                      <div style={{ color: '#666', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                        Profesor: {curso.profesor.firstName} {curso.profesor.lastName}
+                      </div>
+                    )}
+                    <div style={{ 
+                      display: 'inline-block',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      marginTop: '0.25rem',
+                      backgroundColor: curso.estado === 'activo' ? '#d4edda' : 
+                                      curso.estado === 'completado' ? '#d1ecf1' :
+                                      curso.estado === 'cancelado' ? '#f8d7da' : '#fff3cd',
+                      color: curso.estado === 'activo' ? '#155724' :
+                            curso.estado === 'completado' ? '#0c5460' :
+                            curso.estado === 'cancelado' ? '#721c24' : '#856404'
+                    }}>
+                      {curso.estado || 'planificado'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>

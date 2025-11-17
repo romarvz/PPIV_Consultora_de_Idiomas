@@ -78,11 +78,19 @@ const getTeachers = async (req, res) => {
     const options = {
       page: parseInt(page),
       limit: parseInt(limit),
-      sort: { createdAt: -1 },
+      // Ordenar alfabéticamente por apellido y nombre para mejor UX
+      sort: { lastName: 1, firstName: 1 },
       select: '-password'
     };
 
+    // Log para debugging
+    console.log(`[getTeachers] Filtros aplicados:`, JSON.stringify(filters, null, 2));
+    console.log(`[getTeachers] Parámetros: page=${page}, limit=${limit}, status=${status}, search=${search}`);
+
     const result = await userService.findUsers(filters, options);
+    
+    // Log para debugging
+    console.log(`[getTeachers] Encontrados ${result.docs.length} profesores de ${result.totalDocs} total`);
 
     res.json({
       success: true,

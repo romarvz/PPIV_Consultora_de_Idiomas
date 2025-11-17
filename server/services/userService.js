@@ -108,8 +108,17 @@ async function findUsers(filters, options = {}) {
 
   // Si es consulta de profesores, popular las especialidades y horarios
   if (filters.role === 'profesor') {
-    query.populate('especialidades', 'code name nativeName isActive');
-    query.populate('horariosPermitidos');
+    query.populate({
+      path: 'especialidades',
+      select: 'code name nativeName isActive',
+      // No fallar si no hay especialidades o si hay IDs inválidos
+      options: { strictPopulate: false }
+    });
+    query.populate({
+      path: 'horariosPermitidos',
+      // No fallar si no hay horarios
+      options: { strictPopulate: false }
+    });
   }
 
   const [docs, totalDocs] = await Promise.all([

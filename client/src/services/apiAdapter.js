@@ -686,7 +686,8 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.reports.financial(params)
       }
-      return await api.get('/reports/financial', { params })
+      // Usar el endpoint de dashboard financiero
+      return await api.get('/reportes-financieros/dashboard/financiero')
     },
 
     /**

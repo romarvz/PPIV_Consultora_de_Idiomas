@@ -105,6 +105,13 @@ router.get(
   cursosController.obtenerCursosDisponibles
 );
 
+// Get courses of a specific student (admin only)
+router.get(
+  '/estudiante/:estudianteId',
+  requireRole(['admin']),
+  cursosController.obtenerCursosPorEstudiante
+);
+
 // ============================================
 // ROUTES FOR TEACHERS
 // ============================================
@@ -120,9 +127,6 @@ router.get(
 router.get(
   '/profesor/:profesorId',
   requireRole(['admin', 'profesor']),
-  validarObtenerPorId,
-  handleValidationErrors,
-  paginationMiddleware,
   cursosController.obtenerCursosPorProfesor
 );
 

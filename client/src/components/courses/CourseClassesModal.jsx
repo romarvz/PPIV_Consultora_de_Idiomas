@@ -11,10 +11,11 @@ const modalStyles = {
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1001,
-    padding: '40px 20px'
+    zIndex: 10001,
+    padding: '20px',
+    overflowY: 'auto'
   },
   container: {
     width: '100%',

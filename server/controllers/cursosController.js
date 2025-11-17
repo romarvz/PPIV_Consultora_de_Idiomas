@@ -339,13 +339,18 @@ exports.obtenerCursosProfesor = async (req, res) => {
  */
 exports.obtenerCursosPorProfesor = async (req, res) => {
   try {
-    const cursos = await cursosService.getCursosByProfesor(req.params.profesorId);
+    const { profesorId } = req.params;
+    console.log('[obtenerCursosPorProfesor] ProfesorId recibido:', profesorId);
+    
+    const cursos = await cursosService.getCursosByProfesor(profesorId);
+    console.log('[obtenerCursosPorProfesor] Cursos encontrados:', cursos.length);
     
     return res.status(200).json({
       success: true,
       data: cursos
     });
   } catch (error) {
+    console.error('[obtenerCursosPorProfesor] Error:', error);
     return res.status(500).json({
       success: false,
       error: error.message
@@ -370,6 +375,28 @@ exports.obtenerMisCursos = async (req, res) => {
     });
   } catch (error) {
     console.error('Error en obtenerMisCursos:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtener cursos de un estudiante específico (para admin)
+ * GET /api/cursos/estudiante/:estudianteId
+ */
+exports.obtenerCursosPorEstudiante = async (req, res) => {
+  try {
+    const { estudianteId } = req.params;
+    const cursos = await cursosService.getCursosByEstudiante(estudianteId);
+    
+    return res.status(200).json({
+      success: true,
+      data: cursos
+    });
+  } catch (error) {
+    console.error('Error en obtenerCursosPorEstudiante:', error);
     return res.status(500).json({
       success: false,
       error: error.message

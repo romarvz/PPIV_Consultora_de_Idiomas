@@ -27,10 +27,25 @@ const ReportsDashboard = ({ onClose }) => {
         apiAdapter.reports.financial()
       ])
       
-      setAcademicData(academicResponse.data.data)
-      setFinancialData(financialResponse.data.data)
+      if (academicResponse.data.success) {
+        setAcademicData(academicResponse.data.data)
+      } else {
+        console.warn('La respuesta académica no fue exitosa:', academicResponse.data)
+        setAcademicData(null)
+      }
+      
+      if (financialResponse.data.success) {
+        setFinancialData(financialResponse.data.data)
+      } else {
+        console.warn('La respuesta financiera no fue exitosa:', financialResponse.data)
+        setFinancialData(null)
+      }
     } catch (error) {
       console.error('Error loading reports:', error)
+      console.error('Error completo:', error.response?.data || error.message)
+      // Establecer datos vacíos en caso de error
+      setAcademicData(null)
+      setFinancialData(null)
     } finally {
       setLoading(false)
     }
@@ -417,31 +432,46 @@ const ReportsDashboard = ({ onClose }) => {
                 </h2>
 
                 {/* Academic Performance Chart */}
-                <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
+                {!academicData ? (
+                  <div style={{ 
+                    background: 'var(--card-bg)', 
+                    padding: '2rem', 
+                    borderRadius: '12px', 
+                    boxShadow: 'var(--shadow-md)', 
+                    marginBottom: '2rem',
+                    textAlign: 'center',
+                    color: 'var(--text-secondary)'
+                  }}>
+                    No hay datos académicos disponibles para mostrar
+                  </div>
+                ) : (
+                  <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
-                    {/* Progress Ring Chart */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-                        <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color)" strokeWidth="8" />
-                          <circle 
-                            cx="60" 
-                            cy="60" 
-                            r="50" 
-                            fill="none" 
-                            stroke="#27ae60" 
-                            strokeWidth="8"
-                            strokeDasharray={`${(academicData?.averageAttendance || 0) * 3.14} 314`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>{academicData?.averageAttendance || 0}%</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Promedio</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
+                      {/* Progress Ring Chart */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                          <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color)" strokeWidth="8" />
+                            <circle 
+                              cx="60" 
+                              cy="60" 
+                              r="50" 
+                              fill="none" 
+                              stroke="#27ae60" 
+                              strokeWidth="8"
+                              strokeDasharray={`${((academicData?.averageAttendance || 0) / 100) * 314} 314`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                              {typeof academicData.averageAttendance === 'number' ? academicData.averageAttendance.toFixed(1) : (academicData.averageAttendance || 0)}%
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Promedio</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
                     {/* Performance Distribution */}
                     <div>
                       <div style={{ marginBottom: '1rem' }}>
@@ -478,6 +508,7 @@ const ReportsDashboard = ({ onClose }) => {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Filters */}
                 <div style={{
@@ -605,7 +636,14 @@ const ReportsDashboard = ({ onClose }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getFilteredAndSortedData(academicData)?.map((student, index) => (
+                      {!academicData || !academicData.students || academicData.students.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            No hay datos académicos disponibles
+                          </td>
+                        </tr>
+                      ) : (
+                        getFilteredAndSortedData(academicData)?.map((student, index) => (
                         <tr key={student._id} style={{ 
                           borderBottom: '1px solid var(--border-color)'
                         }} className="table-row-hover">
@@ -661,7 +699,8 @@ const ReportsDashboard = ({ onClose }) => {
                             </span>
                           </td>
                         </tr>
-                      ))}
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -869,7 +908,14 @@ const ReportsDashboard = ({ onClose }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getFilteredAndSortedFinancialData(financialData)?.map((student, index) => {
+                      {!financialData || !financialData.topStudents || financialData.topStudents.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            No hay datos financieros disponibles
+                          </td>
+                        </tr>
+                      ) : (
+                        getFilteredAndSortedFinancialData(financialData)?.map((student, index) => {
                         const totalExpected = student.total + (student.pending || 0)
                         const percentagePaid = totalExpected > 0 ? ((student.total / totalExpected) * 100).toFixed(1) : 0
                         const isExpanded = expandedRows.has(student.id || index)
@@ -972,7 +1018,8 @@ const ReportsDashboard = ({ onClose }) => {
                             )}
                           </React.Fragment>
                         )
-                      })}
+                      })
+                      )}
                     </tbody>
                   </table>
                 </div>

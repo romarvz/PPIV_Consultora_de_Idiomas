@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import api from '../../services/api'
+import apiAdapter from '../../services/apiAdapter'
 import { FaSpinner, FaTimes } from 'react-icons/fa'
 
 const GenerateReportModal = ({ type, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false)
+  const [loadingCourses, setLoadingCourses] = useState(false)
   const [formData, setFormData] = useState({
     cursoId: ''
   })
@@ -12,17 +13,43 @@ const GenerateReportModal = ({ type, onClose, onSuccess }) => {
   useEffect(() => {
     if (type === 'academic') {
       loadCourses()
+    } else {
+      // Limpiar cursos si no es académico
+      setCourses([])
     }
   }, [type])
 
   const loadCourses = async () => {
+    setLoadingCourses(true)
     try {
-      const response = await api.get('/cursos')
+      console.log('GenerateReportModal - Cargando cursos...')
+      // Solicitar todos los cursos (el backend limita a 100 máximo)
+      const response = await apiAdapter.cursos.getAll({
+        page: 1,
+        limit: 100 // Máximo permitido por el backend
+      })
+      console.log('GenerateReportModal - Respuesta completa:', response)
+      console.log('GenerateReportModal - response.data:', response.data)
+      console.log('GenerateReportModal - response.data.data:', response.data?.data)
+      
       if (response.data.success) {
-        setCourses(response.data.data || [])
+        // El endpoint devuelve data como array directo de cursos
+        const cursos = response.data.data || []
+        console.log('GenerateReportModal - Cursos cargados para reporte:', cursos.length)
+        if (cursos.length > 0) {
+          console.log('GenerateReportModal - Primeros cursos:', cursos.slice(0, 3).map(c => ({ id: c._id, nombre: c.nombre })))
+        }
+        setCourses(cursos)
+      } else {
+        console.warn('GenerateReportModal - La respuesta de cursos no fue exitosa:', response.data)
+        setCourses([])
       }
     } catch (error) {
-      console.error('Error loading courses:', error)
+      console.error('GenerateReportModal - Error loading courses:', error)
+      console.error('GenerateReportModal - Error completo:', error.response?.data || error.message)
+      setCourses([])
+    } finally {
+      setLoadingCourses(false)
     }
   }
 
@@ -142,26 +169,45 @@ const GenerateReportModal = ({ type, onClose, onSuccess }) => {
               }}>
                 Seleccionar Curso
               </label>
-              <select
-                value={formData.cursoId}
-                onChange={(e) => setFormData({ ...formData, cursoId: e.target.value })}
-                style={{
+              {loadingCourses ? (
+                <div style={{
                   width: '100%',
                   padding: '0.75rem',
-                  border: '1px solid var(--input-border)',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  background: 'var(--input-bg)',
-                  color: 'var(--text-primary)'
-                }}
-              >
-                <option value="">Seleccione un curso...</option>
-                {courses.map(course => (
-                  <option key={course._id} value={course._id}>
-                    {course.nombre} - {course.idioma}
-                  </option>
-                ))}
-              </select>
+                  textAlign: 'center',
+                  color: 'var(--text-secondary)'
+                }}>
+                  <FaSpinner style={{ 
+                    animation: 'spin 1s linear infinite',
+                    marginRight: '0.5rem'
+                  }} />
+                  Cargando cursos...
+                </div>
+              ) : (
+                <select
+                  value={formData.cursoId}
+                  onChange={(e) => setFormData({ ...formData, cursoId: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid var(--input-border)',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    background: 'var(--input-bg)',
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  <option value="">Seleccione un curso...</option>
+                  {courses.length === 0 ? (
+                    <option value="" disabled>No hay cursos disponibles</option>
+                  ) : (
+                    courses.map(course => (
+                      <option key={course._id} value={course._id}>
+                        {course.nombre} - {course.idioma || 'N/A'}
+                      </option>
+                    ))
+                  )}
+                </select>
+              )}
               <p style={{
                 fontSize: '0.875rem',
                 color: 'var(--text-secondary)',

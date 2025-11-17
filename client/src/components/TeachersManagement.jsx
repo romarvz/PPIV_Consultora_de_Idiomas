@@ -8,7 +8,8 @@ import {
   FaBook,
   FaEnvelope,
   FaPhone,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaGraduationCap
 } from 'react-icons/fa';
 import api from '../services/api';
 import RegisterTeacher from './RegisterTeacher';
@@ -715,6 +716,56 @@ const TeachersManagement = ({ onBack }) => {
           </table>
         )}
         </div>
+        
+        {/* Controles de paginación */}
+        {!loading && totalPages > 1 && (
+          <div style={{ 
+            padding: '1.5rem', 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            borderTop: '1px solid var(--border-color)',
+            background: 'var(--card-bg)'
+          }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              Mostrando página {currentPage} de {totalPages} ({totalTeachers} profesores en total)
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  background: currentPage === 1 ? 'var(--bg-secondary)' : 'var(--card-bg)',
+                  color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  background: currentPage === totalPages ? 'var(--bg-secondary)' : 'var(--card-bg)',
+                  color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal de edición */}
@@ -739,19 +790,18 @@ const TeachersManagement = ({ onBack }) => {
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000,
           padding: '20px',
-          overflowY: 'auto',
-          paddingTop: '40px',
-          paddingBottom: '40px'
+          overflowY: 'auto'
         }}>
           <div style={{
             width: '100%',
             maxWidth: '800px',
-            maxHeight: 'calc(100vh - 80px)',
-            overflowY: 'auto'
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            margin: 'auto'
           }}>
             <RegisterTeacher
               onSuccess={handleRegisterSuccess}
@@ -806,6 +856,8 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allHorarios, setAllHorarios] = useState([]);
   const [loadingHorarios, setLoadingHorarios] = useState(true);
+  const [teacherCourses, setTeacherCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   // Cargar todos los horarios disponibles
   useEffect(() => {
@@ -825,6 +877,39 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
     };
     fetchHorarios();
   }, []);
+
+  // Cargar cursos del profesor
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (!teacher._id) {
+        console.log('[EditTeacherModal] No hay teacher._id, no se cargan cursos');
+        return;
+      }
+      
+      try {
+        setLoadingCourses(true);
+        console.log('[EditTeacherModal] Cargando cursos para profesor:', teacher._id);
+        const response = await api.get(`/cursos/profesor/${teacher._id}`);
+        console.log('[EditTeacherModal] Respuesta de cursos:', response.data);
+        if (response.data.success) {
+          const cursos = response.data.data || [];
+          console.log('[EditTeacherModal] Cursos encontrados:', cursos.length);
+          setTeacherCourses(cursos);
+        } else {
+          console.warn('[EditTeacherModal] Respuesta sin success:', response.data);
+          setTeacherCourses([]);
+        }
+      } catch (error) {
+        console.error('[EditTeacherModal] Error cargando cursos del profesor:', error);
+        console.error('[EditTeacherModal] Error response:', error.response?.data);
+        console.error('[EditTeacherModal] Error status:', error.response?.status);
+        setTeacherCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+    fetchCourses();
+  }, [teacher._id]);
 
   // Actualizar formData cuando teacher cambie (después de una actualización exitosa)
   useEffect(() => {
@@ -946,13 +1031,11 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
       bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: 10000,
       padding: '20px',
-      overflowY: 'auto',
-      paddingTop: '40px',
-      paddingBottom: '40px'
+      overflowY: 'auto'
     }}>
       <div style={{
         backgroundColor: 'var(--card-bg)',
@@ -960,8 +1043,9 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
         boxShadow: 'var(--shadow-xl)',
         width: '100%',
         maxWidth: '800px',
-        maxHeight: 'calc(100vh - 80px)',
-        overflow: 'hidden'
+        maxHeight: '90vh',
+        overflow: 'hidden',
+        margin: 'auto'
       }}>
         <div style={{
           padding: '1.5rem 1.5rem 0 1.5rem',
@@ -1285,6 +1369,78 @@ const EditTeacherModal = ({ teacher, onSave, onCancel, successMessage, setSucces
               <p style={{ color: '#e74c3c', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: '500' }}>
                 ⚠ Ningún horario seleccionado - El profesor no podrá ser asignado a cursos hasta que seleccione al menos un horario
               </p>
+            )}
+          </div>
+
+          {/* Cursos del Profesor */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h4 style={{ color: 'var(--text-primary)', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center' }}>
+              <FaGraduationCap style={{ marginRight: '0.5rem', color: '#3498db' }} />
+              Cursos Asignados
+            </h4>
+            {loadingCourses ? (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Cargando cursos...</p>
+            ) : teacherCourses.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                Este profesor no tiene cursos asignados actualmente.
+              </p>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gap: '0.75rem',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                padding: '0.5rem',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-secondary)'
+              }}>
+                {teacherCourses.map((curso) => (
+                  <div
+                    key={curso._id}
+                    style={{
+                      padding: '0.75rem',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '6px',
+                      backgroundColor: 'var(--card-bg)',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                      {curso.nombre || 'Sin nombre'}
+                    </div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                      {curso.idioma && (
+                        <span style={{ marginRight: '0.5rem' }}>
+                          Idioma: {curso.idioma}
+                        </span>
+                      )}
+                      {curso.nivel && (
+                        <span>
+                          Nivel: {curso.nivel}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ 
+                      display: 'inline-block',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      marginTop: '0.25rem',
+                      backgroundColor: curso.estado === 'activo' ? '#d4edda' : 
+                                      curso.estado === 'completado' ? '#d1ecf1' :
+                                      curso.estado === 'cancelado' ? '#f8d7da' : '#fff3cd',
+                      color: curso.estado === 'activo' ? '#155724' :
+                            curso.estado === 'completado' ? '#0c5460' :
+                            curso.estado === 'cancelado' ? '#721c24' : '#856404'
+                    }}>
+                      {curso.estado || 'planificado'}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
