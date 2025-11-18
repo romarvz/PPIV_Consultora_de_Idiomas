@@ -27,7 +27,7 @@ const AuthNavbar = ({ user, onLogout, showBackButton = true, onBack }) => {
   const isMainDashboard = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
 
   return (
-    <div className="auth-navbar">
+    <div className="auth-navbar" style={{ position: 'fixed !important', top: '0 !important', left: '0 !important', right: '0 !important', zIndex: '1000 !important', backgroundColor: 'var(--card-bg, white)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', height: '60px' }}>
       <div className="auth-navbar__left">
         <img 
           src="/images/Logo.png" 

@@ -44,7 +44,7 @@ const Login = () => {
     <section className="section visible">
       <div className="container">
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-          <h2 className="section-title">Iniciar Sesión</h2>
+          <h2 className="section-title" style={{ marginTop: '3rem' }}>Iniciar Sesión</h2>
           
           {/* Information for first-time users */}
           <div style={{ 

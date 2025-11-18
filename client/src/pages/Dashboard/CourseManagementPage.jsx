@@ -192,7 +192,8 @@ const CourseManagementPage = () => {
 
   // Component JSX with modified table
   return (
-    <div style={{ padding: '2rem', background: '#f8f9fa', minHeight: '100vh' }}>
+    <div className="dashboard-container">
+      <div style={{ padding: '2rem', background: '#f8f9fa', minHeight: '100vh' }}>
       {/* Header */}
       <div className="dashboard-section">
         <h3 className="dashboard-section__title">Gestión de Catálogo de Cursos</h3>
@@ -502,6 +503,7 @@ const CourseManagementPage = () => {
           onClose={handleCloseStudents}
         />
       )}
+      </div>
     </div>
   );
 };

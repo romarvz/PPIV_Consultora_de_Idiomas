@@ -120,10 +120,12 @@ const Header = ({ theme, toggleTheme }) => {
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
             
-            {/* Login button */}
-            <button className="login-btn" onClick={() => navigate(routes.LOGIN)}>
-              Iniciar Sesión
-            </button>
+            {/* Login button - hide on login page */}
+            {location.pathname !== routes.LOGIN && (
+              <button className="login-btn" onClick={() => navigate(routes.LOGIN)}>
+                Iniciar Sesión
+              </button>
+            )}
             
             {/* Mobile menu hamburger button */}
             <button className="menu-toggle" onClick={toggleMenu}>

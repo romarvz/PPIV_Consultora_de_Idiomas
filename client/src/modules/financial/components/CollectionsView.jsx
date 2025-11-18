@@ -803,8 +803,10 @@ const CollectionsView = () => {
           inset: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.6)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
+          paddingTop: '2rem',
+          overflowY: 'auto',
           zIndex: 9999
         }}>
           <div style={{
@@ -1012,11 +1014,12 @@ const CollectionsView = () => {
           inset: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.6)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
+          paddingTop: '2rem',
+          overflowY: 'auto',
           zIndex: 9999,
-          padding: '1rem',
-          overflowY: 'auto'
+          padding: '1rem'
         }}>
           <div style={{
             backgroundColor: 'var(--card-bg)',
@@ -1378,8 +1381,10 @@ const CollectionsView = () => {
           inset: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
+          paddingTop: '2rem',
+          overflowY: 'auto',
           zIndex: 10000
         }}>
           <div style={{

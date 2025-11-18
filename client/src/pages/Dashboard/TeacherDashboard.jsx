@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaCalendarCheck, FaChalkboardTeacher } from 'react-icons/fa';
+import { FaCalendarCheck, FaChalkboardTeacher, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import AuthNavbar from '../../components/common/AuthNavbar';
 import TeacherCourseClasses from '../../components/courses/TeacherCourseClasses';
@@ -32,20 +32,21 @@ const infoValueStyle = {
 
 const calendarGridStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-  gap: '1rem'
+  gridTemplateColumns: 'repeat(7, 1fr)',
+  gap: '1px',
+  backgroundColor: '#e5e7eb',
+  borderRadius: '8px',
+  overflow: 'hidden'
 };
 
 const calendarDayCardStyle = {
-  borderRadius: '12px',
-  border: '1px solid var(--border-color, #e5e7eb)',
-  padding: '0.85rem',
+  padding: '0.5rem',
   background: '#fff',
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.6rem',
-  minHeight: '180px',
-  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.06)'
+  gap: '0.25rem',
+  minHeight: '100px',
+  position: 'relative'
 };
 
 const calendarDayHeaderStyle = {
@@ -85,29 +86,37 @@ const isSameDay = (dateA, dateB) => {
   );
 };
 
-const buildCalendarDays = (classes, daysToShow = 14) => {
+const buildCalendarDays = (classes, weekOffset = 0) => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
+  
+  // Calculate start of current week (Sunday)
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  
+  // Apply week offset
+  startOfWeek.setDate(startOfWeek.getDate() + (weekOffset * 7));
+  
+  // Build 4 weeks (28 days)
   const days = [];
-  for (let i = 0; i < daysToShow; i += 1) {
-    const day = new Date(today);
-    day.setDate(today.getDate() + i);
-
+  for (let i = 0; i < 28; i++) {
+    const day = new Date(startOfWeek);
+    day.setDate(startOfWeek.getDate() + i);
+    
     const dayClasses = classes.filter((clase) => {
-      if (!clase?.fechaHora) {
-        return false;
-      }
+      if (!clase?.fechaHora) return false;
       const classDate = new Date(clase.fechaHora);
       return isSameDay(classDate, day);
     });
-
+    
+    const isPast = day < today;
+    
     days.push({
       date: day,
-      classes: dayClasses.sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora))
+      classes: dayClasses.sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora)),
+      isPast
     });
   }
-
+  
   return days;
 };
 
@@ -149,6 +158,7 @@ const TeacherDashboard = () => {
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [error, setError] = useState(null);
   const [refreshToken, setRefreshToken] = useState(Date.now());
+  const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -218,16 +228,22 @@ const TeacherDashboard = () => {
       .sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
   }, [upcomingClasses]);
 
-  const calendarDays = useMemo(() => buildCalendarDays(upcomingList), [upcomingList]);
-  const dayFormatter = useMemo(
+  const calendarDays = useMemo(() => buildCalendarDays(upcomingClasses, weekOffset), [upcomingClasses, weekOffset]);
+  const monthYearFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat('es-AR', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short'
+        month: 'long',
+        year: 'numeric'
       }),
     []
   );
+  
+  const currentDisplayDate = useMemo(() => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + (weekOffset * 7));
+    return startOfWeek;
+  }, [weekOffset]);
   const timeFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat([], {
@@ -306,9 +322,41 @@ const TeacherDashboard = () => {
       </div>
 
       <div className="dashboard-card" style={{ marginTop: '1.5rem' }}>
-        <div className="dashboard-card__header">
-          <FaCalendarCheck className="dashboard-card__icon" />
-          <h4 className="dashboard-card__title">Próximas clases</h4>
+        <div className="dashboard-card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FaCalendarCheck className="dashboard-card__icon" />
+            <h4 className="dashboard-card__title">Calendario - {monthYearFormatter.format(currentDisplayDate)}</h4>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setWeekOffset(weekOffset - 1)}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                background: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <FaChevronLeft size={14} />
+            </button>
+            <button
+              onClick={() => setWeekOffset(weekOffset + 1)}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                background: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <FaChevronRight size={14} />
+            </button>
+          </div>
         </div>
 
         {loadingClasses ? (
@@ -318,33 +366,65 @@ const TeacherDashboard = () => {
             No tenés clases agendadas. Podés programarlas o ajustarlas desde la sección de cada curso.
           </p>
         ) : (
-          <div style={calendarGridStyle}>
-            {calendarDays.map(({ date, classes }) => (
-              <div key={date.toISOString()} style={calendarDayCardStyle}>
-                <div style={calendarDayHeaderStyle}>
-                  <span>{dayFormatter.format(date)}</span>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
-                    {classes.length} {classes.length === 1 ? 'clase' : 'clases'}
-                  </span>
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: '1rem', backgroundColor: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}>
+              {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(day => (
+                <div key={day} style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151', backgroundColor: '#f9fafb' }}>
+                  {day}
                 </div>
-                {classes.length === 0 ? (
-                  <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Sin clases programadas</span>
-                ) : (
-                  classes.map((clase) => (
-                    <div key={clase._id} style={calendarClassCardStyle}>
-                      <strong style={{ color: 'var(--text-primary)' }}>{clase.titulo}</strong>
-                      <span style={{ color: '#4b5563', fontSize: '0.85rem' }}>
-                        {timeFormatter.format(new Date(clase.fechaHora))} • {clase.duracionMinutos} min
-                      </span>
-                      {clase.curso?.nombre && (
-                        <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>Curso: {clase.curso.nombre}</span>
-                      )}
+              ))}
+            </div>
+            
+            <div style={calendarGridStyle}>
+              {calendarDays.map(({ date, classes, isPast }) => {
+                const today = new Date();
+                const isToday = isSameDay(date, today);
+                return (
+                  <div key={date.toISOString()} style={{
+                    ...calendarDayCardStyle,
+                    backgroundColor: isPast ? '#f3f4f6' : '#fff',
+                    border: isToday ? '2px solid #0F5C8C' : '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ 
+                      fontSize: '0.875rem', 
+                      fontWeight: isToday ? '700' : '500', 
+                      color: isToday ? '#0F5C8C' : '#111827', 
+                      marginBottom: '0.25rem' 
+                    }}>
+                      {date.getDate()}
                     </div>
-                  ))
-                )}
-              </div>
-            ))}
-          </div>
+                    {classes.map((clase) => {
+                      const isCompleted = isPast || clase.estado === 'completada';
+                      const courseName = typeof clase.curso === 'string' ? clase.curso : clase.curso?.nombre || 'Curso';
+                      return (
+                        <div key={clase._id} style={{
+                          padding: '0.4rem',
+                          borderRadius: '6px',
+                          fontSize: '0.7rem',
+                          backgroundColor: isCompleted ? '#0F5C8C' : '#27ae60',
+                          color: 'white',
+                          marginBottom: '0.25rem',
+                          lineHeight: '1.2'
+                        }}>
+                          <div style={{ fontWeight: '600', marginBottom: '0.1rem' }}>
+                            {timeFormatter.format(new Date(clase.fechaHora))}
+                          </div>
+                          <div style={{ opacity: 0.9, fontSize: '0.65rem' }}>
+                            {courseName}
+                          </div>
+                          {clase.tema && (
+                            <div style={{ opacity: 0.8, fontSize: '0.6rem', marginTop: '0.1rem' }}>
+                              {clase.tema.length > 15 ? `${clase.tema.substring(0, 15)}...` : clase.tema}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 

@@ -18,6 +18,29 @@ const ReportsDashboard = ({ onClose }) => {
 
   useEffect(() => {
     loadReports()
+    
+    // Set up polling for real-time report updates every 45 seconds
+    const pollInterval = setInterval(() => {
+      // Only update if page is visible and not currently loading
+      if (!document.hidden && !loading) {
+        loadReports()
+      }
+    }, 45000)
+    
+    // Listen for page visibility changes to update when user returns
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !loading) {
+        loadReports() // Immediate update when page becomes visible
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    // Cleanup on unmount
+    return () => {
+      clearInterval(pollInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const loadReports = async () => {
@@ -34,20 +57,36 @@ const ReportsDashboard = ({ onClose }) => {
       }
       
       // Cargar reportes con timeout individual de 30 segundos cada uno
-      const [academicResponse, financialResponse, recentReportsResponse] = await Promise.all([
+      const [academicResponse, financialResponse, recentReportsResponse, studentsResponse] = await Promise.all([
         withTimeout(apiAdapter.reports.academicDashboard(), 30000),
         withTimeout(apiAdapter.reports.financial(), 30000),
-        withTimeout(api.get('/reportes-academicos/recientes?limite=50'), 30000)
+        withTimeout(api.get('/reportes-academicos/recientes?limite=50'), 30000),
+        withTimeout(api.get('/students?limit=1000'), 30000)
       ])
+      
+      // Get real-time student count
+      let realTimeStudentCount = 0
+      if (studentsResponse?.data?.success) {
+        const students = studentsResponse.data.data?.students || []
+        realTimeStudentCount = students.length
+      }
       
       if (academicResponse?.data?.success) {
         const academicDataReceived = academicResponse.data.data
         console.log('[ReportsDashboard] Datos académicos recibidos:', {
           total: academicDataReceived?.total,
           studentsCount: academicDataReceived?.students?.length,
-          averageAttendance: academicDataReceived?.averageAttendance
+          averageAttendance: academicDataReceived?.averageAttendance,
+          realTimeCount: realTimeStudentCount
         })
-        setAcademicData(academicDataReceived)
+        
+        // Update total with real-time count
+        const updatedAcademicData = {
+          ...academicDataReceived,
+          total: realTimeStudentCount,
+          realTimeTotal: realTimeStudentCount
+        }
+        setAcademicData(updatedAcademicData)
       } else {
         console.warn('La respuesta académica no fue exitosa:', academicResponse?.data)
         // No limpiar los datos existentes si hay error - mantener los datos previos
@@ -83,63 +122,152 @@ const ReportsDashboard = ({ onClose }) => {
   const handleExportPDF = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
+      
+      // Dynamic import of jsPDF
+      const { jsPDF } = await import('jspdf')
+      
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.width
+      let yPosition = 20
+      
+      // Header with logo placeholder and title
+      doc.setFontSize(20)
+      doc.setTextColor(10, 44, 89) // Primary color
+      doc.text('LINGUA ACADEMY', pageWidth / 2, yPosition, { align: 'center' })
+      yPosition += 15
+      
+      doc.setFontSize(16)
+      const reportTitle = activeTab === 'academic' ? 'REPORTE ACADÉMICO' : 'REPORTE FINANCIERO'
+      doc.text(reportTitle, pageWidth / 2, yPosition, { align: 'center' })
+      yPosition += 10
+      
+      doc.setFontSize(10)
+      doc.setTextColor(100, 100, 100)
+      doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, pageWidth / 2, yPosition, { align: 'center' })
+      yPosition += 20
+      
+      // Line separator
+      doc.setDrawColor(15, 92, 140)
+      doc.line(20, yPosition, pageWidth - 20, yPosition)
+      yPosition += 15
+      
+      doc.setTextColor(0, 0, 0)
       
       if (activeTab === 'academic') {
-        const reportId = academicData?.students?.[0]?._id
-        if (!reportId || reportId.startsWith('mock-')) {
-          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
+        if (!academicData || !academicData.students || academicData.students.length === 0) {
+          alert('No hay datos académicos para exportar.')
           return
         }
         
-        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-pdf`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const filteredData = getFilteredAndSortedData(academicData)
+        
+        // Summary section
+        doc.setFontSize(12)
+        doc.setFont(undefined, 'bold')
+        doc.text('RESUMEN GENERAL', 20, yPosition)
+        yPosition += 10
+        
+        doc.setFont(undefined, 'normal')
+        doc.setFontSize(10)
+        doc.text(`Total de estudiantes: ${academicData.realTimeTotal || academicData.total || 0}`, 20, yPosition)
+        yPosition += 6
+        doc.text(`Promedio de asistencia: ${academicData.averageAttendance?.toFixed(1) || 0}%`, 20, yPosition)
+        yPosition += 15
+        
+        // Students table header
+        doc.setFont(undefined, 'bold')
+        doc.text('DETALLE DE ESTUDIANTES', 20, yPosition)
+        yPosition += 8
+        
+        doc.setFont(undefined, 'normal')
+        doc.text('DNI', 20, yPosition)
+        doc.text('Nombre', 50, yPosition)
+        doc.text('Nivel', 110, yPosition)
+        doc.text('Asistencia', 130, yPosition)
+        doc.text('Estado', 160, yPosition)
+        yPosition += 5
+        
+        // Line under header
+        doc.line(20, yPosition, pageWidth - 20, yPosition)
+        yPosition += 8
+        
+        // Students data
+        filteredData.forEach(student => {
+          if (yPosition > 270) {
+            doc.addPage()
+            yPosition = 20
+          }
+          
+          const estado = student.promedio >= 8 ? 'Excelente' : student.promedio >= 6 ? 'Aprobado' : 'Necesita apoyo'
+          
+          doc.text(student.dni || 'Sin DNI', 20, yPosition)
+          doc.text(`${student.firstName} ${student.lastName}`, 50, yPosition)
+          doc.text(student.nivel || 'N/A', 110, yPosition)
+          doc.text(`${student.attendance?.toFixed(1) || 0}%`, 130, yPosition)
+          doc.text(estado, 160, yPosition)
+          yPosition += 6
         })
         
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
-        }
-        
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `reporte-academico-${reportId}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        doc.save(`reporte-academico-${new Date().toISOString().split('T')[0]}.pdf`)
       } else {
-        // Calcular período actual (YYYY-Q1/Q2/Q3/Q4)
-        const fecha = new Date()
-        const year = fecha.getFullYear()
-        const month = fecha.getMonth() + 1
-        const quarter = Math.ceil(month / 3)
-        const periodo = `${year}-Q${quarter}`
-        
-        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-pdf`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        if (!financialData || !financialData.topStudents) {
+          alert('No hay datos financieros para exportar.')
+          return
         }
         
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `reporte-financiero-${periodo}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        const filteredData = getFilteredAndSortedFinancialData(financialData)
+        
+        // Summary section
+        doc.setFontSize(12)
+        doc.setFont(undefined, 'bold')
+        doc.text('RESUMEN FINANCIERO', 20, yPosition)
+        yPosition += 10
+        
+        doc.setFont(undefined, 'normal')
+        doc.setFontSize(10)
+        doc.text(`Total de ingresos: $${financialData.totalIncome || 0}`, 20, yPosition)
+        yPosition += 6
+        doc.text(`Ingresos pendientes: $${financialData.pendingIncome || 0}`, 20, yPosition)
+        yPosition += 15
+        
+        // Financial table header
+        doc.setFont(undefined, 'bold')
+        doc.text('DETALLE POR ESTUDIANTE', 20, yPosition)
+        yPosition += 8
+        
+        doc.setFont(undefined, 'normal')
+        doc.text('Estudiante', 20, yPosition)
+        doc.text('Total Pagado', 80, yPosition)
+        doc.text('Adeuda', 130, yPosition)
+        doc.text('% Cobrado', 160, yPosition)
+        yPosition += 5
+        
+        // Line under header
+        doc.line(20, yPosition, pageWidth - 20, yPosition)
+        yPosition += 8
+        
+        // Financial data
+        filteredData.forEach(student => {
+          if (yPosition > 270) {
+            doc.addPage()
+            yPosition = 20
+          }
+          
+          const totalExpected = student.total + (student.pending || 0)
+          const percentage = totalExpected > 0 ? ((student.total / totalExpected) * 100).toFixed(1) : 0
+          
+          doc.text(student.studentName, 20, yPosition)
+          doc.text(`$${student.total}`, 80, yPosition)
+          doc.text(`$${student.pending || 0}`, 130, yPosition)
+          doc.text(`${percentage}%`, 160, yPosition)
+          yPosition += 6
+        })
+        
+        doc.save(`reporte-financiero-${new Date().toISOString().split('T')[0]}.pdf`)
       }
     } catch (error) {
       console.error('Error exporting PDF:', error)
-      alert('Error al exportar PDF:\n' + error.message)
+      alert('Error al exportar PDF: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -148,63 +276,65 @@ const ReportsDashboard = ({ onClose }) => {
   const handleExportExcel = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
       
       if (activeTab === 'academic') {
-        const reportId = academicData?.students?.[0]?._id
-        if (!reportId || reportId.startsWith('mock-')) {
-          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
+        if (!academicData || !academicData.students || academicData.students.length === 0) {
+          alert('No hay datos académicos para exportar.')
           return
         }
         
-        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-excel`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+        // Create CSV content (Excel-compatible)
+        const filteredData = getFilteredAndSortedData(academicData)
+        let csvContent = 'LINGUA ACADEMY\n'
+        csvContent += 'REPORTE ACADÉMICO\n'
+        csvContent += `Generado el: ${new Date().toLocaleDateString('es-ES')}\n\n`
+        csvContent += 'DNI,Nombre,Apellido,Nivel,Asistencia (%),Promedio,Estado\n'
+        
+        filteredData.forEach(student => {
+          const estado = student.promedio >= 8 ? 'Excelente' : student.promedio >= 6 ? 'Aprobado' : 'Necesita apoyo'
+          csvContent += `"${student.dni || 'Sin DNI'}","${student.firstName}","${student.lastName}","${student.nivel}","${student.attendance?.toFixed(1) || 0}","${student.promedio?.toFixed(2) || 'N/A'}","${estado}"\n`
         })
         
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
-        }
-        
-        const blob = await response.blob()
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `reporte-academico-${reportId}.xlsx`
+        a.download = `reporte-academico-${new Date().toISOString().split('T')[0]}.csv`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        // Calcular período actual (YYYY-Q1/Q2/Q3/Q4)
-        const fecha = new Date()
-        const year = fecha.getFullYear()
-        const month = fecha.getMonth() + 1
-        const quarter = Math.ceil(month / 3)
-        const periodo = `${year}-Q${quarter}`
-        
-        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-excel`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        if (!financialData || !financialData.topStudents) {
+          alert('No hay datos financieros para exportar.')
+          return
         }
         
-        const blob = await response.blob()
+        const filteredData = getFilteredAndSortedFinancialData(financialData)
+        let csvContent = 'LINGUA ACADEMY\n'
+        csvContent += 'REPORTE FINANCIERO\n'
+        csvContent += `Generado el: ${new Date().toLocaleDateString('es-ES')}\n\n`
+        csvContent += 'Estudiante,Total Pagado,Adeuda,Porcentaje Cobrado (%)\n'
+        
+        filteredData.forEach(student => {
+          const totalExpected = student.total + (student.pending || 0)
+          const percentage = totalExpected > 0 ? ((student.total / totalExpected) * 100).toFixed(1) : 0
+          csvContent += `"${student.studentName}","${student.total}","${student.pending || 0}","${percentage}"\n`
+        })
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `reporte-financiero-${periodo}.xlsx`
+        a.download = `reporte-financiero-${new Date().toISOString().split('T')[0]}.csv`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       }
     } catch (error) {
-      console.error('Error exporting Excel:', error)
-      alert('Error al exportar Excel:\n' + error.message)
+      console.error('Error exporting:', error)
+      alert('Error al exportar: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -335,7 +465,7 @@ const ReportsDashboard = ({ onClose }) => {
   }
 
   return (
-    <>
+    <div className="dashboard-container">
       {/* Header */}
       <div className="dashboard-section">
         <h3 className="dashboard-section__title">Reportes</h3>
@@ -424,7 +554,7 @@ const ReportsDashboard = ({ onClose }) => {
             onClick={handleExportPDF}
             disabled={loading}
             style={{
-              background: '#dc2626',
+              background: '#0F5C8C',
               color: 'white',
               border: 'none',
               padding: '0.75rem 1.5rem',
@@ -445,7 +575,7 @@ const ReportsDashboard = ({ onClose }) => {
             onClick={handleExportExcel}
             disabled={loading}
             style={{
-              background: '#16a34a',
+              background: '#3088BF',
               color: 'white',
               border: 'none',
               padding: '0.75rem 1.5rem',
@@ -510,21 +640,21 @@ const ReportsDashboard = ({ onClose }) => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
                       {/* Progress Ring Chart */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-                          <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
-                            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color)" strokeWidth="8" />
+                        <div style={{ position: 'relative', width: '160px', height: '160px' }}>
+                          <svg width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
+                            <circle cx="80" cy="80" r="70" fill="none" stroke="var(--border-color)" strokeWidth="8" />
                             <circle 
-                              cx="60" 
-                              cy="60" 
-                              r="50" 
+                              cx="80" 
+                              cy="80" 
+                              r="70" 
                               fill="none" 
                               stroke="#27ae60" 
                               strokeWidth="8"
                               strokeDasharray={`${
                                 academicData.averageGrade !== null && academicData.averageGrade !== undefined
-                                  ? ((academicData.averageGrade / 10) * 314)
-                                  : ((academicData?.averageAttendance || 0) / 100) * 314
-                              } 314`}
+                                  ? ((academicData.averageGrade / 10) * 440)
+                                  : ((academicData?.averageAttendance || 0) / 100) * 440
+                              } 440`}
                               strokeLinecap="round"
                             />
                           </svg>
@@ -536,7 +666,7 @@ const ReportsDashboard = ({ onClose }) => {
                                   ? `${academicData.averageAttendance.toFixed(1)}%`
                                   : '0%'}
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.2' }}>
                               {academicData.averageGrade !== null && academicData.averageGrade !== undefined
                                 ? 'Promedio de Calificaciones'
                                 : 'Promedio de Asistencia'}
@@ -575,7 +705,12 @@ const ReportsDashboard = ({ onClose }) => {
                       </div>
                       <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: '6px', textAlign: 'center' }}>
                         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Total: </span>
-                        <span style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{academicData?.total || 0} estudiantes</span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)' }}>{academicData?.realTimeTotal || academicData?.total || 0} estudiantes</span>
+                        {academicData?.realTimeTotal && academicData?.realTimeTotal !== academicData?.total && (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '0.25rem' }}>
+                            (Actualizado en tiempo real)
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -671,7 +806,7 @@ const ReportsDashboard = ({ onClose }) => {
                                 flex: 1,
                                 minWidth: '80px',
                                 padding: '0.5rem',
-                                background: '#dc2626',
+                                background: '#0F5C8C',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -716,7 +851,7 @@ const ReportsDashboard = ({ onClose }) => {
                                 flex: 1,
                                 minWidth: '80px',
                                 padding: '0.5rem',
-                                background: '#16a34a',
+                                background: '#3088BF',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -1347,17 +1482,17 @@ const ReportsDashboard = ({ onClose }) => {
             type={activeTab}
             onClose={() => setShowGenerateModal(false)}
             onSuccess={async () => {
-              // Recargar reportes pero mantener los datos existentes si hay error
+              // Immediate reload after generating new report
               try {
                 await loadReports()
               } catch (error) {
-                console.error('Error recargando reportes después de generar:', error)
-                // No limpiar los datos existentes si hay error
+                console.error('Error reloading reports after generation:', error)
+                // Keep existing data if reload fails
               }
             }}
           />
       )}
-    </>
+    </div>
   )
 }
 

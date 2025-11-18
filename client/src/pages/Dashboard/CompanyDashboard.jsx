@@ -98,8 +98,7 @@ const CompanyDashboard = () => {
   }
 
   return (
-    <section className="section visible">
-      <div className="container dashboard-container">
+    <div className="dashboard-container">
         <AuthNavbar user={user} onLogout={handleLogout} showBackButton={true} />
 
         {/* Company Info */}
@@ -325,8 +324,7 @@ const CompanyDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+    </div>
   )
 }
 

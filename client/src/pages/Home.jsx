@@ -403,14 +403,23 @@ const Home = () => {
                       flexWrap: 'wrap',
                       justifyContent: 'center',
                       textAlign: 'center',
-                      marginTop: '1rem',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      color: '#1f76d3'
+                      marginTop: '1rem'
                     }}
                   >
                     {service.tags.map((tag) => (
-                      <span key={tag}>{tag}</span>
+                      <span 
+                        key={tag}
+                        style={{
+                          backgroundColor: '#0F5C8C',
+                          color: 'white',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '20px',
+                          fontSize: '0.8rem',
+                          fontWeight: 500
+                        }}
+                      >
+                        {tag}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -496,15 +505,33 @@ const Home = () => {
                           justifyContent: 'center',
                           textAlign: 'center',
                           marginTop: 'auto',
-                          fontSize: '0.9rem',
-                          fontWeight: 600,
-                          color: '#1f76d3',
                           flexShrink: 0
                         }}
                       >
-                        <span>{course.language}</span>
-                        <span>{course.level}</span>
-                        {course.modality && <span>{course.modality}</span>}
+                        <span style={{
+                          backgroundColor: '#0F5C8C',
+                          color: 'white',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '20px',
+                          fontSize: '0.8rem',
+                          fontWeight: 500
+                        }}>{course.language}</span>
+                        <span style={{
+                          backgroundColor: '#0F5C8C',
+                          color: 'white',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '20px',
+                          fontSize: '0.8rem',
+                          fontWeight: 500
+                        }}>{course.level}</span>
+                        {course.modality && <span style={{
+                          backgroundColor: '#0F5C8C',
+                          color: 'white',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '20px',
+                          fontSize: '0.8rem',
+                          fontWeight: 500
+                        }}>{course.modality}</span>}
                       </div>
                     </div>
                   </Link>

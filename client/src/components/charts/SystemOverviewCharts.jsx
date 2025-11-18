@@ -34,23 +34,44 @@ const SystemOverviewCharts = ({ stats, loading }) => {
     { name: 'Inactivos', value: stats.totalTeachers - stats.activeTeachers, fill: colors.info }
   ];
 
-  // Data for Specialties Chart (Bar Chart)
-  const specialtiesData = stats.teacherSpecialties.slice(0, 5).map((specialty, index) => ({
-    name: specialty,
-    fullName: specialty,
-    value: Math.floor(Math.random() * 8) + 2,
+  // Data for Specialties Chart (Bar Chart) - using real API data
+  const specialtiesData = (stats.specialtyData || []).map((specialty, index) => ({
+    name: specialty.name,
+    fullName: specialty.name,
+    value: specialty.count,
     fill: [colors.secondary, colors.purple, colors.info, colors.pink, colors.success][index % 5]
   }));
 
-  // Data for Revenue Chart (Line Chart)
-  const revenueData = [
-    { month: 'Ene', revenue: 15000, target: 20000 },
-    { month: 'Feb', revenue: 18000, target: 20000 },
-    { month: 'Mar', revenue: 22000, target: 20000 },
-    { month: 'Abr', revenue: 19000, target: 22000 },
-    { month: 'May', revenue: 25000, target: 22000 },
-    { month: 'Jun', revenue: stats.monthlyRevenue || 28000, target: 25000 }
-  ];
+  // Generate past 6 months data based on current date
+  const generatePast6MonthsData = () => {
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    const currentDate = new Date()
+    const past6Months = []
+    
+    // Generate past 6 months including current month
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
+      const monthName = months[date.getMonth()]
+      const year = date.getFullYear()
+      
+      // Find real data for this month if available
+      const realData = stats.revenueData?.find(item => {
+        const itemDate = new Date(item.month)
+        return itemDate.getMonth() === date.getMonth() && itemDate.getFullYear() === year
+      })
+      
+      past6Months.push({
+        month: monthName,
+        fullDate: `${monthName} ${year}`,
+        revenue: realData ? realData.amount : 0,
+        target: realData ? realData.target || realData.amount * 1.1 : 20000
+      })
+    }
+    
+    return past6Months
+  }
+  
+  const revenueData = generatePast6MonthsData()
 
   // Custom tooltip components with enhanced information
   const CustomPieTooltip = ({ active, payload }) => {
@@ -106,7 +127,7 @@ const SystemOverviewCharts = ({ stats, loading }) => {
 
   const CustomSpecialtyTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const totalSpecialtyTeachers = specialtiesData.reduce((sum, item) => sum + item.value, 0);
+      const totalSpecialtyTeachers = stats.totalTeachers || 1;
       const percentage = ((payload[0].value / totalSpecialtyTeachers) * 100).toFixed(1);
       return (
         <div className="custom-tooltip">
@@ -140,7 +161,7 @@ const SystemOverviewCharts = ({ stats, loading }) => {
       return (
         <div className="custom-tooltip">
           <div className="tooltip-header">
-            <span className="tooltip-label">{label} 2024</span>
+            <span className="tooltip-label">{payload[0]?.payload?.fullDate || label}</span>
           </div>
           <div className="tooltip-content">
             <div className="tooltip-row">
@@ -358,8 +379,8 @@ const SystemOverviewCharts = ({ stats, loading }) => {
             </LineChart>
           </ResponsiveContainer>
           <div className="chart-summary">
-            <span className="chart-total">${stats.monthlyRevenue.toLocaleString()}</span>
-            <span className="chart-detail">Octubre 2025</span>
+            <span className="chart-total">${stats.monthlyRevenue?.toLocaleString() || '0'}</span>
+            <span className="chart-detail">{new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
           </div>
         </div>
       </div>

@@ -1,11 +1,18 @@
 /* === AUTHENTICATED PAGES STYLES === */
 /* Dashboard pages, admin panel, etc. */
 
+/* Remove default body/html spacing */
+body, html {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 /* Auth pages container */
 .dashboard-container,
 .authenticated-layout {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
+  margin-top: 60px;
 }
 
 /* Typography for auth pages */

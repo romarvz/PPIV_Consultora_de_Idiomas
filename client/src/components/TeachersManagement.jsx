@@ -470,7 +470,8 @@ const TeachersManagement = ({ onBack }) => {
   }, [teachers]);
 
   return (
-    <div style={{ padding: '2rem', background: 'var(--bg-secondary)', minHeight: '100vh' }}>
+    <div className="dashboard-container">
+      <div style={{ padding: '2rem', background: 'var(--bg-secondary)', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ marginBottom: '2rem' }}>
         <h3 style={{ 
@@ -810,6 +811,7 @@ const TeachersManagement = ({ onBack }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

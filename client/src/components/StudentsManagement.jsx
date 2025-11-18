@@ -273,7 +273,8 @@ const StudentsManagement = ({ onBack }) => {
   };
 
   return (
-    <div className="students-management" style={{ padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="dashboard-container">
+      <div className="students-management" style={{ padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
       <div className="dashboard-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h3 className="dashboard-section__title" style={{ margin: 0 }}>Gestión de Estudiantes</h3>
@@ -752,13 +753,23 @@ const StudentsManagement = ({ onBack }) => {
             bottom: 0, 
             background: 'rgba(0,0,0,0.5)', 
             display: 'flex', 
-            alignItems: 'center', 
+            alignItems: 'flex-start', 
             justifyContent: 'center',
-            zIndex: 10000
+            zIndex: 10000,
+            overflowY: 'auto',
+            padding: '2rem 1rem'
           }}
           onClick={() => setShowAddModal(false)}
         >
-          <div onClick={(e) => e.stopPropagation()}>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              marginTop: '2rem',
+              marginBottom: '2rem',
+              maxWidth: '100%',
+              width: 'auto'
+            }}
+          >
             <RegisterStudent 
               onSuccess={() => {
                 setShowAddModal(false);
@@ -770,6 +781,7 @@ const StudentsManagement = ({ onBack }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

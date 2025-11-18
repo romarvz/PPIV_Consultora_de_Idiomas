@@ -167,14 +167,13 @@ const TeacherCourseClasses = ({ course, refreshToken, onRefresh }) => {
 
   return (
     <div style={cardStyles.container}>
-      <div style={cardStyles.header}>
-        <h3 style={cardStyles.title}>Clases de {course.nombre}</h3>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div style={{ marginBottom: '1rem' }}>
+        <h3 style={{ ...cardStyles.title, marginBottom: '1rem', wordWrap: 'break-word', lineHeight: '1.4' }}>Clases de {course.nombre}</h3>
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
           <button
             style={cardStyles.button}
             onClick={() => setShowModal(true)}
           >
-            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>＋</span>
             Gestionar clases
           </button>
           <button
@@ -251,10 +250,21 @@ const TeacherCourseClasses = ({ course, refreshToken, onRefresh }) => {
               <div>
                 <h4 style={cardStyles.classTitle}>{clase.titulo}</h4>
                 <div style={cardStyles.classMeta}>
-                  {new Date(clase.fechaHora).toLocaleString()} • {clase.duracionMinutos} min
+                  {new Date(clase.fechaHora).toLocaleDateString('es-AR')} • {clase.duracionMinutos} min
                 </div>
                 <div style={cardStyles.classMeta}>
-                  {clase.modalidad === 'virtual' ? 'Virtual' : 'Presencial'} • Estado: {clase.estado}
+                  {clase.modalidad === 'virtual' ? 'Virtual' : 'Presencial'} • 
+                  <span style={{
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    marginLeft: '0.25rem',
+                    backgroundColor: clase.estado === 'completada' ? '#0F5C8C' : '#27ae60',
+                    color: 'white'
+                  }}>
+                    {clase.estado === 'completada' ? 'Completada' : 'Próxima'}
+                  </span>
                 </div>
               </div>
             </div>

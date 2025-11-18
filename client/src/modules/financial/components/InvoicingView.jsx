@@ -1223,7 +1223,7 @@ const InvoicingView = () => {
       {vistaActiva === 'lista' ? renderListaFacturas() : renderNuevaFactura()}
 
       {mostrarModalError && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '2rem', overflowY: 'auto', zIndex: 10000 }}>
           <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: 'var(--border-radius-lg)', padding: '2rem', maxWidth: '500px', width: '90%', boxShadow: 'var(--shadow-xl)', border: '2px solid var(--error)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--error-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -1250,7 +1250,7 @@ const InvoicingView = () => {
       )}
 
       {mostrarDetalle && facturaDetalle && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '2rem', overflowY: 'auto', zIndex: 50 }}>
           <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: 'var(--border-radius-lg)', padding: '2rem', maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--primary)' }}>Detalle de Factura</h2>
@@ -1415,8 +1415,10 @@ const InvoicingView = () => {
           inset: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.6)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
+          paddingTop: '2rem',
+          overflowY: 'auto',
           zIndex: 9999
         }}>
           <div style={{

@@ -58,6 +58,21 @@ const startServer = async () => {
       });
     });
 
+    // Debug endpoint to check data counts without auth
+    app.get('/debug/counts', async (req, res) => {
+      try {
+        const { BaseUser } = require('./models');
+        const students = await BaseUser.countDocuments({ role: 'estudiante' });
+        const teachers = await BaseUser.countDocuments({ role: 'profesor' });
+        res.json({
+          success: true,
+          data: { students, teachers }
+        });
+      } catch (error) {
+        res.json({ success: false, error: error.message });
+      }
+    });
+
     const authRoutes = require('./routes/authNew');
     app.use('/api/auth', authRoutes);
 

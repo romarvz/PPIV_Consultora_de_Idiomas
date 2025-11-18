@@ -131,7 +131,9 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
       setLoading(true);
       const response = await apiAdapter.classes.getAll({ curso: course._id });
       const lista = response?.data?.data || [];
-      setClasses(lista);
+      // Sort by date order regardless of status
+      const sortedClasses = lista.sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+      setClasses(sortedClasses);
     } catch (err) {
       console.error('Error cargando clases:', err);
       setError(err?.message || 'No se pudieron cargar las clases');
@@ -186,6 +188,12 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
       tareas: clase.tareas || '',
       notasProfesor: clase.notasProfesor || ''
     });
+    
+    // Scroll to form
+    const formElement = document.querySelector('form');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handleCancelEdit = () => {
@@ -513,7 +521,7 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                   disabled={saving}
                   style={{
                     padding: '0.65rem 1.5rem',
-                    background: 'linear-gradient(135deg, #27ae60, #229954)',
+                    background: '#0F5C8C',
                     border: 'none',
                     borderRadius: '6px',
                     color: '#fff',
@@ -544,12 +552,12 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
                   <thead>
                     <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Título</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Fecha</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Duración</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057', cursor: 'pointer' }} onClick={() => setClasses([...classes].sort((a, b) => a.titulo.localeCompare(b.titulo)))}>Título ↕</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057', cursor: 'pointer' }} onClick={() => setClasses([...classes].sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora)))}>Fecha ↕</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057', cursor: 'pointer' }} onClick={() => setClasses([...classes].sort((a, b) => a.duracionMinutos - b.duracionMinutos))}>Duración ↕</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Contenido</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Modalidad</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Estado</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057', cursor: 'pointer' }} onClick={() => setClasses([...classes].sort((a, b) => a.modalidad.localeCompare(b.modalidad)))}>Modalidad ↕</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: '#495057', cursor: 'pointer' }} onClick={() => setClasses([...classes].sort((a, b) => (a.estado || 'programada').localeCompare(b.estado || 'programada')))}>Estado ↕</th>
                       <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#495057' }}>Asistencia</th>
                       <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#495057' }}>Acciones</th>
                     </tr>

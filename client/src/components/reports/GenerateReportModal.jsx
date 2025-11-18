@@ -134,8 +134,10 @@ const GenerateReportModal = ({ type, onClose, onSuccess }) => {
       bottom: 0,
       background: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'center',
+      paddingTop: '2rem',
+      overflowY: 'auto',
       zIndex: 1000
     }}>
       <div style={{
