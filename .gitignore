@@ -6,6 +6,7 @@ yarn-error.log*
 
 # Environment variables
 .env
+.claude
 
 # Build outputs
 /client/build
@@ -19,9 +20,10 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-#documentacion
+# Specific files
+HANDOFF_PARA_PROXIMO_CHAT.md
 PLAN_DE_ACCION_PROYECTO.md
 PLANTILLA_DOCUMENTACION_PRUEBAS.md
-HANDOFF_PARA_PROXIMO_CHAT.md
-resumenBorradorFacgtura.md
-GUIA_IMPLEMENTACION_CHAT.md
+no.md 
+
+
