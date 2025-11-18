@@ -233,14 +233,14 @@ inscripcionSchema.methods.cancelar = function(motivo) {
 inscripcionSchema.statics.findByEstudiante = function(estudianteId, filtros = {}) {
   return this.find({ estudiante: estudianteId, ...filtros })
     .populate('curso', 'nombre idioma nivel fechaInicio fechaFin estado')
-    .populate('estudiante', 'firstName lastName email')
+    .populate('estudiante', 'firstName lastName email dni')
     .sort({ fechaInscripcion: -1 });
 };
 
 // Método estático para buscar inscripciones por curso
 inscripcionSchema.statics.findByCurso = function(cursoId, filtros = {}) {
   return this.find({ curso: cursoId, ...filtros })
-    .populate('estudiante', 'firstName lastName email phone')
+    .populate('estudiante', 'firstName lastName email phone dni')
     .sort({ fechaInscripcion: -1 });
 };
 

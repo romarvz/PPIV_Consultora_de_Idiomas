@@ -392,6 +392,7 @@ const StudentsManagement = ({ onBack }) => {
                 <thead>
                   <tr>
                     <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Alumno</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>DNI</th>
                     <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Email</th>
                     <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Curso</th>
                     <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Profesor</th>
@@ -405,6 +406,9 @@ const StudentsManagement = ({ onBack }) => {
                     <tr key={`${item.estudianteId}-${item.cursoId}-${index}`}>
                       <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
                         <div style={{ fontWeight: 600, color: '#111827' }}>{item.estudianteNombre || '—'}</div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', fontFamily: 'monospace', fontWeight: '500', color: '#4b5563' }}>
+                        {item.estudianteDni || 'Sin DNI'}
                       </td>
                       <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', color: '#4b5563' }}>
                         {item.estudianteEmail || '—'}
@@ -536,6 +540,7 @@ const StudentsManagement = ({ onBack }) => {
                 <thead>
                   <tr>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Estudiante</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>DNI</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Email</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Nivel</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Estado</th>
@@ -563,6 +568,9 @@ const StudentsManagement = ({ onBack }) => {
                             )}
                           </div>
                         </div>
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', fontFamily: 'monospace', fontWeight: '500' }}>
+                        {student.dni || 'Sin DNI'}
                       </td>
                       <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>{student.email}</td>
                       <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>

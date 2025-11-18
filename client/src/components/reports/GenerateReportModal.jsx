@@ -30,24 +30,35 @@ const GenerateReportModal = ({ type, onClose, onSuccess }) => {
       })
       console.log('GenerateReportModal - Respuesta completa:', response)
       console.log('GenerateReportModal - response.data:', response.data)
-      console.log('GenerateReportModal - response.data.data:', response.data?.data)
       
-      if (response.data.success) {
-        // El endpoint devuelve data como array directo de cursos
-        const cursos = response.data.data || []
-        console.log('GenerateReportModal - Cursos cargados para reporte:', cursos.length)
-        if (cursos.length > 0) {
-          console.log('GenerateReportModal - Primeros cursos:', cursos.slice(0, 3).map(c => ({ id: c._id, nombre: c.nombre })))
+      // El endpoint puede devolver los cursos en diferentes formatos
+      let cursos = []
+      if (response.data) {
+        if (response.data.success && response.data.data) {
+          // Formato: { success: true, data: [...] }
+          cursos = Array.isArray(response.data.data) ? response.data.data : []
+        } else if (Array.isArray(response.data)) {
+          // Formato: [...] (array directo)
+          cursos = response.data
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          // Formato: { data: [...] }
+          cursos = response.data.data
         }
-        setCourses(cursos)
-      } else {
-        console.warn('GenerateReportModal - La respuesta de cursos no fue exitosa:', response.data)
-        setCourses([])
       }
+      
+      console.log('GenerateReportModal - Cursos cargados para reporte:', cursos.length)
+      if (cursos.length > 0) {
+        console.log('GenerateReportModal - Primeros cursos:', cursos.slice(0, 3).map(c => ({ id: c._id, nombre: c.nombre })))
+      } else {
+        console.warn('GenerateReportModal - No se encontraron cursos en la respuesta')
+      }
+      
+      setCourses(cursos)
     } catch (error) {
       console.error('GenerateReportModal - Error loading courses:', error)
       console.error('GenerateReportModal - Error completo:', error.response?.data || error.message)
       setCourses([])
+      alert('Error al cargar cursos. Por favor, intente nuevamente.')
     } finally {
       setLoadingCourses(false)
     }

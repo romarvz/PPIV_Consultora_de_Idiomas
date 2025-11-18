@@ -367,6 +367,10 @@ body {
   align-items: stretch;
 }
 
+.services-grid--featured {
+  align-items: stretch;
+}
+
 .services-grid .service-card {
   opacity: 0;
   transform: translateY(40px);
@@ -402,7 +406,14 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 200px;
+  min-height: 220px;
+}
+
+.service-card--course {
+  min-height: 450px !important;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .service-card::before {
@@ -886,12 +897,17 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
+  align-items: stretch; /* Asegura que todas las tarjetas tengan la misma altura */
 }
 
 .course-card {
   background: var(--card-bg);
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Asegura que todas las tarjetas tengan la misma altura */
+  min-height: 420px; /* Altura mínima fija para todas las tarjetas */
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -917,6 +933,14 @@ body {
 
 .course-card-content {
   padding: 1.5rem;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-grow: 1 !important;
+  min-height: 300px;
+}
+
+.course-card-header {
+  flex-shrink: 0; /* Evita que el header se comprima */
 }
 
 .course-card-title {
@@ -932,14 +956,16 @@ body {
 
 .course-card-description {
   color: var(--text-secondary);
-  margin-bottom: 1rem;
+  margin-bottom: 0 !important;
   line-height: 1.5;
+  flex-grow: 1 !important; /* Permite que la descripción ocupe el espacio disponible */
 }
 
 .course-card-tags {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  flex-shrink: 0; /* Evita que los tags se compriman */
 }
 
 .course-card-tag {
@@ -965,6 +991,8 @@ body {
   font-weight: 500;
   transition: all 0.3s ease;
   width: 100%;
+  margin-top: auto !important; /* Empuja el botón hacia abajo */
+  flex-shrink: 0 !important; /* Evita que el botón se comprima */
 }
 
 .course-card-button:hover {

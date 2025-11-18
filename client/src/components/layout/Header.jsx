@@ -46,16 +46,22 @@ const Header = ({ theme, toggleTheme }) => {
 
   // Handle navigation - scroll on home page, route to home then scroll to section
   const handleSectionClick = (sectionId) => {
+    // Close dropdown first
+    setServiciosDropdownOpen(false)
+    handleNavClick()
+    
     const performScroll = () => scrollToSection(sectionId)
 
     if (location.pathname === '/') {
+      // Already on home page, scroll directly
       performScroll()
     } else {
-      navigate('/', {
-        state: { scrollTo: sectionId }
+      // Navigate to home with hash and state for reliable scrolling
+      navigate(`/#${sectionId}`, {
+        state: { scrollTo: sectionId },
+        replace: false
       })
     }
-    handleNavClick()
   }
 
   return (
@@ -83,7 +89,7 @@ const Header = ({ theme, toggleTheme }) => {
               </a>
               <ul className={`dropdown-menu ${serviciosDropdownOpen ? 'show' : ''}`}>
                 <li><Link to="/cursos" onClick={handleNavClick}>Ver Todos los Cursos</Link></li>
-                <li><Link to="/cursos#clase-individual" onClick={handleNavClick}>Clases Individuales</Link></li>
+                <li><a href="#contacto" onClick={(e) => { e.preventDefault(); handleSectionClick('contacto'); }}>Clases Individuales</a></li>
                 <li><Link to="/cursos#curso-grupal" onClick={handleNavClick}>Clases Grupales</Link></li>
                 <li><Link to="/cursos#curso-corporativo" onClick={handleNavClick}>Cursos Corporativos</Link></li>
                 <li><Link to="/cursos#certificacion" onClick={handleNavClick}>Preparación Certificaciones</Link></li>

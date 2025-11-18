@@ -44,9 +44,22 @@ exports.listarCursosPublicos = async (req, res) => {
       search: req.query.search
     };
 
+    // Si se especifica estado en query, usarlo
     if (req.query.estado) {
       filtros.estado = req.query.estado;
-    } else {
+    } 
+    // Si se especifica activeOnly, interpretarlo
+    else if (req.query.activeOnly !== undefined) {
+      const activeOnly = req.query.activeOnly === 'true' || req.query.activeOnly === true;
+      if (activeOnly) {
+        filtros.estado = 'activo';
+      } else {
+        // Si activeOnly es false, mostrar activos y planificados
+        filtros.estado = { $in: ['activo', 'planificado'] };
+      }
+    } 
+    // Por defecto, mostrar activos y planificados
+    else {
       filtros.estado = { $in: ['activo', 'planificado'] };
     }
     

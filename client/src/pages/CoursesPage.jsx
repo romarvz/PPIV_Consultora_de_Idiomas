@@ -123,6 +123,30 @@ const CoursesPage = () => {
     fetchData();
   }, []); // Efecto de ejecución única para cargar los datos
 
+  // COMENTADO: useEffect para igualar alturas con JavaScript (DESACTIVADO - usando CSS con min-height)
+  // useEffect(() => {
+  //   if (loading || Object.keys(groupedCourses).length === 0) return;
+  //   const equalizeCardHeights = () => {
+  //     const courseCards = document.querySelectorAll('.dashboard-grid .course-card');
+  //     if (courseCards.length === 0) return;
+  //     courseCards.forEach(card => { card.style.height = 'auto'; });
+  //     let maxHeight = 0;
+  //     courseCards.forEach(card => {
+  //       const height = card.offsetHeight;
+  //       if (height > maxHeight) { maxHeight = height; }
+  //     });
+  //     if (maxHeight > 0) {
+  //       courseCards.forEach(card => { card.style.height = `${maxHeight}px`; });
+  //     }
+  //   };
+  //   const timeoutId = setTimeout(() => { equalizeCardHeights(); }, 200);
+  //   window.addEventListener('resize', equalizeCardHeights);
+  //   return () => {
+  //     clearTimeout(timeoutId);
+  //     window.removeEventListener('resize', equalizeCardHeights);
+  //   };
+  // }, [loading, groupedCourses]);
+
   useEffect(() => {
     if (!loading) {
       if (location.hash) {

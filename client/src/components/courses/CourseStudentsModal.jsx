@@ -208,6 +208,7 @@ const CourseStudentsModal = ({ course, onClose }) => {
                 <thead>
                   <tr>
                     <th style={thStyles}>Estudiante</th>
+                    <th style={thStyles}>DNI</th>
                     <th style={thStyles}>Email</th>
                     <th style={thStyles}>Inscripto el</th>
                     <th style={thStyles}>Progreso</th>
@@ -234,6 +235,9 @@ const CourseStudentsModal = ({ course, onClose }) => {
                       <tr key={key}>
                         <td style={tdStyles}>
                           {`${estudiante?.firstName || ''} ${estudiante?.lastName || ''}`.trim() || '—'}
+                        </td>
+                        <td style={{ ...tdStyles, fontFamily: 'monospace', fontWeight: '500' }}>
+                          {estudiante?.dni || 'Sin DNI'}
                         </td>
                         <td style={tdStyles}>{estudiante?.email || item.email || '—'}</td>
                         <td style={tdStyles}>{formatDate(item.fechaInscripcion)}</td>
