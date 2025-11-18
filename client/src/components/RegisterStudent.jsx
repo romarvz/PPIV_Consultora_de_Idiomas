@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import apiService from '../services/api.js'
+import { capitalizeUserNames } from '../utils/stringHelpers'
 
 const RegisterStudent = ({ onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -8,7 +9,7 @@ const RegisterStudent = ({ onSuccess, onCancel }) => {
     lastName: '',
     dni: '',
     nivel: 'A1',
-    estadoAcademico: 'inscrito',
+    condicion: 'inscrito',
     phone: ''
   })
   
@@ -18,7 +19,12 @@ const RegisterStudent = ({ onSuccess, onCancel }) => {
   const [showSuccess, setShowSuccess] = useState(false)
   
   const niveles = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-  const estadosAcademicos = ['inscrito', 'en_curso', 'graduado', 'suspendido']
+  const condiciones = [
+    { value: 'inscrito', label: 'Inscripto' },
+    { value: 'activo', label: 'Activo' },
+    { value: 'inactivo', label: 'Inactivo' },
+    { value: 'graduado', label: 'Graduado' }
+  ]
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -36,9 +42,17 @@ const RegisterStudent = ({ onSuccess, onCancel }) => {
     setError('')
 
     try {
+      // Capitalizar nombres y apellidos antes de enviar
+      const capitalizedData = capitalizeUserNames({
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
+      
       // Agregar el rol requerido
       const studentData = {
         ...formData,
+        firstName: capitalizedData.firstName,
+        lastName: capitalizedData.lastName,
         role: 'estudiante'
       }
 
@@ -153,7 +167,7 @@ El registro se completó exitosamente`
                     lastName: '',
                     dni: '',
                     nivel: 'A1',
-                    estadoAcademico: 'inscrito',
+                    condicion: 'inscrito',
                     phone: ''
                   })
                   // Cerrar modal
@@ -280,18 +294,18 @@ El registro se completó exitosamente`
             </div>
             
             <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="estadoAcademico">Estado Académico</label>
+              <label htmlFor="condicion">Condición</label>
               <select
-                id="estadoAcademico"
-                name="estadoAcademico"
-                value={formData.estadoAcademico}
+                id="condicion"
+                name="condicion"
+                value={formData.condicion}
                 onChange={handleChange}
                 disabled={isSubmitting}
                 style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--input-border)' }}
               >
-                {estadosAcademicos.map(estado => (
-                  <option key={estado} value={estado}>
-                    {estado.replace('_', ' ').charAt(0).toUpperCase() + estado.replace('_', ' ').slice(1)}
+                {condiciones.map(condicion => (
+                  <option key={condicion.value} value={condicion.value}>
+                    {condicion.label}
                   </option>
                 ))}
               </select>

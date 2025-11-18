@@ -7,6 +7,15 @@ module.exports = {
     'controllers/**/*.js',
     '!**/node_modules/**',
     '!**/__tests__/**'
+    'models/PerfilEstudiante.js',
+    'models/ReporteAcademico.js',
+    'models/ReporteFinanciero.js',
+    'services/perfilesService.js',
+    'services/reportesAcademicosService.js',
+    'services/reportesFinancierosService.js',
+    'controllers/perfilesController.js',
+    'controllers/reportesAcademicosController.js',
+    'controllers/reportesFinancierosController.js'
   ],
   coverageThreshold: {
     global: {

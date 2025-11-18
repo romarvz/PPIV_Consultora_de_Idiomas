@@ -23,6 +23,7 @@ import Login from './pages/Login'
 import AdminDashboard from './pages/Dashboard/AdminDashboard'
 import StudentDashboard from './pages/Dashboard/StudentDashboard'
 import TeacherDashboard from './pages/Dashboard/TeacherDashboard'
+import CourseAcademicSheet from './pages/Dashboard/CourseAcademicSheet'
 import CompanyDashboard from './pages/Dashboard/CompanyDashboard'
 import FinancialDashboard from './pages/Dashboard/FinancialDashboard'
 
@@ -81,6 +82,14 @@ function App() {
                 <TeacherDashboard />
               </ProtectedRoute>
             } 
+          />
+          <Route
+            path="/dashboard/teacher/curso/:courseId/planilla"
+            element={
+              <ProtectedRoute allowedRoles={['profesor']}>
+                <CourseAcademicSheet />
+              </ProtectedRoute>
+            }
           />
           <Route 
             path={routes.DASHBOARD.COMPANY} 

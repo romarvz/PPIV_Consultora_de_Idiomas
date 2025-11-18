@@ -1,289 +1,384 @@
-import React, { useState } from 'react'
-import { useAuth } from '../../hooks/useAuth.jsx'
-import ForcePasswordChange from '../../components/common/ForcePasswordChange'
-import AuthNavbar from '../../components/common/AuthNavbar'
-import '../../styles/variables.css'
-import '../../styles/auth.css'
-import '../../styles/charts.css'
-import { 
-  FaChalkboardTeacher, 
-  FaUsers, 
-  FaCalendarCheck,
-  FaClock,
-  FaBookOpen,
-  FaDollarSign,
-  FaSignOutAlt,
-  FaUser,
-  FaGraduationCap,
-  FaStar
-} from 'react-icons/fa'
+import React, { useEffect, useMemo, useState } from 'react';
+import { FaCalendarCheck, FaChalkboardTeacher } from 'react-icons/fa';
+import { useAuth } from '../../hooks/useAuth.jsx';
+import AuthNavbar from '../../components/common/AuthNavbar';
+import TeacherCourseClasses from '../../components/courses/TeacherCourseClasses';
+import apiAdapter from '../../services/apiAdapter';
+import '../../styles/variables.css';
+import '../../styles/auth.css';
+import '../../styles/charts.css';
 
+const summaryCardStyle = {
+  borderRadius: '12px',
+  border: '1px solid var(--border-color, #e5e7eb)',
+  padding: '1rem',
+  background: 'var(--card-bg, #fff)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.35rem',
+  boxShadow: '0 6px 18px rgba(15, 23, 42, 0.08)'
+};
 
-// Mock data for teacher dashboard
-const mockTodayClasses = [
-  { 
-    id: 1, 
-    student: 'Ana García', 
-    subject: 'Inglés B2', 
-    time: '10:00 AM', 
-    duration: '60 min',
-    status: 'scheduled',
-    type: 'individual'
-  },
-  { 
-    id: 2, 
-    student: 'Carlos Rodríguez', 
-    subject: 'Francés A1', 
-    time: '2:00 PM', 
-    duration: '45 min',
-    status: 'completed',
-    type: 'individual'
-  },
-  { 
-    id: 3, 
-    student: 'Grupo A - Inglés', 
-    subject: 'Inglés B1', 
-    time: '4:00 PM', 
-    duration: '90 min',
-    status: 'scheduled',
-    type: 'group'
-  },
-  { 
-    id: 4, 
-    student: 'María López', 
-    subject: 'Alemán A2', 
-    time: '6:00 PM', 
-    duration: '60 min',
-    status: 'pending',
-    type: 'individual'
+const infoLabelStyle = {
+  fontSize: '0.9rem',
+  color: 'var(--text-secondary, #6b7280)'
+};
+
+const infoValueStyle = {
+  fontSize: '1rem',
+  fontWeight: 600,
+  color: 'var(--text-primary, #111827)'
+};
+
+const calendarGridStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+  gap: '1rem'
+};
+
+const calendarDayCardStyle = {
+  borderRadius: '12px',
+  border: '1px solid var(--border-color, #e5e7eb)',
+  padding: '0.85rem',
+  background: '#fff',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.6rem',
+  minHeight: '180px',
+  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.06)'
+};
+
+const calendarDayHeaderStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  color: 'var(--text-primary, #111827)',
+  fontWeight: 600,
+  fontSize: '0.95rem'
+};
+
+const calendarClassCardStyle = {
+  borderRadius: '10px',
+  border: '1px solid #e5e7eb',
+  padding: '0.55rem 0.65rem',
+  background: 'linear-gradient(135deg, #f8fafc, #edf2f7)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.35rem'
+};
+
+const normalizeToArray = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  if (payload && Array.isArray(payload.items)) return payload.items;
+  if (payload && Array.isArray(payload.results)) return payload.results;
+  if (payload && Array.isArray(payload.cursos)) return payload.cursos;
+  if (payload && Array.isArray(payload.clases)) return payload.clases;
+  return [];
+};
+
+const isSameDay = (dateA, dateB) => {
+  return (
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate()
+  );
+};
+
+const buildCalendarDays = (classes, daysToShow = 14) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const days = [];
+  for (let i = 0; i < daysToShow; i += 1) {
+    const day = new Date(today);
+    day.setDate(today.getDate() + i);
+
+    const dayClasses = classes.filter((clase) => {
+      if (!clase?.fechaHora) {
+        return false;
+      }
+      const classDate = new Date(clase.fechaHora);
+      return isSameDay(classDate, day);
+    });
+
+    days.push({
+      date: day,
+      classes: dayClasses.sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora))
+    });
   }
-]
 
-const mockStudents = [
-  { 
-    id: 1, 
-    name: 'Ana García', 
-    level: 'B2 Inglés', 
-    progress: 85,
-    lastClass: '2025-10-10',
-    totalClasses: 24,
-    status: 'active'
-  },
-  { 
-    id: 2, 
-    name: 'Carlos Rodríguez', 
-    level: 'A1 Francés', 
-    progress: 60,
-    lastClass: '2025-10-12',
-    totalClasses: 12,
-    status: 'active'
-  },
-  { 
-    id: 3, 
-    name: 'María López', 
-    level: 'A2 Alemán', 
-    progress: 45,
-    lastClass: '2025-10-08',
-    totalClasses: 8,
-    status: 'active'
-  },
-  { 
-    id: 4, 
-    name: 'Roberto Silva', 
-    level: 'B1 Inglés', 
-    progress: 75,
-    lastClass: '2025-10-11',
-    totalClasses: 18,
-    status: 'active'
-  },
-  { 
-    id: 5, 
-    name: 'Laura Fernández', 
-    level: 'A2 Francés', 
-    progress: 30,
-    lastClass: '2025-10-05',
-    totalClasses: 6,
-    status: 'inactive'
-  }
-]
+  return days;
+};
 
-const mockTeacherStats = {
-  todayClasses: 4,
-  totalStudents: 15,
-  activeStudents: 12,
-  completedClasses: 48,
-  averageRating: 4.8,
-  monthlyEarnings: 28000
-}
+const dedupeBySchedule = (items = []) => {
+  const map = new Map();
+
+  const score = (clase) => {
+    const updated = clase.updatedAt ? new Date(clase.updatedAt).getTime() : 0;
+    const lengthSum =
+      (clase.descripcion ? clase.descripcion.length : 0) +
+      (clase.contenido ? clase.contenido.length : 0) +
+      (clase.tareas ? clase.tareas.length : 0) +
+      (clase.notasProfesor ? clase.notasProfesor.length : 0);
+    return updated + lengthSum;
+  };
+
+  items.forEach((clase) => {
+    if (!clase || !clase.fechaHora) {
+      return;
+    }
+    const cursoId = typeof clase.curso === 'string' ? clase.curso : clase.curso?._id || 'sin-curso';
+    const key = `${cursoId}-${new Date(clase.fechaHora).toISOString()}`;
+    const current = map.get(key);
+    if (!current || score(clase) >= score(current)) {
+      map.set(key, clase);
+    }
+  });
+
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(a.fechaHora) - new Date(b.fechaHora)
+  );
+};
 
 const TeacherDashboard = () => {
-  const { user, logout, mustChangePassword } = useAuth()
-  const [showPasswordChange, setShowPasswordChange] = useState(false) // Disabled for testing
+  const { user, logout } = useAuth();
+  const [courses, setCourses] = useState([]);
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(Date.now());
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const fetchCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const response = await apiAdapter.cursos.getMine();
+        console.log('TeacherDashboard: cursos response', response?.data);
+        const rawData = response?.data?.data;
+        const normalized = normalizeToArray(rawData);
+        if (!Array.isArray(normalized)) {
+          console.warn('TeacherDashboard: formato de cursos inesperado', rawData);
+        }
+        setCourses(normalized || []);
+        setError(null);
+      } catch (err) {
+        console.error('TeacherDashboard: error cargando cursos', err);
+        const message = err.response?.data?.error || 'Error al cargar tus cursos.';
+        setError(message);
+        setCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
+  }, [user, refreshToken]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const fetchClasses = async () => {
+      try {
+        setLoadingClasses(true);
+        const nowIso = new Date().toISOString();
+        const response = await apiAdapter.classes.getMine({
+          fechaInicio: nowIso,
+          limit: 100
+        });
+        console.log('TeacherDashboard: clases response', response?.data);
+        const rawData = response?.data?.data;
+        const normalized = normalizeToArray(rawData);
+        if (!Array.isArray(normalized)) {
+          console.warn('TeacherDashboard: formato de clases inesperado', rawData);
+        }
+        setUpcomingClasses(dedupeBySchedule(normalized || []));
+      } catch (err) {
+        console.error('TeacherDashboard: error cargando clases', err);
+        setUpcomingClasses([]);
+      } finally {
+        setLoadingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [user, refreshToken]);
+
+  const upcomingList = useMemo(() => {
+    const now = new Date();
+    return upcomingClasses
+      .filter((clase) => clase?.fechaHora && new Date(clase.fechaHora) >= now)
+      .sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+  }, [upcomingClasses]);
+
+  const calendarDays = useMemo(() => buildCalendarDays(upcomingList), [upcomingList]);
+  const dayFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat('es-AR', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short'
+      }),
+    []
+  );
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+    []
+  );
+
+  const totalCourses = courses.length;
+  const upcomingCount = upcomingClasses.length;
 
   const handleLogout = async () => {
     try {
-      await logout()
-    } catch (error) {
-      console.error('Logout error:', error)
+      await logout();
+    } catch (err) {
+      console.error('Logout error:', err);
     }
-  }
+  };
 
-  const handlePasswordChanged = () => {
-    setShowPasswordChange(false)
-  }
-
-  // Show forced password change if required
-  if (showPasswordChange) {
-    return <ForcePasswordChange onPasswordChanged={handlePasswordChanged} />
-  }
+  const triggerRefresh = () => setRefreshToken(Date.now());
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
-        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
+      <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
 
-      {/* Teacher Info */}
       <div className="dashboard-info-card">
-        <h3 className="dashboard-info-card__title">Información Personal</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
-          <div>
-            <p className="dashboard-info-card__text"><strong>Email:</strong> {user?.email}</p>
-            <p className="dashboard-info-card__text"><strong>DNI:</strong> {user?.dni}</p>
+        <h3 className="dashboard-info-card__title">Resumen de tu actividad</h3>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1rem'
+          }}
+        >
+          <div style={summaryCardStyle}>
+            <span style={infoLabelStyle}>Correo</span>
+            <span style={infoValueStyle}>{user?.email || 'Sin datos'}</span>
+            <span style={infoLabelStyle}>DNI</span>
+            <span style={infoValueStyle}>{user?.dni || 'Sin datos'}</span>
           </div>
-          <div>
-            <p className="dashboard-info-card__text"><strong>Estudiantes Activos:</strong> {mockTeacherStats.activeStudents}</p>
-            <p className="dashboard-info-card__text"><strong>Clases Completadas:</strong> {mockTeacherStats.completedClasses}</p>
+
+          <div style={summaryCardStyle}>
+            <span style={{ ...infoLabelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaChalkboardTeacher color="#2563eb" />
+              Cursos asignados
+            </span>
+            <span style={{ ...infoValueStyle, fontSize: '1.3rem' }}>{totalCourses}</span>
+            <span style={infoLabelStyle}>Cursos publicados para ti</span>
           </div>
-          <div>
-            <p className="dashboard-info-card__text"><strong>Calificación:</strong> ⭐ {mockTeacherStats.averageRating}/5.0</p>
-            <p className="dashboard-info-card__text"><strong>Ganancias del Mes:</strong> ${mockTeacherStats.monthlyEarnings.toLocaleString()}</p>
+
+          <div style={summaryCardStyle}>
+            <span style={{ ...infoLabelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaCalendarCheck color="#16a34a" />
+              Clases próximas
+            </span>
+            <span style={{ ...infoValueStyle, fontSize: '1.3rem' }}>{upcomingCount}</span>
+            <span style={infoLabelStyle}>Incluye clases confirmadas y pendientes</span>
           </div>
         </div>
+
+        {error && (
+          <div
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid #fecaca',
+              background: '#fef2f2',
+              color: '#b91c1c'
+            }}
+          >
+            {error}
+          </div>
+        )}
       </div>
 
-      {/* Dashboard Cards */}
-      <div className="dashboard-cards-grid dashboard-cards-grid--large">
-        {/* Today's Classes */}
-        <div className="dashboard-card">
-          <div className="dashboard-card__header">
-            <FaCalendarCheck className="dashboard-card__icon" />
-            <h4 className="dashboard-card__title">Mis Clases de Hoy</h4>
-          </div>
-          {mockTodayClasses.map((clase) => (
-            <div key={clase.id} className={`dashboard-card__item dashboard-card__item--with-status ${
-              clase.status === 'completed' ? 'dashboard-card__item--completed' : 
-              clase.status === 'scheduled' ? 'dashboard-card__item--scheduled' : 'dashboard-card__item--pending'
-            }`}>
-              <div className="dashboard-card__item-header">
-                <div className="dashboard-card__item-title">
-                  <FaUser style={{ marginRight: '8px', color: 'var(--primary-color)' }} />
-                  {clase.student}
+      <div className="dashboard-card" style={{ marginTop: '1.5rem' }}>
+        <div className="dashboard-card__header">
+          <FaCalendarCheck className="dashboard-card__icon" />
+          <h4 className="dashboard-card__title">Próximas clases</h4>
+        </div>
+
+        {loadingClasses ? (
+          <p style={{ color: 'var(--text-secondary)' }}>Cargando tus clases...</p>
+        ) : calendarDays.every((day) => day.classes.length === 0) ? (
+          <p style={{ color: 'var(--text-secondary)' }}>
+            No tenés clases agendadas. Podés programarlas o ajustarlas desde la sección de cada curso.
+          </p>
+        ) : (
+          <div style={calendarGridStyle}>
+            {calendarDays.map(({ date, classes }) => (
+              <div key={date.toISOString()} style={calendarDayCardStyle}>
+                <div style={calendarDayHeaderStyle}>
+                  <span>{dayFormatter.format(date)}</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                    {classes.length} {classes.length === 1 ? 'clase' : 'clases'}
+                  </span>
                 </div>
-                <span className={`status-badge ${
-                  clase.status === 'completed' ? 'status-badge--completed' : 
-                  clase.status === 'scheduled' ? 'status-badge--scheduled' : 'status-badge--pending'
-                }`}>
-                  {clase.status === 'completed' ? 'Completada' : 
-                   clase.status === 'scheduled' ? 'Programada' : 'Pendiente'}
-                </span>
+                {classes.length === 0 ? (
+                  <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Sin clases programadas</span>
+                ) : (
+                  classes.map((clase) => (
+                    <div key={clase._id} style={calendarClassCardStyle}>
+                      <strong style={{ color: 'var(--text-primary)' }}>{clase.titulo}</strong>
+                      <span style={{ color: '#4b5563', fontSize: '0.85rem' }}>
+                        {timeFormatter.format(new Date(clase.fechaHora))} • {clase.duracionMinutos} min
+                      </span>
+                      {clase.curso?.nombre && (
+                        <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>Curso: {clase.curso.nombre}</span>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
-              <div className="dashboard-card__item-subtitle" style={{ marginBottom: '5px' }}>
-                <FaBookOpen style={{ marginRight: '5px' }} />
-                {clase.subject} • {clase.type === 'group' ? 'Grupal' : 'Individual'}
-              </div>
-              <div className="dashboard-card__item-meta">
-                <FaClock style={{ marginRight: '5px' }} />
-                {clase.time} • {clase.duration}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* My Students */}
-        <div className="dashboard-card">
-          <div className="dashboard-card__header">
-            <FaUsers className="dashboard-card__icon" />
-            <h4 className="dashboard-card__title">Mis Estudiantes</h4>
+            ))}
           </div>
-          {mockStudents.slice(0, 4).map((student) => (
-            <div key={student.id} className="dashboard-card__item">
-              <div className="dashboard-card__item-header">
-                <div className="dashboard-card__item-title">
-                  <FaGraduationCap />
-                  {student.name}
-                </div>
-                <span className="dashboard-card__item-subtitle">{student.progress}%</span>
-              </div>
-              <div className="dashboard-card__item-subtitle">{student.level}</div>
-              <div className="progress-bar">
-                <div 
-                  className={`progress-bar__fill ${
-                    student.progress > 70 ? 'progress-bar__fill--success' : 
-                    student.progress > 40 ? 'progress-bar__fill--warning' : 'progress-bar__fill--error'
-                  }`}
-                  style={{ width: `${student.progress}%` }}
-                ></div>
-              </div>
-              <div className="progress-text">
-                {student.totalClasses} clases • Última: {student.lastClass}
-              </div>
-            </div>
-          ))}
-          <div style={{ textAlign: 'center', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
-            <button className="cta-btn" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-              Ver todos los estudiantes ({mockStudents.length})
-            </button>
-          </div>
-        </div>
-
-        {/* Teacher Performance */}
-        <div className="dashboard-card">
-          <div className="dashboard-card__header">
-            <FaStar className="dashboard-card__icon" />
-            <h4 className="dashboard-card__title">Mi Rendimiento</h4>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div className="dashboard-card__item" style={{ textAlign: 'center', borderLeft: 'none', background: 'var(--bg-tertiary)' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>
-                {mockTeacherStats.todayClasses}
-              </div>
-              <div className="dashboard-card__item-meta">Clases Hoy</div>
-            </div>
-            <div className="dashboard-card__item" style={{ textAlign: 'center', borderLeft: 'none', background: 'var(--bg-tertiary)' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>
-                {mockTeacherStats.averageRating}
-              </div>
-              <div className="dashboard-card__item-meta">Calificación</div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div className="dashboard-card__item-header">
-              <span className="dashboard-card__item-title">Estudiantes Activos</span>
-              <span className="dashboard-card__item-subtitle">
-                {mockTeacherStats.activeStudents}/{mockTeacherStats.totalStudents}
-              </span>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-bar__fill progress-bar__fill--success"
-                style={{ width: `${(mockTeacherStats.activeStudents / mockTeacherStats.totalStudents) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-
-          <div className="dashboard-card__item" style={{ textAlign: 'center', borderLeft: 'none', background: 'var(--primary)', color: 'white' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
-              <FaDollarSign style={{ marginRight: '0.5rem' }} />
-              ${mockTeacherStats.monthlyEarnings.toLocaleString()}
-            </div>
-            <div style={{ fontSize: '0.8rem', opacity: '0.9' }}>Ganancias este mes</div>
-          </div>
-        </div>
+        )}
       </div>
+
+      <section style={{ marginTop: '2rem' }}>
+        <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Mis cursos</h3>
+        {loadingCourses ? (
+          <p style={{ color: 'var(--text-secondary)' }}>Cargando tus cursos...</p>
+        ) : courses.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)' }}>
+            Aún no tenés cursos asignados. Cuando la administración te asigne uno, aparecerá aquí.
+          </p>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '1.5rem'
+            }}
+          >
+            {courses.map((course) => (
+              <TeacherCourseClasses
+                key={course._id}
+                course={course}
+                refreshToken={refreshToken}
+                onRefresh={triggerRefresh}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
-  )
-}
+  );
+};
 
-export default TeacherDashboard
+export default TeacherDashboard;
+
+

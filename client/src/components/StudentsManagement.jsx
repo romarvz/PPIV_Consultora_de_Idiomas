@@ -7,11 +7,15 @@ import {
   FaUserTimes,
   FaGraduationCap,
   FaEye,
-  FaUserPlus
+  FaUserPlus,
+  FaChartLine,
+  FaBook
 } from 'react-icons/fa';
 import api from '../services/api';
+import apiAdapter from '../services/apiAdapter';
 import { mockStudents } from '../services/mockData';
 import RegisterStudent from './RegisterStudent';
+import { capitalizeUserNames } from '../utils/stringHelpers';
 
 const StudentsManagement = ({ onBack }) => {
   const [students, setStudents] = useState([]);
@@ -37,11 +41,15 @@ const StudentsManagement = ({ onBack }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [attendanceStats, setAttendanceStats] = useState({}); // { studentId: { porcentaje, esRegular } }
+  const [riskStudents, setRiskStudents] = useState([]);
+  const [loadingRisk, setLoadingRisk] = useState(false);
+  const [showRiskTable, setShowRiskTable] = useState(false);
 
   useEffect(() => {
     fetchStudents();
     fetchStats();
-  }, [filters, pagination.page]);
+  }, [filters, pagination.page, pagination.limit]);
 
   const fetchStudents = async () => {
     try {
@@ -59,7 +67,34 @@ const StudentsManagement = ({ onBack }) => {
       const response = await api.get(`/students?${queryParams}`);
       
       if (response.data.success) {
-        setStudents(response.data.data.students);
+        // Ordenar estudiantes por apellido (y luego por nombre si hay apellidos iguales)
+        // IMPORTANTE: Ordenar siempre, incluso si el backend ya ordenó, para asegurar consistencia
+        const estudiantesRaw = response.data.data.students || [];
+        
+        const estudiantesOrdenados = [...estudiantesRaw].sort((a, b) => {
+          // Normalizar y limpiar apellidos - asegurarse de que sean strings
+          const apellidoA = String(a.lastName || '').trim().toLowerCase();
+          const apellidoB = String(b.lastName || '').trim().toLowerCase();
+          
+          // Comparar apellidos directamente (case-insensitive)
+          if (apellidoA && apellidoB) {
+            if (apellidoA < apellidoB) return -1;
+            if (apellidoA > apellidoB) return 1;
+          } else if (!apellidoA && apellidoB) {
+            return 1; // Sin apellido va al final
+          } else if (apellidoA && !apellidoB) {
+            return -1; // Con apellido va primero
+          }
+          
+          // Si los apellidos son iguales (o ambos vacíos), ordenar por nombre
+          const nombreA = String(a.firstName || '').trim().toLowerCase();
+          const nombreB = String(b.firstName || '').trim().toLowerCase();
+          if (nombreA < nombreB) return -1;
+          if (nombreA > nombreB) return 1;
+          return 0;
+        });
+        
+        setStudents(estudiantesOrdenados);
         setPagination(prev => ({
           ...prev,
           total: response.data.data.pagination.total,
@@ -67,6 +102,9 @@ const StudentsManagement = ({ onBack }) => {
           hasPrev: response.data.data.pagination.hasPrev,
           hasNext: response.data.data.pagination.hasNext
         }));
+        
+        // Cargar estadísticas de asistencia para los estudiantes de esta página
+        cargarEstadisticasAsistencia(estudiantesOrdenados);
       } else {
         setError('Error al cargar estudiantes');
       }
@@ -86,6 +124,61 @@ const StudentsManagement = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchRiskStudents = async () => {
+    try {
+      setLoadingRisk(true);
+      const response = await apiAdapter.reports.studentsAtRiskByAttendance();
+      if (response?.data?.success) {
+        const data = response.data.data || [];
+        setRiskStudents(data);
+      } else {
+        setRiskStudents([]);
+      }
+    } catch (error) {
+      console.error('Error fetching risk students:', error);
+      setRiskStudents([]);
+    } finally {
+      setLoadingRisk(false);
+    }
+  };
+
+  const cargarEstadisticasAsistencia = async (estudiantes) => {
+    try {
+      // Cargar estadísticas de asistencia para cada estudiante (sin curso específico)
+      const statsPromises = estudiantes.map(async (estudiante) => {
+        const estudianteId = estudiante._id || estudiante.id;
+        try {
+          const response = await apiAdapter.classes.obtenerEstadisticasAsistencia(estudianteId, null);
+          if (response?.data?.success && response.data.data) {
+            return {
+              estudianteId,
+              stats: response.data.data
+            };
+          }
+        } catch (error) {
+          console.error(`Error cargando estadísticas para estudiante ${estudianteId}:`, error);
+        }
+        return null;
+      });
+
+      const results = await Promise.all(statsPromises);
+      const statsMap = {};
+      results.forEach(result => {
+        if (result) {
+          statsMap[result.estudianteId] = {
+            porcentaje: result.stats.porcentajeAsistencia || 0,
+            esRegular: result.stats.esAlumnoRegular || false,
+            totalClases: result.stats.totalClases || 0,
+            clasesAsistidas: result.stats.clasesAsistidas || 0
+          };
+        }
+      });
+      setAttendanceStats(statsMap);
+    } catch (error) {
+      console.error('Error cargando estadísticas de asistencia:', error);
     }
   };
 
@@ -164,7 +257,7 @@ const StudentsManagement = ({ onBack }) => {
     if (student.estadoAcademico) {
       const estadoMap = {
         'en_curso': 'Activo',
-        'inscrito': 'Inscrito', 
+        'inscrito': 'Inscripto', 
         'graduado': 'Graduado',
         'suspendido': 'Suspendido'
       };
@@ -208,13 +301,13 @@ const StudentsManagement = ({ onBack }) => {
       </div>
       
       {/* Estadísticas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <h3 style={{ color: '#3498db', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Total de Estudiantes</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.total}</p>
         </div>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Activos</h3>
+          <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Activos e Inscriptos</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.active}</p>
         </div>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -224,10 +317,140 @@ const StudentsManagement = ({ onBack }) => {
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <h3 style={{ color: '#f39c12', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Graduados</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>
-            {stats.byCondition.find(c => c._id === 'graduado')?.count || 0}
+            {stats.overview.graduated || 0}
           </p>
         </div>
       </div>
+
+      {/* Tarjeta de estudiantes en riesgo, centrada horizontalmente */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+        <div
+          onClick={async () => {
+            setShowRiskTable(prev => !prev);
+            if (!showRiskTable && riskStudents.length === 0 && !loadingRisk) {
+              await fetchRiskStudents();
+            }
+          }}
+          style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s ease, transform 0.1s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <h3 style={{ color: '#e67e22', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>
+            Estudiantes en riesgo
+          </h3>
+          {/* Truco: guion del mismo color que el fondo para mantener altura sin sugerir “0” */}
+          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: 'white' }}>—</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#6b7280' }}>
+            Ver listado
+          </p>
+        </div>
+      </div>
+
+      {/* Listado de estudiantes en riesgo por inasistencias */}
+      {showRiskTable && (
+        <div
+          style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            marginBottom: '2rem'
+          }}
+        >
+          <h4 style={{ margin: '0 0 1rem 0', color: '#111827', fontSize: '1rem', fontWeight: 600 }}>
+            Estudiantes en riesgo por inasistencias
+          </h4>
+          {loadingRisk ? (
+            <div style={{ padding: '1rem', color: '#6b7280' }}>Cargando listado...</div>
+          ) : riskStudents.length === 0 ? (
+            <div style={{ padding: '1rem', color: '#6b7280', fontSize: '0.9rem' }}>
+              No hay estudiantes en riesgo por inasistencias en este momento.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.9rem',
+                  minWidth: '900px'
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Alumno</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>DNI</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Email</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Curso</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Profesor</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Asistencia</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Faltas / límite</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Faltas antes del límite</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {riskStudents.map((item, index) => (
+                    <tr key={`${item.estudianteId}-${item.cursoId}-${index}`}>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+                        <div style={{ fontWeight: 600, color: '#111827' }}>{item.estudianteNombre || '—'}</div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', fontFamily: 'monospace', fontWeight: '500', color: '#4b5563' }}>
+                        {item.estudianteDni || 'Sin DNI'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', color: '#4b5563' }}>
+                        {item.estudianteEmail || '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+                        <div style={{ fontWeight: 500, color: '#111827' }}>{item.cursoNombre || '—'}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.1rem' }}>
+                          {item.idioma && item.nivel ? `${item.idioma.toUpperCase()} - ${item.nivel}` : ''}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', color: '#4b5563' }}>
+                        {item.profesorNombre || '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                        {typeof item.porcentajeAsistencia === 'number'
+                          ? `${item.porcentajeAsistencia.toFixed(1)}%`
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                        {item.limiteMaximoInasistencias > 0
+                          ? `${item.clasesFaltadas} / ${item.limiteMaximoInasistencias}`
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                        {item.inasistenciasRestantes != null
+                          ? item.inasistenciasRestantes === 0
+                            ? 'Límite alcanzado'
+                            : item.inasistenciasRestantes < 0
+                            ? 'Límite superado'
+                            : item.inasistenciasRestantes === 1
+                            ? '1 falta'
+                            : `${item.inasistenciasRestantes} faltas`
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filtros */}
       <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
@@ -283,10 +506,9 @@ const StudentsManagement = ({ onBack }) => {
               style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
             >
               <option value="">Todas</option>
-              <option value="inscrito">Inscrito</option>
-              <option value="cursando">Cursando</option>
+              <option value="activo">Activos e Inscriptos</option>
+              <option value="inactivo">Inactivo</option>
               <option value="graduado">Graduado</option>
-              <option value="abandonado">Abandonado</option>
             </select>
           </div>
         </div>
@@ -318,9 +540,11 @@ const StudentsManagement = ({ onBack }) => {
                 <thead>
                   <tr>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Estudiante</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>DNI</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Email</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Nivel</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Estado</th>
+                    <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Asistencia</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Fecha Registro</th>
                     <th style={{ background: 'var(--primary)', color: 'white', padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Acciones</th>
                   </tr>
@@ -344,6 +568,9 @@ const StudentsManagement = ({ onBack }) => {
                             )}
                           </div>
                         </div>
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', fontFamily: 'monospace', fontWeight: '500' }}>
+                        {student.dni || 'Sin DNI'}
                       </td>
                       <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>{student.email}</td>
                       <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
@@ -369,6 +596,52 @@ const StudentsManagement = ({ onBack }) => {
                         >
                           {getStatusText(student)}
                         </span>
+                      </td>
+                      <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
+                        {(() => {
+                          const estudianteId = student._id || student.id;
+                          const stats = attendanceStats[estudianteId];
+                          if (!stats || stats.totalClases === 0) {
+                            return (
+                              <span style={{ color: '#6c757d', fontSize: '0.85rem' }}>
+                                Sin datos
+                              </span>
+                            );
+                          }
+                          const porcentaje = stats.porcentaje;
+                          const esRegular = stats.esRegular;
+                          const color = esRegular ? '#28a745' : porcentaje >= 70 ? '#ffc107' : '#dc3545';
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                              <span style={{ 
+                                fontWeight: '600', 
+                                color,
+                                fontSize: '0.9rem'
+                              }}>
+                                {porcentaje.toFixed(1)}%
+                              </span>
+                              <div style={{ 
+                                width: '60px', 
+                                height: '6px', 
+                                background: '#e9ecef', 
+                                borderRadius: '3px',
+                                overflow: 'hidden'
+                              }}>
+                                <div style={{ 
+                                  width: `${Math.min(100, porcentaje)}%`, 
+                                  height: '100%', 
+                                  background: color,
+                                  transition: 'width 0.3s ease'
+                                }}></div>
+                              </div>
+                              {esRegular && (
+                                <span style={{ fontSize: '0.7rem', color: '#28a745' }}>
+                                  Regular
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9', textAlign: 'center' }}>
                         {new Date(student.createdAt).toLocaleDateString('es-ES')}
@@ -510,10 +783,33 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
     phone: student?.phone || '',
     dni: student?.dni || '',
     nivel: student?.nivel || '',
-    condicion: student?.condicion || 'activo'
+    condicion: student?.condicion || 'inscrito'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [studentCourses, setStudentCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+
+  // Cargar cursos del estudiante cuando se abre el modal
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (!student?._id) return;
+      
+      try {
+        setLoadingCourses(true);
+        const response = await api.get(`/cursos/estudiante/${student._id}`);
+        if (response.data.success) {
+          setStudentCourses(response.data.data || []);
+        }
+      } catch (error) {
+        console.error('Error cargando cursos del estudiante:', error);
+        setStudentCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+    fetchCourses();
+  }, [student?._id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -529,7 +825,19 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
     setError('');
 
     try {
-      await api.put(`/students/${student._id}`, formData);
+      // Capitalizar nombres y apellidos antes de enviar
+      const capitalizedData = capitalizeUserNames({
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
+      
+      const dataToSend = {
+        ...formData,
+        firstName: capitalizedData.firstName,
+        lastName: capitalizedData.lastName
+      };
+      
+      await api.put(`/students/${student._id}`, dataToSend);
       onSave();
     } catch (error) {
       console.error('Error updating student:', error);
@@ -551,7 +859,9 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        zIndex: 1000
+        zIndex: 10000,
+        padding: '20px',
+        overflowY: 'auto'
       }}
       onClick={onClose}
     >
@@ -563,7 +873,8 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
           maxWidth: '600px', 
           width: '90%',
           maxHeight: '90vh',
-          overflow: 'auto'
+          overflow: 'auto',
+          margin: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -741,11 +1052,89 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
                   fontSize: '1rem'
                 }}
               >
+                <option value="inscrito">Inscripto</option>
                 <option value="activo">Activo</option>
                 <option value="inactivo">Inactivo</option>
                 <option value="graduado">Graduado</option>
               </select>
             </div>
+          </div>
+
+          {/* Cursos del Estudiante */}
+          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e1e5e9' }}>
+            <h4 style={{ margin: '0 0 1rem 0', color: '#333', display: 'flex', alignItems: 'center' }}>
+              <FaBook style={{ marginRight: '0.5rem', color: '#007bff' }} />
+              Cursos Inscriptos
+            </h4>
+            {loadingCourses ? (
+              <p style={{ color: '#666', fontSize: '0.9rem' }}>Cargando cursos...</p>
+            ) : studentCourses.length === 0 ? (
+              <p style={{ color: '#999', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                Este estudiante no está inscrito en ningún curso actualmente.
+              </p>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gap: '0.75rem',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                padding: '0.5rem',
+                border: '1px solid #e1e5e9',
+                borderRadius: '8px',
+                backgroundColor: '#f8f9fa'
+              }}>
+                {studentCourses.map((curso) => (
+                  <div
+                    key={curso._id}
+                    style={{
+                      padding: '0.75rem',
+                      border: '1px solid #e1e5e9',
+                      borderRadius: '6px',
+                      backgroundColor: 'white',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <div style={{ fontWeight: '600', color: '#333', marginBottom: '0.25rem' }}>
+                      {curso.nombre || 'Sin nombre'}
+                    </div>
+                    <div style={{ color: '#666', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                      {curso.idioma && (
+                        <span style={{ marginRight: '0.5rem' }}>
+                          Idioma: {curso.idioma}
+                        </span>
+                      )}
+                      {curso.nivel && (
+                        <span>
+                          Nivel: {curso.nivel}
+                        </span>
+                      )}
+                    </div>
+                    {curso.profesor && (
+                      <div style={{ color: '#666', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                        Profesor: {curso.profesor.firstName} {curso.profesor.lastName}
+                      </div>
+                    )}
+                    <div style={{ 
+                      display: 'inline-block',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      marginTop: '0.25rem',
+                      backgroundColor: curso.estado === 'activo' ? '#d4edda' : 
+                                      curso.estado === 'completado' ? '#d1ecf1' :
+                                      curso.estado === 'cancelado' ? '#f8d7da' : '#fff3cd',
+                      color: curso.estado === 'activo' ? '#155724' :
+                            curso.estado === 'completado' ? '#0c5460' :
+                            curso.estado === 'cancelado' ? '#721c24' : '#856404'
+                    }}>
+                      {curso.estado || 'planificado'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>

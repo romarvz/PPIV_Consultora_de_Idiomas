@@ -90,7 +90,12 @@ const estudianteSpecificValidation = [
   body('estadoAcademico')
     .optional()
     .isIn(['inscrito', 'en_curso', 'graduado', 'suspendido'])
-    .withMessage('Estado académico debe ser: inscrito, en_curso, graduado o suspendido')
+    .withMessage('Estado académico debe ser: inscrito, en_curso, graduado o suspendido'),
+  
+  body('condicion')
+    .optional()
+    .isIn(['inscrito', 'activo', 'inactivo', 'graduado'])
+    .withMessage('Condición debe ser: inscrito, activo, inactivo o graduado')
 ];
 
 // Validaciones para profesores
@@ -111,7 +116,17 @@ const profesorSpecificValidation = [
   body('disponibilidad')
     .optional()
     .isObject()
-    .withMessage('Disponibilidad debe ser un objeto válido')
+    .withMessage('Disponibilidad debe ser un objeto válido'),
+
+  body('horariosPermitidos')
+    .optional()
+    .isArray()
+    .withMessage('Horarios permitidos debe ser un array'),
+
+  body('horariosPermitidos.*')
+    .optional()
+    .isMongoId()
+    .withMessage('ID de horario inválido')
 ];
 
 // Validaciones para administradores

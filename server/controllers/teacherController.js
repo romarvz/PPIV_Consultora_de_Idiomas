@@ -78,11 +78,19 @@ const getTeachers = async (req, res) => {
     const options = {
       page: parseInt(page),
       limit: parseInt(limit),
-      sort: { createdAt: -1 },
+      // Ordenar alfabéticamente por apellido y nombre para mejor UX
+      sort: { lastName: 1, firstName: 1 },
       select: '-password'
     };
 
+    // Log para debugging
+    console.log(`[getTeachers] Filtros aplicados:`, JSON.stringify(filters, null, 2));
+    console.log(`[getTeachers] Parámetros: page=${page}, limit=${limit}, status=${status}, search=${search}`);
+
     const result = await userService.findUsers(filters, options);
+    
+    // Log para debugging
+    console.log(`[getTeachers] Encontrados ${result.docs.length} profesores de ${result.totalDocs} total`);
 
     res.json({
       success: true,
@@ -165,7 +173,8 @@ const updateTeacher = async (req, res) => {
       experiencia,
       isActive,
       disponible,
-      condicion
+      condicion,
+      horariosPermitidos
     } = req.body;
 
     const teacher = await userService.findUserById(id);
@@ -184,12 +193,27 @@ const updateTeacher = async (req, res) => {
     if (email) updateData.email = email;
     if (phone) updateData.phone = phone;
     if (especialidades) updateData.especialidades = especialidades;
-    if (tarifaPorHora) updateData.tarifaPorHora = tarifaPorHora;
+    // Preserve existing tarifaPorHora if not provided, as it's required by the model
+    if (tarifaPorHora !== undefined && tarifaPorHora !== null) {
+      updateData.tarifaPorHora = tarifaPorHora;
+    } else {
+      // Always preserve existing value to avoid validation errors
+      // since userService.updateUser uses save() which validates all required fields
+      if (teacher.tarifaPorHora !== undefined && teacher.tarifaPorHora !== null) {
+        updateData.tarifaPorHora = teacher.tarifaPorHora;
+      }
+    }
     if (disponibilidad) updateData.disponibilidad = disponibilidad;
     if (experiencia) updateData.experiencia = experiencia;
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
     if (typeof disponible === 'boolean') updateData.disponible = disponible;
     if (condicion) updateData.condicion = condicion;
+    // Add support for horariosPermitidos
+    if (horariosPermitidos !== undefined) {
+      updateData.horariosPermitidos = Array.isArray(horariosPermitidos) 
+        ? horariosPermitidos 
+        : [];
+    }
 
     const updatedTeacher = await userService.updateUser(id, updateData);
 
@@ -212,6 +236,21 @@ const updateTeacher = async (req, res) => {
       });
     }
 
+    // Handle validation errors more specifically
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors || {}).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Errores de validación',
+        errors: validationErrors,
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -221,7 +260,6 @@ const updateTeacher = async (req, res) => {
 };
 
 // deactivate teacher
-
 const deactivateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
@@ -236,7 +274,10 @@ const deactivateTeacher = async (req, res) => {
       });
     }
 
-    const updatedTeacher = await userService.updateUser(id, { isActive: false });
+    const updatedTeacher = await userService.updateUser(id, { 
+      isActive: false,
+      condicion: 'inactivo'
+    });
 
     res.json({
       success: true,
@@ -248,6 +289,71 @@ const deactivateTeacher = async (req, res) => {
 
   } catch (error) {
     console.error('Error en deactivateTeacher:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// delete teacher (hard delete)
+const deleteTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const teacher = await userService.findUserById(id);
+    
+    if (!teacher || teacher.role !== 'profesor') {
+      return res.status(404).json({
+        success: false,
+        message: 'Profesor no encontrado',
+        code: 'TEACHER_NOT_FOUND'
+      });
+    }
+
+    // Verificar que el profesor no tenga cursos asignados
+    const { Curso } = require('../models');
+    const cursosAsignados = await Curso.find({ profesor: id })
+      .select('nombre estado');
+
+    if (cursosAsignados.length > 0) {
+      const cursosDetalle = cursosAsignados.map(curso => ({
+        id: curso._id,
+        nombre: curso.nombre,
+        estado: curso.estado
+      }));
+
+      return res.status(400).json({
+        success: false,
+        message: `No se puede eliminar el profesor porque tiene ${cursosAsignados.length} curso(s) asignado(s).\n` +
+                 `Por favor reasigna o elimina esos cursos antes de eliminar al profesor.`,
+        code: 'TEACHER_HAS_COURSES',
+        data: {
+          cursos: cursosDetalle
+        }
+      });
+    }
+
+    // Eliminar permanentemente
+    const { BaseUser } = require('../models');
+    await BaseUser.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: 'Profesor eliminado permanentemente',
+      data: {
+        deletedTeacher: {
+          _id: teacher._id,
+          email: teacher.email,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en deleteTeacher:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -272,7 +378,20 @@ const reactivateTeacher = async (req, res) => {
       });
     }
 
-    const updatedTeacher = await userService.updateUser(id, { isActive: true });
+    // Usar findByIdAndUpdate para evitar validaciones completas del esquema
+    const { BaseUser } = require('../models');
+    const updatedTeacher = await BaseUser.findByIdAndUpdate(
+      id, 
+      { 
+        isActive: true,
+        condicion: 'activo'
+      },
+      { 
+        new: true,
+        runValidators: false,  // Evitar validaciones del esquema
+        select: '-password'
+      }
+    );
 
     res.json({
       success: true,
@@ -362,5 +481,6 @@ module.exports = {
   updateTeacher,
   deactivateTeacher,
   reactivateTeacher,
+  deleteTeacher,
   getTeachersStats
 };

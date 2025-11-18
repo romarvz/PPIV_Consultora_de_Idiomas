@@ -1,71 +1,80 @@
-// Adaptador inteligente que alterna entre Mock y Backend Real
+// client/src/services/apiAdapter.js
 
 import api from './api' // Backend real existente
 import mockApi from './mockApi' // Mock para demo
+import { mockStudents } from './mockData'
 
 // SWITCH PRINCIPAL - Cambiar aquí para alternar entre mock y real
 // true = Usa datos mock (para demo sin backend)
 // false = Usa backend real (cuando esté implementado)
-const USE_MOCK = true
+const USE_MOCK = false
 
 // Variable de entorno alternativa (opcional)
 // const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true
 
 /**
  * Adaptador inteligente que redirige peticiones según configuración
- * 
- * USO EN COMPONENTES:
+ * * USO EN COMPONENTES:
  * import apiAdapter from '../services/apiAdapter'
  * const response = await apiAdapter.classes.getAll()
  */
 const apiAdapter = {
-  // ==================== CLASES ====================
-  classes: {
-    /**
-     * Obtener todas las clases con filtros opcionales
-     * @param {Object} params - Filtros: teacherId, studentId, status, date, page, limit
-     */
-    getAll: async (params = {}) => {
+  // ==================== CLASES (MODIFICADO) ====================
+  classes: {
+    /**
+     * Obtener todas las clases con filtros opcionales
+     * @param {Object} params - Filtros: teacherId, studentId, status, date, page, limit
+     */
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getAll(params)
+      }
+      // CAMBIO: Ruta en español
+      return await api.get('/clases', { params })
+    },
+    getMine: async (params = {}) => {
       if (USE_MOCK) {
         return await mockApi.classes.getAll(params)
       }
-      // Cuando implementemos el endpoint real:
-      return await api.get('/classes', { params })
+      return await api.get('/clases/profesor/mis-clases', { params })
     },
 
-    /**
-     * Crear nueva clase
-     * @param {Object} classData - { studentId, teacherId, subject, date, time, duration }
-     */
-    create: async (classData) => {
-      if (USE_MOCK) {
-        return await mockApi.classes.create(classData)
-      }
-      return await api.post('/classes', classData)
-    },
+    /**
+     * Crear nueva clase
+     * @param {Object} classData - { studentId, teacherId, subject, date, time, duration }
+     */
+    create: async (classData) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.create(classData)
+      }
+      // CAMBIO: Ruta en español
+      return await api.post('/clases', classData)
+    },
 
-    /**
-     * Actualizar clase existente
-     * @param {String} id - ID de la clase
-     * @param {Object} classData - Datos a actualizar
-     */
-    update: async (id, classData) => {
-      if (USE_MOCK) {
-        return await mockApi.classes.update(id, classData)
-      }
-      return await api.put(`/classes/${id}`, classData)
-    },
+    /**
+     * Actualizar clase existente
+     * @param {String} id - ID de la clase
+     * @param {Object} classData - Datos a actualizar
+     */
+    update: async (id, classData) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.update(id, classData)
+      }
+      // CAMBIO: Ruta en español
+      return await api.put(`/clases/${id}`, classData)
+    },
 
-    /**
-     * Eliminar clase
-     * @param {String} id - ID de la clase
-     */
-    delete: async (id) => {
-      if (USE_MOCK) {
-        return await mockApi.classes.delete(id)
-      }
-      return await api.delete(`/classes/${id}`)
-    },
+    /**
+     * Eliminar clase
+     * @param {String} id - ID de la clase
+     */
+    delete: async (id, data = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.delete(id)
+      }
+      // CAMBIO: Ruta en español
+      return await api.delete(`/clases/${id}`, { data })
+    },
 
     /**
      * Obtener estadísticas de clases
@@ -74,9 +83,112 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.classes.getStats()
       }
-      return await api.get('/classes/stats')
+      // CAMBIO: Ruta en español
+      return await api.get('/clases/stats')
+    },
+
+    /**
+     * Obtener clase por ID
+     */
+    getById: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getById(id)
+      }
+      return await api.get(`/clases/${id}`)
+    },
+
+    /**
+     * Registrar asistencia de un estudiante (profesor/admin)
+     */
+    registrarAsistencia: async (claseId, estudianteId, presente, minutosTarde = 0, comentarios = '') => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Asistencia registrada' } }
+      }
+      return await api.put(`/clases/${claseId}/asistencia`, {
+        estudiante: estudianteId,
+        presente,
+        minutosTarde,
+        comentarios
+      })
+    },
+
+    /**
+     * Registrar mi propia asistencia como estudiante
+     */
+    registrarMiAsistencia: async (claseId, presente, minutosTarde = 0, comentarios = '') => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Tu asistencia ha sido registrada' } }
+      }
+      return await api.post(`/clases/${claseId}/asistencia/estudiante`, {
+        presente,
+        minutosTarde,
+        comentarios
+      })
+    },
+
+    /**
+     * Registrar asistencia múltiple (toda la clase)
+     */
+    registrarAsistenciaMultiple: async (claseId, asistencias) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Asistencia registrada para todos' } }
+      }
+      return await api.put(`/clases/${claseId}/asistencia/multiple`, { asistencias })
+    },
+
+    /**
+     * Marcar clase como completada (actualiza progreso de inscripciones)
+     */
+    completarClase: async (claseId) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Clase completada (mock)' } }
+      }
+      return await api.patch(`/clases/${claseId}/completar`)
+    },
+
+    /**
+     * Obtener asistencia de una clase
+     */
+    obtenerAsistencia: async (claseId) => {
+      if (USE_MOCK) {
+        return { data: { success: true, data: { asistencia: [] } } }
+      }
+      return await api.get(`/clases/${claseId}/asistencia`)
+    },
+
+    /**
+     * Obtener estadísticas de asistencia de un estudiante
+     */
+    obtenerEstadisticasAsistencia: async (estudianteId, cursoId = null) => {
+      if (USE_MOCK) {
+        return { 
+          data: { 
+            success: true, 
+            data: { 
+              totalClases: 0, 
+              clasesAsistidas: 0, 
+              porcentajeAsistencia: 0,
+              esAlumnoRegular: false
+            } 
+          } 
+        }
+      }
+      const url = cursoId 
+        ? `/clases/asistencia/estudiante/${estudianteId}/curso/${cursoId}`
+        : `/clases/asistencia/estudiante/${estudianteId}/curso/null`
+      return await api.get(url)
+    },
+
+    /**
+     * Obtener mis clases como estudiante
+     */
+    getMisClases: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.classes.getAll(params)
+      }
+      return await api.get('/clases/estudiante/mis-clases', { params })
     }
-  },
+ },
 
   // ==================== PAGOS ====================
   payments: {
@@ -136,62 +248,419 @@ const apiAdapter = {
     }
   },
 
- // ==================== CURSOS (PLANTILLAS) - NUEVA SECCIÓN ====================
-  courses: {
-    /**
-     * Obtener todos los cursos.
-     * @param {Object} params - { activeOnly: Boolean }
-     */
+// ==================== CURSOS (MODIFICADO) ====================
+  courses: {
+    /**
+     * Obtener todos los cursos.
+     * @param {Object} params - { activeOnly: Boolean }
+     */
     getAll: async (params = {}) => {
       if (USE_MOCK) {
         return await mockApi.courses.getAll(params);
       }
-      return await api.get('/courses', { params });
+      // CAMBIO: Ruta en español
+      return await api.get('/cursos', { params });
     },
 
     /**
-     * Obtener un curso por ID
-     * @param {String} id - ID del curso
+     * Obtener cursos públicos sin autenticación
+     * @param {Object} params - filtros y paginación opcionales
      */
+    getPublic: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll({
+          ...params,
+          activeOnly: params.activeOnly ?? false
+        });
+      }
+      return await api.get('/cursos/publico', { params });
+    },
+
+    /**
+     * Obtener un curso por ID
+     * @param {String} id - ID del curso
+     */
+    getById: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getById(id);
+      }
+      // CAMBIO: Ruta en español
+      return await api.get(`/cursos/${id}`);
+    },
+
+    /**
+     * Crear un nuevo curso
+     * @param {Object} courseData - Datos del curso a crear
+     */
+    create: async (courseData) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.create(courseData);
+      }
+      // CAMBIO: Ruta en español
+      return await api.post('/cursos', courseData);
+    },
+
+    /**
+     * Actualizar un curso
+     * @param {String} id - ID del curso
+     * @param {Object} courseData - Datos a actualizar
+     */
+    update: async (id, courseData) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.update(id, courseData);
+      }
+      // CAMBIO: Ruta en español
+      return await api.put(`/cursos/${id}`, courseData);
+    },
+
+    /**
+     * Eliminar un curso
+     * @param {String} id - ID del curso
+     */
+    delete: async (id) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.delete(id);
+      }
+      // CAMBIO: Ruta en español
+      return await api.delete(`/cursos/${id}`);
+    },
+
+    /**
+     * Obtener horarios disponibles de un profesor para crear cursos
+     * @param {String} profesorId - ID del profesor
+     * @param {String} excludeCursoId - ID del curso a excluir (opcional, útil al editar)
+     * @returns {Promise} Array de horarios disponibles
+     */
+    getAvailableSchedulesByTeacher: async (profesorId, excludeCursoId = null) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
+      }
+      // Construir URL con query param si se está excluyendo un curso
+      let url = `/cursos/profesor/${profesorId}/horarios-disponibles`;
+      if (excludeCursoId) {
+        url += `?excludeCursoId=${excludeCursoId}`;
+      }
+      return await api.get(url);
+    },
+
+    /**
+     * Obtener mis cursos como estudiante
+     */
+    getMyCourses: async () => {
+      if (USE_MOCK) {
+        return { data: { success: true, data: [] } };
+      }
+      return await api.get('/cursos/estudiante/mis-cursos');
+    },
+
+    /**
+     * Obtener estudiantes de un curso
+     * @param {String} cursoId
+     */
+    getStudents: async (cursoId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (!course || !course.estudiantes) {
+          return {
+            data: {
+              success: true,
+              data: []
+            }
+          };
+        }
+        const estudiantes = course.estudiantes.map((studentId) => {
+          const student = mockStudents.find((s) => s._id === studentId);
+          return {
+            estudiante: student,
+            fechaInscripcion: new Date().toISOString(),
+            progreso: { horasCompletadas: 0, porcentaje: 0 }
+          };
+        });
+        return {
+          data: {
+            success: true,
+            data: estudiantes
+          }
+        };
+      }
+      return await api.get(`/cursos/${cursoId}/estudiantes`);
+    },
+    /**
+     * Actualizar notas/calificación de una inscripción de curso (alias en español)
+     */
+    updateEnrollmentNotes: async (cursoId, inscripcionId, payload) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Notas actualizadas (mock)', data: payload } };
+      }
+      return await api.patch(
+        `/cursos/${cursoId}/inscripciones/${inscripcionId}/notas`,
+        payload || {}
+      );
+    },
+
+    /**
+     * Actualizar notas/calificación de una inscripción de curso
+     * `payload` puede incluir: notasAdicionales, tp1, tp2, parcial1, parcial2, examenFinal
+     */
+    updateEnrollmentNotes: async (cursoId, inscripcionId, payload) => {
+      if (USE_MOCK) {
+        return { data: { success: true, message: 'Notas actualizadas (mock)', data: payload } };
+      }
+      return await api.patch(
+        `/cursos/${cursoId}/inscripciones/${inscripcionId}/notas`,
+        payload || {}
+      );
+    },
+    removeStudent: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (course) {
+          course.estudiantes = (course.estudiantes || []).filter((id) => id !== estudianteId);
+        }
+        return {
+          data: {
+            success: true
+          }
+        };
+      }
+      return await api.delete(`/cursos/${cursoId}/estudiantes/${estudianteId}`);
+    },
+
+    /**
+     * Inscribir estudiante a un curso
+     * @param {String} cursoId - ID del curso
+     * @param {String} estudianteId - ID del estudiante
+     */
+    enroll: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        // Simular respuesta exitosa
+        return {
+          data: {
+            success: true,
+            message: 'Estudiante inscripto (mock)',
+            data: {
+              cursoId,
+              estudianteId
+            }
+          }
+        };
+      }
+      return await api.post(`/cursos/${cursoId}/inscribir`, { estudianteId });
+    }
+  },
+
+  // ==================== PROFESORES  ====================
+  /**
+   *  `CoursesPage.jsx` necesita esta sección para cargar profesores reales.
+   */
+  teachers: {
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.teachers.getAll(params); 
+      }
+      // Apunta a la ruta real de profesores 
+      const response = await api.get('/teachers', { params });
+      // Normalizar respuesta para que data.data contenga el array directamente
+      if (response.data.success && response.data.data && response.data.data.teachers) {
+        return {
+          ...response,
+          data: {
+            ...response.data,
+            data: response.data.data.teachers
+          }
+        };
+      }
+      return response;
+    }
+  },
+
+  // ==================== ESTUDIANTES ====================
+  students: {
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        const search = params.search ? params.search.toLowerCase() : '';
+        let students = [...mockStudents];
+        if (search) {
+          students = students.filter((student) => {
+            const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
+            return (
+              fullName.includes(search) ||
+              (student.email || '').toLowerCase().includes(search)
+            );
+          });
+        }
+        return {
+          data: {
+            success: true,
+            data: {
+              students,
+              pagination: {
+                page: 1,
+                limit: students.length,
+                total: students.length,
+                pages: 1,
+                hasNext: false,
+                hasPrev: false
+              }
+            }
+          }
+        };
+      }
+      return await api.get('/students', { params });
+    }
+  },
+
+  // ==================== ALIASES EN ESPAÑOL (para compatibilidad) ====================
+  cursos: {
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll(params);
+      }
+      return await api.get('/cursos', { params });
+    },
+    getPublic: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAll({
+          ...params,
+          activeOnly: params.activeOnly ?? true
+        });
+      }
+      return await api.get('/cursos/publico', { params });
+    },
+    getMine: async () => {
+      if (USE_MOCK) {
+        return {
+          data: {
+            success: true,
+            data: []
+          }
+        };
+      }
+      return await api.get('/cursos/profesor/mis-cursos');
+    },
     getById: async (id) => {
       if (USE_MOCK) {
         return await mockApi.courses.getById(id);
       }
-      return await api.get(`/courses/${id}`);
+      return await api.get(`/cursos/${id}`);
     },
-
-    /**
-     * Crear un nuevo curso
-     * @param {Object} courseData - Datos del curso a crear
-     */
     create: async (courseData) => {
       if (USE_MOCK) {
         return await mockApi.courses.create(courseData);
       }
-      return await api.post('/courses', courseData);
+      return await api.post('/cursos', courseData);
     },
-
-    /**
-     * Actualizar un curso
-     * @param {String} id - ID del curso
-     * @param {Object} courseData - Datos a actualizar
-     */
     update: async (id, courseData) => {
       if (USE_MOCK) {
         return await mockApi.courses.update(id, courseData);
       }
-      return await api.put(`/courses/${id}`, courseData);
+      return await api.put(`/cursos/${id}`, courseData);
     },
-
-    /**
-     * Eliminar un curso
-     * @param {String} id - ID del curso
-     */
     delete: async (id) => {
       if (USE_MOCK) {
         return await mockApi.courses.delete(id);
       }
-      return await api.delete(`/courses/${id}`);
+      return await api.delete(`/cursos/${id}`);
+    },
+    getAvailableSchedulesByTeacher: async (profesorId) => {
+      if (USE_MOCK) {
+        return await mockApi.courses.getAvailableSchedulesByTeacher(profesorId);
+      }
+      return await api.get(`/cursos/profesor/${profesorId}/horarios-disponibles`);
+    },
+    getStudents: async (cursoId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (!course || !course.estudiantes) {
+          return {
+            data: {
+              success: true,
+              data: []
+            }
+          };
+        }
+        const estudiantes = course.estudiantes.map((studentId) => {
+          const student = mockStudents.find((s) => s._id === studentId);
+          return {
+            estudiante: student,
+            fechaInscripcion: new Date().toISOString(),
+            progreso: { horasCompletadas: 0, porcentaje: 0 }
+          };
+        });
+        return {
+          data: {
+            success: true,
+            data: estudiantes
+          }
+        };
+      }
+      return await api.get(`/cursos/${cursoId}/estudiantes`);
+    },
+    removeStudent: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        const course = mockCourses.find((c) => c._id === cursoId);
+        if (course) {
+          course.estudiantes = (course.estudiantes || []).filter((id) => id !== estudianteId);
+        }
+        return {
+          data: {
+            success: true
+          }
+        };
+      }
+      return await api.delete(`/cursos/${cursoId}/estudiantes/${estudianteId}`);
+    },
+    enroll: async (cursoId, estudianteId) => {
+      if (USE_MOCK) {
+        return {
+          data: {
+            success: true,
+            message: 'Estudiante inscripto (mock)',
+            data: {
+              cursoId,
+              estudianteId
+            }
+          }
+        };
+      }
+      return await api.post(`/cursos/${cursoId}/inscribir`, { estudianteId });
+    }
+  },
+  profesores: {
+    getAll: async (params = {}) => {
+      if (USE_MOCK) {
+        return await mockApi.teachers.getAll(params);
+      }
+      const response = await api.get('/teachers', { params });
+      // Normalizar respuesta para que data.data contenga el array directamente
+      if (response.data.success && response.data.data && response.data.data.teachers) {
+        return {
+          ...response,
+          data: {
+            ...response.data,
+            data: response.data.data.teachers
+          }
+        };
+      }
+      return response;
+    }
+  },
+
+  // ==================== SUBIDA DE ARCHIVOS ====================
+  uploads: {
+    /**
+     * Subir imagen de un curso
+     * @param {FormData} formData - Debe incluir el campo 'image'
+     */
+    uploadCourseImage: async (formData) => {
+      if (USE_MOCK) {
+        return await mockApi.uploads.uploadCourseImage(formData);
+      }
+      return await api.post('/uploads/course-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
     }
   },
 
@@ -217,7 +686,8 @@ const apiAdapter = {
       if (USE_MOCK) {
         return await mockApi.reports.financial(params)
       }
-      return await api.get('/reports/financial', { params })
+      // Usar el endpoint de dashboard financiero
+      return await api.get('/reportes-financieros/dashboard/financiero')
     },
 
     /**
@@ -228,6 +698,26 @@ const apiAdapter = {
         return await mockApi.reports.teachers()
       }
       return await api.get('/reports/teachers')
+    },
+
+    /**
+     * Resumen académico para dashboard (usa backend real)
+     */
+    academicDashboard: async () => {
+      if (USE_MOCK) {
+        return await mockApi.reports.academic({})
+      }
+      return await api.get('/reportes-academicos/dashboard/academico')
+    },
+
+    /**
+     * Listado global de estudiantes en riesgo por inasistencias
+     */
+    studentsAtRiskByAttendance: async () => {
+      if (USE_MOCK) {
+        return { data: { success: true, data: [] } }
+      }
+      return await api.get('/reportes-academicos/estudiantes-en-riesgo/asistencia')
     }
   },
 

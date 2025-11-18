@@ -1,5 +1,5 @@
 const { validationResult } = require('express-validator');
-const userService = require('../services/userService');
+const studentService = require('../services/studentService');
 
 // Función auxiliar para manejar errores de validación
 const handleValidationErrors = (req, res) => {
@@ -17,7 +17,11 @@ const handleValidationErrors = (req, res) => {
   return null;
 };
 
-
+/**
+ * GET /api/students
+ * Lista estudiantes con filtros y paginación
+ * ✅ CORRECTO - Usa service para lógica de negocio
+ */
 const getStudents = async (req, res) => {
   try {
     const { 
@@ -29,44 +33,13 @@ const getStudents = async (req, res) => {
       condicion 
     } = req.query;
 
-    const filters = { role: 'estudiante' };
-    
-    // Filtro por texto (nombre, apellido, email)
-    if (search) {
-      filters.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    // Filtro por estado de cuenta
-    if (status) {
-      if (status === 'active') {
-        filters.isActive = true;
-      } else if (status === 'inactive') {
-        filters.isActive = false;
-      }
-    }
-
-    // level filter
-    if (nivel) {
-      filters.nivel = nivel;
-    }
-
-    // academic condition filter
-    if (condicion) {
-      filters.condicion = condicion;
-    }
-
-    const options = {
+    const filtros = { search, status, nivel, condicion };
+    const opciones = {
       page: parseInt(page),
-      limit: parseInt(limit),
-      sort: { createdAt: -1 },
-      select: '-password'
+      limit: parseInt(limit)
     };
 
-    const result = await userService.findUsers(filters, options);
+    const result = await studentService.listarEstudiantes(filtros, opciones);
 
     res.json({
       success: true,
@@ -95,19 +68,16 @@ const getStudents = async (req, res) => {
 };
 
 
+/**
+ * GET /api/students/:id
+ * Obtiene un estudiante por ID
+ * ✅ CORRECTO - Usa service para lógica de negocio
+ */
 const getStudentById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const student = await userService.findUserById(id);
-    
-    if (!student || student.role !== 'estudiante') {
-      return res.status(404).json({
-        success: false,
-        message: 'Estudiante no encontrado',
-        code: 'STUDENT_NOT_FOUND'
-      });
-    }
+    const student = await studentService.obtenerEstudiantePorId(id);
 
     res.json({
       success: true,
@@ -119,6 +89,15 @@ const getStudentById = async (req, res) => {
 
   } catch (error) {
     console.error('Error en getStudentById:', error);
+    
+    if (error.message === 'Estudiante no encontrado') {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+        code: 'STUDENT_NOT_FOUND'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -127,8 +106,11 @@ const getStudentById = async (req, res) => {
   }
 };
 
-//  update student
-
+/**
+ * PUT /api/students/:id
+ * Actualiza un estudiante
+ * ✅ CORRECTO - Usa service para lógica de negocio
+ */
 const updateStudent = async (req, res) => {
   try {
     const validationError = handleValidationErrors(req, res);
@@ -148,16 +130,6 @@ const updateStudent = async (req, res) => {
       isActive 
     } = req.body;
 
-    const student = await userService.findUserById(id);
-    
-    if (!student || student.role !== 'estudiante') {
-      return res.status(404).json({
-        success: false,
-        message: 'Estudiante no encontrado',
-        code: 'STUDENT_NOT_FOUND'
-      });
-    }
-
     const updateData = {};
     if (firstName) updateData.firstName = firstName;
     if (lastName) updateData.lastName = lastName;
@@ -165,24 +137,12 @@ const updateStudent = async (req, res) => {
     if (phone) updateData.phone = phone;
     if (dni) updateData.dni = dni;
     if (nivel) updateData.nivel = nivel;
-    
-    // map condicion to estadoAcademico
-    if (condicion) {
-      const estadoMap = {
-        'activo': 'en_curso',
-        'inactivo': 'suspendido', 
-        'graduado': 'graduado'
-      };
-      updateData.estadoAcademico = estadoMap[condicion] || 'inscrito';
-      // also store original condicion
-      updateData.condicion = condicion;
-    }
-    
+    if (condicion) updateData.condicion = condicion;
     if (estadoAcademico) updateData.estadoAcademico = estadoAcademico;
     if (fechaInicio) updateData.fechaInicio = fechaInicio;
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
 
-    const updatedStudent = await userService.updateUser(id, updateData);
+    const updatedStudent = await studentService.actualizarEstudiante(id, updateData);
 
     res.json({
       success: true,
@@ -194,6 +154,14 @@ const updateStudent = async (req, res) => {
 
   } catch (error) {
     console.error('Error en updateStudent:', error);
+    
+    if (error.message === 'Estudiante no encontrado') {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+        code: 'STUDENT_NOT_FOUND'
+      });
+    }
     
     if (error.code === 11000) {
       return res.status(400).json({
@@ -211,24 +179,16 @@ const updateStudent = async (req, res) => {
   }
 };
 
-// @endpoint to deactivate student
-
-
+/**
+ * PUT /api/students/:id/deactivate
+ * Desactiva un estudiante
+ * ✅ CORRECTO - Usa service para lógica de negocio
+ */
 const deactivateStudent = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const student = await userService.findUserById(id);
-    
-    if (!student || student.role !== 'estudiante') {
-      return res.status(404).json({
-        success: false,
-        message: 'Estudiante no encontrado',
-        code: 'STUDENT_NOT_FOUND'
-      });
-    }
-
-    const updatedStudent = await userService.updateUser(id, { isActive: false });
+    const updatedStudent = await studentService.desactivarEstudiante(id);
 
     res.json({
       success: true,
@@ -240,6 +200,15 @@ const deactivateStudent = async (req, res) => {
 
   } catch (error) {
     console.error('Error en deactivateStudent:', error);
+    
+    if (error.message === 'Estudiante no encontrado') {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+        code: 'STUDENT_NOT_FOUND'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -248,22 +217,16 @@ const deactivateStudent = async (req, res) => {
   }
 };
 
-// endpoint to reactivate student
+/**
+ * PUT /api/students/:id/reactivate
+ * Reactiva un estudiante
+ * ✅ CORRECTO - Usa service para lógica de negocio
+ */
 const reactivateStudent = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const student = await userService.findUserById(id);
-    
-    if (!student || student.role !== 'estudiante') {
-      return res.status(404).json({
-        success: false,
-        message: 'Estudiante no encontrado',
-        code: 'STUDENT_NOT_FOUND'
-      });
-    }
-
-    const updatedStudent = await userService.updateUser(id, { isActive: true });
+    const updatedStudent = await studentService.reactivarEstudiante(id);
 
     res.json({
       success: true,
@@ -275,6 +238,15 @@ const reactivateStudent = async (req, res) => {
 
   } catch (error) {
     console.error('Error en reactivateStudent:', error);
+    
+    if (error.message === 'Estudiante no encontrado') {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+        code: 'STUDENT_NOT_FOUND'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -283,40 +255,19 @@ const reactivateStudent = async (req, res) => {
   }
 };
 
-// get students statistics
-
+/**
+ * GET /api/students/stats
+ * Obtiene estadísticas de estudiantes
+ * ✅ CORRECTO - Usa service para lógica de negocio
+ */
 const getStudentsStats = async (req, res) => {
   try {
-    const totalStudents = await userService.countUsers({ role: 'estudiante' });
-    const activeStudents = await userService.countUsers({ role: 'estudiante', isActive: true });
-    const inactiveStudents = await userService.countUsers({ role: 'estudiante', isActive: false });
-    
-    // level statistics
-    const levelStats = await userService.getAggregateStats([
-      { $match: { role: 'estudiante', isActive: true } },
-      { $group: { _id: '$nivel', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    // academic condition statistics
-    const conditionStats = await userService.getAggregateStats([
-      { $match: { role: 'estudiante', isActive: true } },
-      { $group: { _id: '$condicion', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
+    const estadisticas = await studentService.obtenerEstadisticasEstudiantes();
 
     res.json({
       success: true,
       message: 'Estadísticas de estudiantes obtenidas exitosamente',
-      data: {
-        overview: {
-          total: totalStudents,
-          active: activeStudents,
-          inactive: inactiveStudents
-        },
-        byLevel: levelStats,
-        byCondition: conditionStats
-      }
+      data: estadisticas
     });
 
   } catch (error) {

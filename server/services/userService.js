@@ -11,7 +11,9 @@ async function createUser(data) {
 
 // Buscar usuario por email
 async function findUserByEmail(email) {
-  return await BaseUser.findOne({ email });
+  // Normalizar email: lowercase y trim
+  const normalizedEmail = email ? email.toLowerCase().trim() : email;
+  return await BaseUser.findOne({ email: normalizedEmail });
 }
 
 // Validar contraseña
@@ -31,6 +33,7 @@ async function getUserProfile(userId) {
   
   if (user && user.role === 'profesor') {
     await user.populate('especialidades', 'code name nativeName isActive');
+    await user.populate('horariosPermitidos');
   }
   
   return user;
@@ -41,6 +44,7 @@ async function findUserById(userId) {
   const user = await BaseUser.findById(userId);
   if (user && user.role === 'profesor') {
     await user.populate('especialidades', 'code name nativeName isActive');
+    await user.populate('horariosPermitidos');
   }
   return user;
 }
@@ -102,9 +106,19 @@ async function findUsers(filters, options = {}) {
     .skip(skip)
     .limit(limit);
 
-  // Si es consulta de profesores, popular las especialidades
+  // Si es consulta de profesores, popular las especialidades y horarios
   if (filters.role === 'profesor') {
-    query.populate('especialidades', 'code name nativeName isActive');
+    query.populate({
+      path: 'especialidades',
+      select: 'code name nativeName isActive',
+      // No fallar si no hay especialidades o si hay IDs inválidos
+      options: { strictPopulate: false }
+    });
+    query.populate({
+      path: 'horariosPermitidos',
+      // No fallar si no hay horarios
+      options: { strictPopulate: false }
+    });
   }
 
   const [docs, totalDocs] = await Promise.all([

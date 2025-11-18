@@ -7,6 +7,15 @@ const Language = require('./Language');
 const Empresa = require('./Empresa');
 const AuditoriaLog = require('./AuditoriaLog');
 
+const Curso = require('./Curso');
+const Horario = require('./Horario');
+const Inscripcion = require('./Inscripcion');
+const Clase = require('./Clase');
+const EventoCalendario = require('./EventoCalendario');
+const PerfilEstudiante = require('./PerfilEstudiante');
+const ReporteAcademico = require('./ReporteAcademico');
+const ReporteFinanciero = require('./ReporteFinanciero');
+
 module.exports = {
   BaseUser,
   Estudiante,
@@ -15,6 +24,15 @@ module.exports = {
   Language,
   Empresa,
   AuditoriaLog,
+  Curso,
+  Horario,
+  Inscripcion,
+  Clase,
+  EventoCalendario,
+  PerfilEstudiante,
+  ReporteAcademico,
+  ReporteFinanciero,
+
   //function helper
   getUserModel: (role) => {
     switch(role) {
@@ -30,7 +48,9 @@ module.exports = {
   },
   // Function to find any user regardless of type
   findUserByEmail: async (email) => {
-    return await BaseUser.findOne({ email });
+    // Normalizar email: lowercase y trim
+    const normalizedEmail = email ? email.toLowerCase().trim() : email;
+    return await BaseUser.findOne({ email: normalizedEmail });
   },
   // Function to find user by ID regardless of type
   findUserById: async (id) => {

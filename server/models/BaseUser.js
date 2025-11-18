@@ -64,7 +64,17 @@ const baseUserSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
-  }
+  },
+
+  // --- NUEVO CAMPO (PUNTO 2) ---
+  // Solo aplica para 'profesor'.
+  // Almacena los IDs de los horarios que el profesor ESTÁ DISPUESTO a dar.
+  horariosPermitidos: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Horario'
+  }]
+  // --- FIN NUEVO CAMPO ---
+
 }, {
   timestamps: true,
   discriminatorKey: 'role', 
@@ -105,6 +115,6 @@ baseUserSchema.virtual('fullName').get(function() {
 });
 
 // Create the base model only if it doesn't exist
-const BaseUser = mongoose.models.User || mongoose.model('User', baseUserSchema);
+const BaseUser = mongoose.models.BaseUser || mongoose.model('BaseUser', baseUserSchema);
 
 module.exports = BaseUser;

@@ -1,0 +1,32 @@
+warning: in the working copy of 'client/src/components/courses/CourseFormModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/Dashboard/CourseManagementPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/services/apiAdapter.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/index.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/routes/auditoria.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/routes/clases.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/routes/cursos.js', LF will be replaced by CRLF the next time Git touches it
+ client/src/components/ClassScheduler.jsx           |   2 [32m+[m[31m-[m
+ client/src/components/TeachersManagement.jsx       | 247 [32m++++[m[31m----[m
+ client/src/components/admin/CalendarView.jsx       |  31 [32m+[m[31m-[m
+ .../src/components/courses/CourseDetailModal.jsx   |  21 [32m+[m[31m-[m
+ client/src/components/courses/CourseFormModal.jsx  | 633 [32m++++++++++++++++++[m[31m---[m
+ client/src/pages/CoursesPage.jsx                   |  53 [32m+[m[31m-[m
+ .../src/pages/Dashboard/CourseManagementPage.jsx   | 537 [32m++++++++[m[31m---------[m
+ client/src/services/apiAdapter.js                  | 277 [32m++++++[m[31m---[m
+ package-lock.json                                  |   2 [32m+[m[31m-[m
+ server/controllers/cursosController.js             |  71 [32m++[m[31m-[m
+ server/controllers/teacherController.js            |  73 [32m++[m[31m-[m
+ server/index.js                                    |  81 [32m++[m[31m-[m
+ server/models/BaseUser.js                          |   2 [32m+[m[31m-[m
+ server/models/Clase.js                             |   2 [32m+[m[31m-[m
+ server/models/Curso.js                             | 247 [32m++[m[31m------[m
+ server/models/EventoCalendario.js                  |   2 [32m+[m[31m-[m
+ server/models/index.js                             |  10 [32m+[m
+ server/routes/auditoria.js                         |   6 [32m+[m[31m-[m
+ server/routes/clases.js                            |  36 [32m+[m[31m-[m
+ server/routes/cursos.js                            |  50 [32m+[m[31m-[m
+ server/routes/index.js                             |  56 [31m--[m
+ server/routes/teacherRoutes.js                     |   4 [32m+[m[31m-[m
+ server/services/cursosService.js                   | 285 [32m++++++++[m[31m--[m
+ server/validators/cursosValidator.js               |  69 [32m++[m[31m-[m
+ 24 files changed, 1829 insertions(+), 968 deletions(-)

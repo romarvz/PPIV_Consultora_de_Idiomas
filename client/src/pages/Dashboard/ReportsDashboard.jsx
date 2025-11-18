@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import apiAdapter from '../../services/apiAdapter'
-import { FaFileExport, FaSpinner } from 'react-icons/fa'
+import api from '../../services/api'
+import { FaFileExport, FaSpinner, FaFilePdf, FaFileExcel, FaPlus, FaTrash } from 'react-icons/fa'
+import GenerateReportModal from '../../components/reports/GenerateReportModal'
 
 const ReportsDashboard = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('academic')
   const [loading, setLoading] = useState(false)
   const [academicData, setAcademicData] = useState(null)
   const [financialData, setFinancialData] = useState(null)
+  const [recentReports, setRecentReports] = useState([])
   const [filters, setFilters] = useState({ search: '', nivel: '', estado: '' })
   const [financialFilters, setFinancialFilters] = useState({ search: '', paymentStatus: '', minAmount: '', maxAmount: '' })
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+  const [sortConfig, setSortConfig] = useState({ key: 'dni', direction: 'asc' }) // Ordenar por DNI por defecto
   const [expandedRows, setExpandedRows] = useState(new Set())
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
 
   useEffect(() => {
     loadReports()
@@ -19,24 +23,191 @@ const ReportsDashboard = ({ onClose }) => {
   const loadReports = async () => {
     setLoading(true)
     try {
-      const response = await apiAdapter.classes.getAll()
-      const [academicResponse, financialResponse] = await Promise.all([
-        apiAdapter.reports.academic(),
-        apiAdapter.reports.financial()
+      // Función helper para agregar timeout a una promesa
+      const withTimeout = (promise, timeoutMs) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout: La carga está tardando demasiado')), timeoutMs)
+          )
+        ])
+      }
+      
+      // Cargar reportes con timeout individual de 30 segundos cada uno
+      const [academicResponse, financialResponse, recentReportsResponse] = await Promise.all([
+        withTimeout(apiAdapter.reports.academicDashboard(), 30000),
+        withTimeout(apiAdapter.reports.financial(), 30000),
+        withTimeout(api.get('/reportes-academicos/recientes?limite=50'), 30000)
       ])
       
-      setAcademicData(academicResponse.data.data)
-      setFinancialData(financialResponse.data.data)
+      if (academicResponse?.data?.success) {
+        const academicDataReceived = academicResponse.data.data
+        console.log('[ReportsDashboard] Datos académicos recibidos:', {
+          total: academicDataReceived?.total,
+          studentsCount: academicDataReceived?.students?.length,
+          averageAttendance: academicDataReceived?.averageAttendance
+        })
+        setAcademicData(academicDataReceived)
+      } else {
+        console.warn('La respuesta académica no fue exitosa:', academicResponse?.data)
+        // No limpiar los datos existentes si hay error - mantener los datos previos
+      }
+      
+      if (financialResponse?.data?.success) {
+        setFinancialData(financialResponse.data.data)
+      } else {
+        console.warn('La respuesta financiera no fue exitosa:', financialResponse?.data)
+        // No limpiar los datos existentes si hay error - mantener los datos previos
+      }
+
+      if (recentReportsResponse?.data?.success) {
+        setRecentReports(recentReportsResponse.data.data || [])
+      } else {
+        console.warn('La respuesta de reportes recientes no fue exitosa:', recentReportsResponse?.data)
+        // No limpiar los reportes recientes si hay error - mantener los datos previos
+      }
     } catch (error) {
       console.error('Error loading reports:', error)
+      console.error('Error completo:', error.response?.data || error.message)
+      // No limpiar los datos existentes si hay error - mantener los datos previos
+      // Solo establecer null si es la primera carga (no hay datos previos)
+      
+      if (error.message.includes('Timeout')) {
+        alert('⚠️ La carga de reportes está tardando demasiado. Por favor, intente recargar la página.')
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  const handleExportCSV = () => {
-    const reportType = activeTab === 'academic' ? 'Académico' : 'Financiero'
-    alert(`Exportando Reporte ${reportType} a CSV...\n\nEsta funcionalidad está simulada. En producción, aquí se generaría y descargaría el archivo CSV.`)
+  const handleExportPDF = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (activeTab === 'academic') {
+        const reportId = academicData?.students?.[0]?._id
+        if (!reportId || reportId.startsWith('mock-')) {
+          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
+          return
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-pdf`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-academico-${reportId}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        // Calcular período actual (YYYY-Q1/Q2/Q3/Q4)
+        const fecha = new Date()
+        const year = fecha.getFullYear()
+        const month = fecha.getMonth() + 1
+        const quarter = Math.ceil(month / 3)
+        const periodo = `${year}-Q${quarter}`
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-pdf`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-financiero-${periodo}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Error al exportar PDF:\n' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleExportExcel = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (activeTab === 'academic') {
+        const reportId = academicData?.students?.[0]?._id
+        if (!reportId || reportId.startsWith('mock-')) {
+          alert('⚠️ No hay reportes reales disponibles para exportar.\n\nPara exportar reportes:\n1. Haga clic en "Generar Reporte"\n2. Seleccione un curso\n3. El sistema generará reportes automáticos\n4. Luego podrá exportar a PDF o Excel')
+          return
+        }
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-academicos/${reportId}/exportar-excel`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-academico-${reportId}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        // Calcular período actual (YYYY-Q1/Q2/Q3/Q4)
+        const fecha = new Date()
+        const year = fecha.getFullYear()
+        const month = fecha.getMonth() + 1
+        const quarter = Math.ceil(month / 3)
+        const periodo = `${year}-Q${quarter}`
+        
+        const response = await fetch(`http://localhost:5000/api/reportes-financieros/periodo/${periodo}/exportar-excel`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Error ${response.status}: No se pudo exportar el reporte`)
+        }
+        
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-financiero-${periodo}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting Excel:', error)
+      alert('Error al exportar Excel:\n' + error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const formatCurrency = (amount) => {
@@ -72,6 +243,25 @@ const ReportsDashboard = ({ onClose }) => {
       filtered.sort((a, b) => {
         let aValue = sortConfig.key === 'name' ? `${a.firstName} ${a.lastName}` : a[sortConfig.key]
         let bValue = sortConfig.key === 'name' ? `${b.firstName} ${b.lastName}` : b[sortConfig.key]
+        
+        // Manejar valores null/undefined para promedio (ponerlos al final)
+        if (sortConfig.key === 'promedio') {
+          if (aValue === null || aValue === undefined) aValue = -1
+          if (bValue === null || bValue === undefined) bValue = -1
+        }
+        
+        // Manejar valores null/undefined para DNI (ponerlos al final)
+        if (sortConfig.key === 'dni') {
+          if (!aValue || aValue === '') aValue = '999999999' // Poner sin DNI al final
+          if (!bValue || bValue === '') bValue = '999999999'
+          // Convertir a número si es posible para ordenar numéricamente
+          const aNum = Number(aValue)
+          const bNum = Number(bValue)
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            aValue = aNum
+            bValue = bNum
+          }
+        }
         
         if (typeof aValue === 'string') {
           aValue = aValue.toLowerCase()
@@ -145,7 +335,7 @@ const ReportsDashboard = ({ onClose }) => {
   }
 
   return (
-    <div>
+    <>
       {/* Header */}
       <div className="dashboard-section">
         <h3 className="dashboard-section__title">Reportes</h3>
@@ -201,16 +391,17 @@ const ReportsDashboard = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Export Button */}
+        {/* Action Buttons */}
         <div style={{
           padding: '1rem',
           background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
-          justifyContent: 'flex-end'
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
           <button
-            onClick={handleExportCSV}
+            onClick={() => setShowGenerateModal(true)}
             style={{
               background: 'var(--primary)',
               color: 'white',
@@ -226,8 +417,52 @@ const ReportsDashboard = ({ onClose }) => {
               transition: 'all 0.3s ease'
             }}
           >
-            <FaFileExport /> Exportar a CSV
+            <FaPlus /> Generar Reporte
           </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            onClick={handleExportPDF}
+            disabled={loading}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            <FaFilePdf /> Exportar PDF
+          </button>
+          <button
+            onClick={handleExportExcel}
+            disabled={loading}
+            style={{
+              background: '#16a34a',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            <FaFileExcel /> Exportar Excel
+          </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -257,31 +492,58 @@ const ReportsDashboard = ({ onClose }) => {
                 </h2>
 
                 {/* Academic Performance Chart */}
-                <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
+                {!academicData ? (
+                  <div style={{ 
+                    background: 'var(--card-bg)', 
+                    padding: '2rem', 
+                    borderRadius: '12px', 
+                    boxShadow: 'var(--shadow-md)', 
+                    marginBottom: '2rem',
+                    textAlign: 'center',
+                    color: 'var(--text-secondary)'
+                  }}>
+                    No hay datos académicos disponibles para mostrar
+                  </div>
+                ) : (
+                  <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
-                    {/* Progress Ring Chart */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-                        <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color)" strokeWidth="8" />
-                          <circle 
-                            cx="60" 
-                            cy="60" 
-                            r="50" 
-                            fill="none" 
-                            stroke="#27ae60" 
-                            strokeWidth="8"
-                            strokeDasharray={`${(academicData?.averageAttendance || 0) * 3.14} 314`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>{academicData?.averageAttendance || 0}%</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Promedio</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
+                      {/* Progress Ring Chart */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                          <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color)" strokeWidth="8" />
+                            <circle 
+                              cx="60" 
+                              cy="60" 
+                              r="50" 
+                              fill="none" 
+                              stroke="#27ae60" 
+                              strokeWidth="8"
+                              strokeDasharray={`${
+                                academicData.averageGrade !== null && academicData.averageGrade !== undefined
+                                  ? ((academicData.averageGrade / 10) * 314)
+                                  : ((academicData?.averageAttendance || 0) / 100) * 314
+                              } 314`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                              {academicData.averageGrade !== null && academicData.averageGrade !== undefined
+                                ? academicData.averageGrade.toFixed(1)
+                                : academicData.averageAttendance !== null && academicData.averageAttendance !== undefined
+                                  ? `${academicData.averageAttendance.toFixed(1)}%`
+                                  : '0%'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              {academicData.averageGrade !== null && academicData.averageGrade !== undefined
+                                ? 'Promedio de Calificaciones'
+                                : 'Promedio de Asistencia'}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
                     {/* Performance Distribution */}
                     <div>
                       <div style={{ marginBottom: '1rem' }}>
@@ -318,6 +580,210 @@ const ReportsDashboard = ({ onClose }) => {
                     </div>
                   </div>
                 </div>
+                )}
+
+                {/* Reportes Generados Recientemente */}
+                {recentReports.length > 0 && (
+                  <div style={{ 
+                    background: 'var(--card-bg)', 
+                    padding: '1.5rem', 
+                    borderRadius: '12px', 
+                    boxShadow: 'var(--shadow-md)', 
+                    marginBottom: '2rem' 
+                  }}>
+                    <h3 style={{
+                      fontSize: '1.1rem',
+                      fontWeight: '600',
+                      marginBottom: '1rem',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Reportes Generados Recientemente ({recentReports.length})
+                    </h3>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                      gap: '1rem',
+                      maxHeight: '400px',
+                      overflowY: 'auto'
+                    }}>
+                      {recentReports.map((reporte) => (
+                        <div
+                          key={reporte._id}
+                          style={{
+                            padding: '1rem',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            background: 'var(--bg-secondary)'
+                          }}
+                        >
+                          <div style={{ marginBottom: '0.75rem' }}>
+                            <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                              {reporte.estudiante ? `${reporte.estudiante.firstName} ${reporte.estudiante.lastName}` : 'Estudiante desconocido'}
+                            </div>
+                            {reporte.curso && (
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                                {reporte.curso.nombre} - {reporte.curso.idioma}
+                              </div>
+                            )}
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              Período: {reporte.periodo || 'N/A'} | 
+                              Estado: <span style={{
+                                color: reporte.estado === 'aprobado' ? '#27ae60' :
+                                       reporte.estado === 'reprobado' ? '#e74c3c' :
+                                       '#f39c12',
+                                fontWeight: '500'
+                              }}>
+                                {reporte.estado === 'aprobado' ? 'Aprobado' :
+                                 reporte.estado === 'reprobado' ? 'Necesita apoyo' :
+                                 reporte.estado === 'en_progreso' ? 'En progreso' :
+                                 reporte.estado || 'En progreso'}
+                              </span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  setLoading(true)
+                                  const token = localStorage.getItem('token')
+                                  const response = await fetch(
+                                    `http://localhost:5000/api/reportes-academicos/${reporte._id}/exportar-pdf`,
+                                    { headers: { 'Authorization': `Bearer ${token}` } }
+                                  )
+                                  if (!response.ok) throw new Error('Error al exportar')
+                                  const blob = await response.blob()
+                                  const url = window.URL.createObjectURL(blob)
+                                  const a = document.createElement('a')
+                                  a.href = url
+                                  a.download = `reporte-${reporte.estudiante?.lastName || 'academico'}-${reporte.periodo || 'actual'}.pdf`
+                                  document.body.appendChild(a)
+                                  a.click()
+                                  window.URL.revokeObjectURL(url)
+                                  document.body.removeChild(a)
+                                } catch (error) {
+                                  alert('Error al exportar PDF: ' + error.message)
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              disabled={loading}
+                              style={{
+                                flex: 1,
+                                minWidth: '80px',
+                                padding: '0.5rem',
+                                background: '#dc2626',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '0.85rem',
+                                fontWeight: '500',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                              }}
+                            >
+                              <FaFilePdf /> PDF
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  setLoading(true)
+                                  const token = localStorage.getItem('token')
+                                  const response = await fetch(
+                                    `http://localhost:5000/api/reportes-academicos/${reporte._id}/exportar-excel`,
+                                    { headers: { 'Authorization': `Bearer ${token}` } }
+                                  )
+                                  if (!response.ok) throw new Error('Error al exportar')
+                                  const blob = await response.blob()
+                                  const url = window.URL.createObjectURL(blob)
+                                  const a = document.createElement('a')
+                                  a.href = url
+                                  a.download = `reporte-${reporte.estudiante?.lastName || 'academico'}-${reporte.periodo || 'actual'}.xlsx`
+                                  document.body.appendChild(a)
+                                  a.click()
+                                  window.URL.revokeObjectURL(url)
+                                  document.body.removeChild(a)
+                                } catch (error) {
+                                  alert('Error al exportar Excel: ' + error.message)
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              disabled={loading}
+                              style={{
+                                flex: 1,
+                                minWidth: '80px',
+                                padding: '0.5rem',
+                                background: '#16a34a',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '0.85rem',
+                                fontWeight: '500',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                              }}
+                            >
+                              <FaFileExcel /> Excel
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`¿Estás seguro de que deseas eliminar el reporte de ${reporte.estudiante?.firstName} ${reporte.estudiante?.lastName}?`)) {
+                                  return
+                                }
+                                try {
+                                  setLoading(true)
+                                  const token = localStorage.getItem('token')
+                                  const response = await fetch(
+                                    `http://localhost:5000/api/reportes-academicos/${reporte._id}`,
+                                    {
+                                      method: 'DELETE',
+                                      headers: { 'Authorization': `Bearer ${token}` }
+                                    }
+                                  )
+                                  if (!response.ok) {
+                                    const errorData = await response.json().catch(() => ({}))
+                                    throw new Error(errorData.error || 'Error al eliminar reporte')
+                                  }
+                                  // Recargar reportes
+                                  await loadReports()
+                                  alert('✅ Reporte eliminado exitosamente')
+                                } catch (error) {
+                                  alert('Error al eliminar reporte: ' + error.message)
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              disabled={loading}
+                              style={{
+                                padding: '0.5rem',
+                                background: '#ef4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '0.85rem',
+                                fontWeight: '500',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                              }}
+                              title="Eliminar reporte"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Filters */}
                 <div style={{
@@ -388,6 +854,19 @@ const ReportsDashboard = ({ onClose }) => {
                     <thead>
                       <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
                         <th 
+                          onClick={() => handleSort('dni')}
+                          style={{ 
+                            textAlign: 'left', 
+                            padding: '1rem', 
+                            fontWeight: '600', 
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
+                        >
+                          DNI {sortConfig.key === 'dni' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ' ⇅'}
+                        </th>
+                        <th 
                           onClick={() => handleSort('name')}
                           style={{ 
                             textAlign: 'left', 
@@ -414,7 +893,7 @@ const ReportsDashboard = ({ onClose }) => {
                           Nivel {sortConfig.key === 'nivel' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ' ⇅'}
                         </th>
                         <th 
-                          onClick={() => handleSort('attendance')}
+                          onClick={() => handleSort('promedio')}
                           style={{ 
                             textAlign: 'center', 
                             padding: '1rem', 
@@ -424,7 +903,7 @@ const ReportsDashboard = ({ onClose }) => {
                             userSelect: 'none'
                           }}
                         >
-                          Progreso (%) {sortConfig.key === 'attendance' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ' ⇅'}
+                          Progreso (Promedio) {sortConfig.key === 'promedio' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ' ⇅'}
                         </th>
                         <th 
                           onClick={() => handleSort('attendance')}
@@ -445,10 +924,20 @@ const ReportsDashboard = ({ onClose }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getFilteredAndSortedData(academicData)?.map((student, index) => (
+                      {!academicData || !academicData.students || academicData.students.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            No hay datos académicos disponibles
+                          </td>
+                        </tr>
+                      ) : (
+                        getFilteredAndSortedData(academicData)?.map((student, index) => (
                         <tr key={student._id} style={{ 
                           borderBottom: '1px solid var(--border-color)'
                         }} className="table-row-hover">
+                          <td style={{ padding: '1rem', color: 'var(--text-primary)', fontFamily: 'monospace', fontWeight: '500' }}>
+                            {student.dni || 'Sin DNI'}
+                          </td>
                           <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>
                             {student.firstName} {student.lastName}
                           </td>
@@ -456,52 +945,76 @@ const ReportsDashboard = ({ onClose }) => {
                             {student.nivel}
                           </td>
                           <td style={{ padding: '1rem', textAlign: 'left' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <div style={{
-                                flex: 1,
-                                background: 'var(--border-color)',
-                                borderRadius: '9999px',
-                                height: '8px',
-                                maxWidth: '100px'
-                              }}>
-                                <div
-                                  style={{
-                                    background: 'var(--primary)',
-                                    height: '8px',
-                                    borderRadius: '9999px',
-                                    width: `${student.attendance}%`
-                                  }}
-                                />
+                            {student.promedio !== null && student.promedio !== undefined ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{
+                                  flex: 1,
+                                  background: 'var(--border-color)',
+                                  borderRadius: '9999px',
+                                  height: '8px',
+                                  maxWidth: '100px'
+                                }}>
+                                  <div
+                                    style={{
+                                      background: student.promedio >= 6 ? 'var(--success)' : 
+                                                 student.promedio >= 4 ? 'var(--warning)' : 'var(--error)',
+                                      height: '8px',
+                                      borderRadius: '9999px',
+                                      width: `${(student.promedio / 10) * 100}%`
+                                    }}
+                                  />
+                                </div>
+                                <span style={{ fontSize: '0.875rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                                  {student.promedio.toFixed(2)}
+                                </span>
                               </div>
-                              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                {student.attendance}%
+                            ) : (
+                              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                Sin calificaciones
                               </span>
-                            </div>
+                            )}
                           </td>
                           <td style={{ padding: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                            {student.attendance}%
+                            {student.attendance?.toFixed(1) || 0}%
                           </td>
                           <td style={{ padding: '1rem', textAlign: 'center' }}>
-                            <span style={{
-                              display: 'inline-block',
-                              minWidth: '120px',
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '12px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              textAlign: 'center',
-                              textTransform: 'uppercase',
-                              background: student.attendance >= 85 ? 'var(--success-light)' : 
-                                         student.attendance >= 70 ? 'var(--warning-light)' : 'var(--error-light)',
-                              color: student.attendance >= 85 ? 'var(--success-dark)' : 
-                                     student.attendance >= 70 ? 'var(--warning-dark)' : 'var(--error-dark)'
-                            }}>
-                              {student.attendance >= 85 ? 'Excelente' : 
-                               student.attendance >= 70 ? 'Bueno' : 'Necesita apoyo'}
-                            </span>
+                            {student.promedio !== null && student.promedio !== undefined ? (
+                              <span style={{
+                                display: 'inline-block',
+                                minWidth: '120px',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                textAlign: 'center',
+                                textTransform: 'uppercase',
+                                background: student.promedio >= 8 ? 'var(--success-light)' : 
+                                           student.promedio >= 6 ? 'var(--warning-light)' : 'var(--error-light)',
+                                color: student.promedio >= 8 ? 'var(--success-dark)' : 
+                                       student.promedio >= 6 ? 'var(--warning-dark)' : 'var(--error-dark)'
+                              }}>
+                                {student.promedio >= 8 ? 'Excelente' : 
+                                 student.promedio >= 6 ? 'Aprobado' : 'Necesita apoyo'}
+                              </span>
+                            ) : (
+                              <span style={{
+                                display: 'inline-block',
+                                minWidth: '120px',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '500',
+                                textAlign: 'center',
+                                color: 'var(--text-muted)',
+                                fontStyle: 'italic'
+                              }}>
+                                No registra progreso aún
+                              </span>
+                            )}
                           </td>
                         </tr>
-                      ))}
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -709,7 +1222,14 @@ const ReportsDashboard = ({ onClose }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getFilteredAndSortedFinancialData(financialData)?.map((student, index) => {
+                      {!financialData || !financialData.topStudents || financialData.topStudents.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            No hay datos financieros disponibles
+                          </td>
+                        </tr>
+                      ) : (
+                        getFilteredAndSortedFinancialData(financialData)?.map((student, index) => {
                         const totalExpected = student.total + (student.pending || 0)
                         const percentagePaid = totalExpected > 0 ? ((student.total / totalExpected) * 100).toFixed(1) : 0
                         const isExpanded = expandedRows.has(student.id || index)
@@ -812,7 +1332,8 @@ const ReportsDashboard = ({ onClose }) => {
                             )}
                           </React.Fragment>
                         )
-                      })}
+                      })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -820,7 +1341,23 @@ const ReportsDashboard = ({ onClose }) => {
             )}
           </div>
         </div>
-      </div>
+
+      {showGenerateModal && (
+          <GenerateReportModal
+            type={activeTab}
+            onClose={() => setShowGenerateModal(false)}
+            onSuccess={async () => {
+              // Recargar reportes pero mantener los datos existentes si hay error
+              try {
+                await loadReports()
+              } catch (error) {
+                console.error('Error recargando reportes después de generar:', error)
+                // No limpiar los datos existentes si hay error
+              }
+            }}
+          />
+      )}
+    </>
   )
 }
 
