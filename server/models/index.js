@@ -46,13 +46,13 @@ module.exports = {
         return BaseUser;
     }
   },
-  // Function to find any user regardless of type
+  // Función para buscar cualquier usuario sin importar el tipo
   findUserByEmail: async (email) => {
     // Normalizar email: lowercase y trim
     const normalizedEmail = email ? email.toLowerCase().trim() : email;
     return await BaseUser.findOne({ email: normalizedEmail });
   },
-  // Function to find user by ID regardless of type
+  // Función para buscar usuario por ID sin importar el tipo
   findUserById: async (id) => {
     return await BaseUser.findById(id);
   }

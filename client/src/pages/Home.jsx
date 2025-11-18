@@ -247,21 +247,21 @@ const Home = () => {
     fetchCourses();
   }, []);
 
-  // Set up scroll animations when sections come into view (Tu useEffect original)
+  // Set up scroll animations when sections come into view
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
+            entry.target.classList.add('visible')
           }
-        });
+        })
       },
       { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
+    )
 
-    const sections = document.querySelectorAll('.section');
-    sections.forEach((section) => observer.observe(section));
+    const sections = document.querySelectorAll('.section')
+    sections.forEach((section) => observer.observe(section))
 
     return () => observer.disconnect();
   }, []);
@@ -335,16 +335,18 @@ const Home = () => {
 
   return (
     <>
+      {/* Hero Section */}
       <section className="hero">
         <div className="container">
-          <h1>Aprendé las lenguas del mundo</h1>
+          <h1>Aprende las lenguas del mundo</h1>
           <p>Consultora especializada en enseñanza de idiomas con metodologías innovadoras y profesores certificados</p>
           <button className="cta-btn" onClick={() => document.getElementById('servicios')?.scrollIntoView({ behavior: 'smooth' })}>
-            Conocé Nuestros Servicios
+            Conoce Nuestros Servicios
           </button>
         </div>
       </section>
 
+      {/* About Section */}
       <section id="nosotros" className="section">
         <div className="container">
           <h2 className="section-title">Nosotros</h2>
@@ -361,7 +363,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Services Section */}
       <section id="servicios" className="section">
         <div className="container">
@@ -548,7 +550,6 @@ const Home = () => {
         </div>
       </section>
 
-
       {/* Clients Section */}
       <section id="clientes" className="section">
         <div className="container">
@@ -558,17 +559,14 @@ const Home = () => {
               <h4>Empresas Multinacionales</h4>
               <p>Capacitación en idiomas para equipos internacionales</p>
             </div>
-
             <div className="client-card">
               <h4>Estudiantes Universitarios</h4>
               <p>Preparación para intercambios y certificaciones</p>
             </div>
-
             <div className="client-card">
               <h4>Profesionales</h4>
               <p>Desarrollo de habilidades lingüísticas para crecimiento profesional</p>
             </div>
-
             <div className="client-card">
               <h4>Instituciones Educativas</h4>
               <p>Programas complementarios para colegios y universidades</p>
@@ -583,7 +581,7 @@ const Home = () => {
           <h2 className="section-title">Demo</h2>
           <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
-              Descubrí nuestra plataforma de gestión integral. Experimentá cómo administramos estudiantes, 
+              Descubre nuestra plataforma de gestión integral. Experimenta cómo administramos estudiantes, 
               clases, pagos y seguimiento académico de manera eficiente.
             </p>
             <button className="cta-btn" onClick={() => navigate(routes.LOGIN)}>
@@ -593,7 +591,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Contact Section - Contiene id="contacto" */}
+      {/* Contact Section */}
       <section id="contacto" className="section">
         <div className="container">
           <h2 className="section-title">Contacto</h2>
@@ -603,23 +601,20 @@ const Home = () => {
                 <label htmlFor="nombre">Nombre Completo</label>
                 <input type="text" id="nombre" name="nombre" required />
               </div>
-
               <div className="form-group">
                 <label htmlFor="email">Correo Electrónico</label>
                 <input type="email" id="email" name="email" required />
               </div>
-
               <div className="form-group">
                 <label htmlFor="telefono">Teléfono</label>
                 <input type="tel" id="telefono" name="telefono" />
               </div>
-
               <div className="form-group">
                 <label htmlFor="mensaje">Mensaje</label>
-                <textarea
-                  id="mensaje"
-                  name="mensaje"
-                  placeholder="Contanos sobre tus objetivos de aprendizaje..."
+                <textarea 
+                  id="mensaje" 
+                  name="mensaje" 
+                  placeholder="Cuéntanos sobre tus objetivos de aprendizaje..." 
                   required
                 ></textarea>
               </div>
@@ -632,4 +627,4 @@ const Home = () => {
   )
 }
 
-export default Home;
+export default Home

@@ -27,8 +27,6 @@ import {
 
 
 const StudentDashboard = () => {
-  console.log('StudentDashboard component rendering...')
-  
   const { user, logout, mustChangePassword } = useAuth()
   const [showPasswordChange, setShowPasswordChange] = useState(false) // Disabled for testing
   const [misClases, setMisClases] = useState([])
@@ -270,13 +268,10 @@ const StudentDashboard = () => {
   }
 
   // Show forced password change if required
-  // Temporarily disabled for testing
-  if (false && showPasswordChange) {
+  if (showPasswordChange) {
     return <ForcePasswordChange onPasswordChanged={handlePasswordChanged} />
   }
 
-  console.log('Rendering main StudentDashboard content!')
-  
   return (
     <div className="dashboard-container">
       {/* Header */}

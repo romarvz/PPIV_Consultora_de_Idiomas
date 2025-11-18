@@ -17,7 +17,7 @@ import { mockStudents } from '../services/mockData';
 import RegisterStudent from './RegisterStudent';
 import { capitalizeUserNames } from '../utils/stringHelpers';
 
-const StudentsManagement = ({ onBack }) => {
+const StudentsManagement = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,15 +55,18 @@ const StudentsManagement = ({ onBack }) => {
     try {
       setLoading(true);
       
+      // Debug: información del usuario
+      const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('👤 Usuario logueado:', userInfo);
+      console.log('🎭 Rol del usuario:', userInfo.role);
+      console.log('🔑 Token disponible:', localStorage.getItem('token') ? 'Sí' : 'No');
+      
       const queryParams = new URLSearchParams({
         page: pagination.page,
         limit: pagination.limit,
-        ...(filters.search && { search: filters.search }),
-        ...(filters.status && { status: filters.status }),
-        ...(filters.nivel && { nivel: filters.nivel }),
-        ...(filters.condicion && { condicion: filters.condicion })
+        ...filters
       });
-      
+
       const response = await api.get(`/students?${queryParams}`);
       
       if (response.data.success) {
@@ -110,7 +113,11 @@ const StudentsManagement = ({ onBack }) => {
       }
     } catch (error) {
       setError('Error al cargar estudiantes');
-      console.error('Error fetching students:', error);
+      console.error('❌ Error fetching students:', error);
+      console.error('Error response:', error.response);
+      console.error('Status code:', error.response?.status);
+      console.error('Error message:', error.response?.data);
+      console.error('Token disponible:', localStorage.getItem('token') ? 'Sí' : 'No');
     } finally {
       setLoading(false);
     }
@@ -119,11 +126,10 @@ const StudentsManagement = ({ onBack }) => {
   const fetchStats = async () => {
     try {
       const response = await api.get('/students/stats');
-      if (response.data.success) {
-        setStats(response.data.data);
-      }
+      setStats(response.data.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
+      console.error('Stats error response:', error.response);
     }
   };
 
@@ -226,7 +232,17 @@ const StudentsManagement = ({ onBack }) => {
   const getStatusBadgeClass = (student) => {
     if (!student.isActive) return 'badge-inactive';
     
-    // Usar estadoAcademico como fuente principal
+    // Usar condicion si existe
+    if (student.condicion) {
+      switch (student.condicion) {
+        case 'graduado': return 'badge-graduated';
+        case 'activo': return 'badge-active';
+        case 'inactivo': return 'badge-inactive';
+        default: return 'badge-default';
+      }
+    }
+    
+    // Mapear estadoAcademico si condicion no existe
     if (student.estadoAcademico) {
       switch (student.estadoAcademico) {
         case 'graduado': return 'badge-graduated';
@@ -237,36 +253,25 @@ const StudentsManagement = ({ onBack }) => {
       }
     }
     
-    // Fallback a condicion si existe
-    if (student.condicion) {
-      switch (student.condicion) {
-        case 'graduado': return 'badge-graduated';
-        case 'activo': return 'badge-active';
-        case 'inactivo': return 'badge-inactive';
-        default: return 'badge-default';
-      }
-    }
-    
     return 'badge-active'; // Por defecto
   };
 
   const getStatusText = (student) => {
     if (!student.isActive) return 'Inactivo';
     
-    // Usar estadoAcademico como fuente principal
+    // Mapear estadoAcademico a condicion si condicion no existe
+    if (student.condicion) {
+      return student.condicion.charAt(0).toUpperCase() + student.condicion.slice(1);
+    }
+    
     if (student.estadoAcademico) {
       const estadoMap = {
         'en_curso': 'Activo',
         'inscrito': 'Inscripto', 
         'graduado': 'Graduado',
-        'suspendido': 'Suspendido'
+        'suspendido': 'Inactivo'
       };
-      return estadoMap[student.estadoAcademico] || student.estadoAcademico;
-    }
-    
-    // Fallback a condicion si existe
-    if (student.condicion) {
-      return student.condicion.charAt(0).toUpperCase() + student.condicion.slice(1);
+      return estadoMap[student.estadoAcademico] || 'Sin definir';
     }
     
     return 'Activo'; // Por defecto
@@ -276,31 +281,13 @@ const StudentsManagement = ({ onBack }) => {
     <div className="dashboard-container">
       <div className="students-management" style={{ padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
-      <div className="dashboard-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h3 className="dashboard-section__title" style={{ margin: 0 }}>Gestión de Estudiantes</h3>
-        <button
-          onClick={() => setShowAddModal(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem 1.5rem',
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <FaUserPlus />
-          Agregar Estudiante
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--primary)', fontSize: '1.8rem', fontWeight: '600' }}>
+          <FaUsers />
+          Gestión de Estudiantes
+        </h1>
       </div>
-      
+
       {/* Estadísticas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -311,9 +298,9 @@ const StudentsManagement = ({ onBack }) => {
           <h3 style={{ color: '#27ae60', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Activos e Inscriptos</h3>
           <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.active}</p>
         </div>
-        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#e74c3c', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Inactivos</h3>
-          <p style={{ fontSize: '2rem', fontWeight: '700', margin: '0', color: '#2c3e50' }}>{stats.overview.inactive}</p>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{stats.overview.inactive}</div>
+          <div style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Inactivos</div>
         </div>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <h3 style={{ color: '#f39c12', fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>Estudiantes Graduados</h3>
@@ -455,7 +442,7 @@ const StudentsManagement = ({ onBack }) => {
 
       {/* Filtros */}
       <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'end' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FaSearch /> Buscar
@@ -465,7 +452,7 @@ const StudentsManagement = ({ onBack }) => {
               placeholder="Nombre, apellido o email..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
             />
           </div>
           
@@ -474,7 +461,7 @@ const StudentsManagement = ({ onBack }) => {
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
             >
               <option value="">Todos</option>
               <option value="active">Activos</option>
@@ -487,7 +474,7 @@ const StudentsManagement = ({ onBack }) => {
             <select
               value={filters.nivel}
               onChange={(e) => handleFilterChange('nivel', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
             >
               <option value="">Todos</option>
               <option value="A1">A1</option>
@@ -504,7 +491,7 @@ const StudentsManagement = ({ onBack }) => {
             <select
               value={filters.condicion}
               onChange={(e) => handleFilterChange('condicion', e.target.value)}
-              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem', height: '48px', boxSizing: 'border-box' }}
+              style={{ padding: '0.75rem', border: '2px solid #e1e5e9', borderRadius: '8px', fontSize: '0.9rem' }}
             >
               <option value="">Todas</option>
               <option value="activo">Activos e Inscriptos</option>
@@ -650,36 +637,27 @@ const StudentsManagement = ({ onBack }) => {
                       <td style={{ padding: '1rem', borderBottom: '1px solid #e1e5e9' }}>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <button
-                            onClick={() => handleEdit(student)}
-                            title="Editar"
-                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#17a2b8', color: 'white' }}
+                            onClick={() => handleDeactivate(student._id)}
+                            title="Desactivar"
+                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#dc3545', color: 'white' }}
                           >
-                            <FaEdit />
+                            <FaUserTimes />
                           </button>
-                          {student.isActive ? (
-                            <button
-                              onClick={() => handleDeactivate(student._id)}
-                              title="Desactivar"
-                              style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#dc3545', color: 'white' }}
-                            >
-                              <FaUserTimes />
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleReactivate(student._id)}
-                              title="Reactivar"
-                              style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#28a745', color: 'white' }}
-                            >
-                              <FaUserCheck />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        ) : (
+                          <button
+                            onClick={() => handleReactivate(student._id)}
+                            title="Reactivar"
+                            style={{ padding: '0.4rem', border: 'none', borderRadius: '6px', cursor: 'pointer', background: '#28a745', color: 'white' }}
+                          >
+                            <FaUserCheck />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
             {/* Paginación */}
             {pagination.pages > 1 && (

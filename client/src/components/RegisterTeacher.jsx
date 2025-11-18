@@ -164,8 +164,8 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
         disponibilidad
       }
 
-      console.log('DEBUG Frontend - Especialidades before sending:', formData.especialidades)
-      console.log('DEBUG Frontend - TeacherData:', JSON.stringify(teacherData, null, 2))
+      console.log('🔍 DEBUG Frontend - Especialidades before sending:', formData.especialidades)
+      console.log('🔍 DEBUG Frontend - TeacherData:', JSON.stringify(teacherData, null, 2))
 
       const response = await apiService.post('/auth/register/profesor', teacherData)
       
@@ -186,7 +186,7 @@ const RegisterTeacher = ({ onSuccess, onCancel }) => {
         }).join(', ')
         
         // Crear mensaje de éxito
-        const message = `PROFESOR REGISTRADO CORRECTAMENTE
+        const message = ` ¡PROFESOR REGISTRADO CORRECTAMENTE! 
 
 Email: ${formData.email}
 Nombre: ${formData.firstName} ${formData.lastName}
@@ -195,14 +195,12 @@ Especialidades: ${especialidadesNombres}
 Tarifa: $${formData.tarifaPorHora}/hora
 Horarios: ${horariosSeleccionadosNombres || 'Sin horarios seleccionados'}
 
-Usuario: ${formData.email}
-Contraseña: ${tempPassword}
+⚠️ IMPORTANTE:
+• El profesor debe usar su DNI como contraseña inicial
+• Deberá cambiar la contraseña en su primer login
+• Guarda esta información de forma segura
 
-IMPORTANTE:
-• El profesor debe usar su correo electrónico como usuario
-• Su contraseña es su DNI
-
-El registro se completó exitosamente`
+ El registro se completó exitosamente`
 
         // Mostrar mensaje de éxito
         setSuccessMessage(message)
@@ -247,57 +245,22 @@ El registro se completó exitosamente`
       overflowY: 'auto'
     }}>
       <div style={{ 
-        background: 'var(--card-bg, white)',
+        background: 'white', // Fondo blanco sólido
+        padding: '30px', 
         borderRadius: '10px',
-        boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+        boxShadow: '0 8px 25px rgba(0,0,0,0.3)', // Sombra más fuerte
         maxWidth: '800px',
-        width: '100%',
-        maxHeight: '90vh',
+        margin: '0 auto',
         position: 'relative',
-        color: 'var(--text-primary, #333)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
+        zIndex: 10001 // Z-index muy alto para estar al frente
       }}>
-        <div style={{
-          padding: '20px 30px',
-          borderBottom: '1px solid var(--border-color, #ddd)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+        <h3 style={{ 
+          color: 'var(--primary)', 
+          marginBottom: '20px',
+          textAlign: 'center'
         }}>
-          <h3 style={{ 
-            color: 'var(--primary)', 
-            margin: 0
-          }}>
-            Registrar Nuevo Profesor
-          </h3>
-          <button
-            onClick={onCancel}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '24px',
-              color: 'var(--text-secondary, #666)',
-              cursor: 'pointer',
-              padding: '5px',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            ×
-          </button>
-        </div>
-        
-        <div style={{
-          padding: '30px',
-          overflowY: 'auto',
-          flex: 1
-        }}>
+          Registrar Nuevo Profesor
+        </h3>
 
         {error && (
           <div style={{
@@ -366,11 +329,11 @@ El registro se completó exitosamente`
         <form onSubmit={handleSubmit}>
           {/* Información Personal */}
           <div style={{ marginBottom: '25px' }}>
-            <h4 style={{ color: 'var(--primary)', marginBottom: '15px', fontWeight: '600', fontSize: '1.1rem' }}>Información Personal</h4>
+            <h5 style={{ color: 'var(--secondary)', marginBottom: '15px' }}>Información Personal</h5>
             
-            <div className="form-row" style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap' }}>
-              <div className="form-group" style={{ flex: 1, minWidth: '200px' }}>
-                <label htmlFor="firstName" style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#333' }}>Nombre *</label>
+            <div className="form-row" style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label htmlFor="firstName">Nombre *</label>
                 <input
                   type="text"
                   id="firstName"
@@ -380,12 +343,12 @@ El registro se completó exitosamente`
                   required
                   disabled={isSubmitting}
                   placeholder="Nombre del profesor"
-                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--border-color, #ddd)', background: 'var(--input-bg, white)', color: 'var(--text-primary, #333)' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--input-border)' }}
                 />
               </div>
               
-              <div className="form-group" style={{ flex: 1, minWidth: '200px' }}>
-                <label htmlFor="lastName" style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#333' }}>Apellido *</label>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label htmlFor="lastName">Apellido *</label>
                 <input
                   type="text"
                   id="lastName"
@@ -395,13 +358,13 @@ El registro se completó exitosamente`
                   required
                   disabled={isSubmitting}
                   placeholder="Apellido del profesor"
-                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--border-color, #ddd)', background: 'var(--input-bg, white)', color: 'var(--text-primary, #333)' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--input-border)' }}
                 />
               </div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '15px' }}>
-              <label htmlFor="email" style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#333' }}>Correo Electrónico *</label>
+              <label htmlFor="email">Correo Electrónico *</label>
               <input
                 type="email"
                 id="email"
@@ -411,13 +374,13 @@ El registro se completó exitosamente`
                 required
                 disabled={isSubmitting}
                 placeholder="profesor@email.com"
-                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--border-color, #ddd)', background: 'var(--input-bg, white)', color: 'var(--text-primary, #333)' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--input-border)' }}
               />
             </div>
 
-            <div className="form-row" style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap' }}>
-              <div className="form-group" style={{ flex: 1, minWidth: '200px' }}>
-                <label htmlFor="dni" style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#333' }}>DNI *</label>
+            <div className="form-row" style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label htmlFor="dni">DNI *</label>
                 <input
                   type="text"
                   id="dni"
@@ -430,15 +393,15 @@ El registro se completó exitosamente`
                   minLength="7"
                   maxLength="8"
                   pattern="[0-9]{7,8}"
-                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--border-color, #ddd)', background: 'var(--input-bg, white)', color: 'var(--text-primary, #333)' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--input-border)' }}
                 />
                 <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
                   7-8 dígitos. Será la contraseña temporal.
                 </small>
               </div>
               
-              <div className="form-group" style={{ flex: 1, minWidth: '200px' }}>
-                <label htmlFor="phone" style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#333' }}>Teléfono</label>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label htmlFor="phone">Teléfono</label>
                 <input
                   type="tel"
                   id="phone"
@@ -447,7 +410,7 @@ El registro se completó exitosamente`
                   onChange={handleChange}
                   disabled={isSubmitting}
                   placeholder="+54911234567"
-                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--border-color, #ddd)', background: 'var(--input-bg, white)', color: 'var(--text-primary, #333)' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid var(--input-border)' }}
                 />
               </div>
             </div>
@@ -455,43 +418,33 @@ El registro se completó exitosamente`
 
           {/* Información Profesional */}
           <div style={{ marginBottom: '25px' }}>
-            <h4 style={{ color: 'var(--primary)', marginBottom: '15px', fontWeight: '600', fontSize: '1.1rem' }}>Información Profesional</h4>
+            <h5 style={{ color: 'var(--secondary)', marginBottom: '15px' }}>Información Profesional</h5>
             
             <div className="form-group" style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>Especialidades *</label>
+              <label>Especialidades *</label>
               {loadingLanguages ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   Cargando idiomas disponibles...
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
                   {languages.map(lang => (
-                    <div 
-                      key={lang._id} 
-                      onClick={() => handleEspecialidadChange(lang._id)}
-                      style={{ 
-                        cursor: 'pointer',
-                        padding: '12px',
-                        border: formData.especialidades.includes(lang._id) ? '2px solid var(--primary, #3498db)' : '1px solid var(--border-color, #ddd)',
-                        borderRadius: '6px',
-                        backgroundColor: formData.especialidades.includes(lang._id) ? 'var(--primary-light, #e3f2fd)' : 'var(--card-bg, white)',
-                        fontSize: '14px',
-                        color: formData.especialidades.includes(lang._id) ? 'var(--primary, #3498db)' : 'var(--text-primary, #333)',
-                        fontWeight: formData.especialidades.includes(lang._id) ? '600' : '400',
-                        textAlign: 'center',
-                        transition: 'all 0.2s ease',
-                        userSelect: 'none'
-                      }}
-                    >
-                      {lang.name}
-                    </div>
+                    <label key={lang._id} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.especialidades.includes(lang._id)}
+                        onChange={() => handleEspecialidadChange(lang._id)}
+                        disabled={isSubmitting}
+                      />
+                      <span style={{ fontSize: '14px' }}>{lang.name}</span>
+                    </label>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="form-group" style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-              <label htmlFor="tarifaPorHora" style={{ fontWeight: '500', color: '#333', minWidth: 'fit-content' }}>Tarifa por Hora ($) *</label>
+            <div className="form-group" style={{ marginBottom: '15px' }}>
+              <label htmlFor="tarifaPorHora">Tarifa por Hora ($) *</label>
               <input
                 type="number"
                 id="tarifaPorHora"
@@ -503,7 +456,7 @@ El registro se completó exitosamente`
                 placeholder="2500"
                 min="0"
                 step="0.01"
-                style={{ width: '100%', maxWidth: '200px', padding: '10px', borderRadius: '5px', border: '1px solid var(--border-color, #ddd)', background: 'var(--input-bg, white)', color: 'var(--text-primary, #333)' }}
+                style={{ width: '200px', padding: '10px', borderRadius: '5px', border: '1px solid var(--input-border)' }}
               />
             </div>
           </div>
@@ -588,15 +541,13 @@ El registro se completó exitosamente`
               style={{
                 padding: '12px 24px',
                 opacity: isSubmitting ? 0.7 : 1,
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                fontSize: '14px'
+                cursor: isSubmitting ? 'not-allowed' : 'pointer'
               }}
             >
               {isSubmitting ? 'Registrando...' : 'Registrar Profesor'}
             </button>
           </div>
         </form>
-        </div>
       </div>
     </div>
   )

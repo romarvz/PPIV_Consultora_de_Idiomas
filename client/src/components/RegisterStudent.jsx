@@ -64,21 +64,20 @@ const RegisterStudent = ({ onSuccess, onCancel }) => {
         const tempPassword = formData.dni // La contraseña temporal es el DNI
         
         // Crear mensaje de éxito
-        const message = `ESTUDIANTE REGISTRADO CORRECTAMENTE
+        const message = ` ¡ESTUDIANTE REGISTRADO CORRECTAMENTE! 
 
-Email: ${formData.email}
-Nombre: ${formData.firstName} ${formData.lastName}
-DNI: ${formData.dni}
-Nivel: ${formData.nivel}
+ Email: ${formData.email}
+ Nombre: ${formData.firstName} ${formData.lastName}
+ DNI: ${formData.dni}
+ Nivel: ${formData.nivel}
+🔑 Contraseña temporal: ${tempPassword}
 
-Usuario: ${formData.email}
-Contraseña: ${tempPassword}
+⚠️ IMPORTANTE:
+• El estudiante debe usar su DNI como contraseña inicial
+• Deberá cambiar la contraseña en su primer login
+• Guarda esta información de forma segura
 
-IMPORTANTE:
-• El estudiante debe usar su correo electrónico como usuario
-• Su contraseña es su DNI
-
-El registro se completó exitosamente`
+ El registro se completó exitosamente`
 
         // Mostrar mensaje de éxito
         setSuccessMessage(message)

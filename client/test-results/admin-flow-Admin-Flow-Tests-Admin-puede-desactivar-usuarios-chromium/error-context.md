@@ -1,0 +1,77 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - img "PPIV Consultora" [ref=e8]
+      - generic [ref=e9]:
+        - heading "Panel de Administración" [level=2] [ref=e10]
+        - paragraph [ref=e11]: ¡Bienvenido/a Admin!
+    - generic [ref=e12]:
+      - button "Cambiar a modo oscuro" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+      - generic [ref=e16]:
+        - generic [ref=e17]: Admin Sistema
+        - generic [ref=e18]: admin
+      - button "Cerrar Sesión" [ref=e19] [cursor=pointer]:
+        - img [ref=e20]
+        - text: Cerrar Sesión
+  - generic [ref=e22]:
+    - heading "Overview del Sistema" [level=3] [ref=e23]
+    - paragraph [ref=e25]: Cargando estadísticas...
+  - generic [ref=e26]:
+    - heading "Acciones Rápidas" [level=3] [ref=e27]:
+      - img [ref=e28]
+      - text: Acciones Rápidas
+    - generic [ref=e30]:
+      - generic [ref=e31] [cursor=pointer]:
+        - img [ref=e33]
+        - heading "Gestión de Estudiantes" [level=4] [ref=e35]
+        - paragraph [ref=e36]: Ver, editar y gestionar información de estudiantes, estados académicos y progreso
+        - button "Gestión de Estudiantes" [ref=e37]
+      - generic [ref=e38] [cursor=pointer]:
+        - img [ref=e40]
+        - heading "Gestión de Profesores" [level=4] [ref=e42]
+        - paragraph [ref=e43]: Registrar profesores, gestionar especialidades, configurar horarios
+        - button "Gestión de Profesores" [ref=e44]
+      - generic [ref=e45] [cursor=pointer]:
+        - img [ref=e47]
+        - heading "Gestión de Clases" [level=4] [ref=e49]
+        - paragraph [ref=e50]: Programar clases, asignar profesores, gestionar horarios
+        - button "Gestionar Clases" [ref=e51]
+      - generic [ref=e52] [cursor=pointer]:
+        - img [ref=e54]
+        - heading "Pagos y Finanzas" [level=4] [ref=e56]
+        - paragraph [ref=e57]: Gestionar pagos, generar facturas, revisar ingresos
+        - button "Ver Finanzas" [ref=e58]
+      - generic [ref=e59] [cursor=pointer]:
+        - img [ref=e61]
+        - heading "Reportes" [level=4] [ref=e63]
+        - paragraph [ref=e64]: Estadísticas académicas, reportes financieros, exportaciones
+        - button "Ver Reportes" [ref=e65]
+      - generic [ref=e66] [cursor=pointer]:
+        - img [ref=e68]
+        - heading "Configuración" [level=4] [ref=e70]
+        - paragraph [ref=e71]: Configurar sistema, gestionar roles, ajustar parámetros
+        - button "Configurar Sistema" [ref=e72]
+  - generic [ref=e73] [cursor=pointer]:
+    - heading "👤 Información Personal" [level=3] [ref=e74]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - paragraph [ref=e77]:
+          - strong [ref=e78]: "Nombre:"
+          - text: Admin Sistema
+        - paragraph [ref=e79]:
+          - strong [ref=e80]: "Email:"
+          - text: admin@consultora.com
+      - generic [ref=e81]:
+        - paragraph [ref=e82]:
+          - strong [ref=e83]: "DNI:"
+        - paragraph [ref=e84]:
+          - strong [ref=e85]: "Rol:"
+          - text: Administrador
+      - paragraph [ref=e87]:
+        - strong [ref=e88]: "Teléfono:"
+        - text: "1234567890"
+```

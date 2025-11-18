@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const BaseUser = require('./BaseUser');
 
-// specific schema for Profesor
+// Schema específico para profesores
 const profesorSchema = new mongoose.Schema({
   especialidades: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -41,18 +41,20 @@ const profesorSchema = new mongoose.Schema({
   }
 });
 
-
+// Validación personalizada para especialidades
 profesorSchema.pre('validate', function(next) {
   if (this.especialidades && this.especialidades.length === 0) {
     this.invalidate('especialidades', 'Debe tener al menos una especialidad');
   }
   next();
 });
+
+// Método para obtener profesores con especialidades pobladas
 profesorSchema.statics.findWithLanguages = function(filter = {}) {
   return this.find(filter).populate('especialidades', 'code name nativeName isActive');
 };
 
-// method to get comma-separated language names
+// Método de instancia para obtener nombres de especialidades
 profesorSchema.methods.getLanguageNames = function() {
   if (this.especialidades && this.especialidades.length > 0) {
     return this.especialidades.map(lang => lang.name || lang.toString()).join(', ');

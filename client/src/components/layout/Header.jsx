@@ -5,7 +5,6 @@ import { routes } from '../../utils/routes'
 // Navigation header that appears on every page
 const Header = ({ theme, toggleTheme }) => {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [serviciosDropdownOpen, setServiciosDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -81,9 +80,7 @@ const Header = ({ theme, toggleTheme }) => {
                 Nosotros
               </a>
             </li>
-            <li className="nav-dropdown" 
-                onMouseEnter={() => setServiciosDropdownOpen(true)}
-                onMouseLeave={() => setServiciosDropdownOpen(false)}>
+            <li>
               <a href="#servicios" onClick={(e) => { e.preventDefault(); handleSectionClick('servicios') }}>
                 Servicios
               </a>

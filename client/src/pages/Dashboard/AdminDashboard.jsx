@@ -1,43 +1,35 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
-import { useNavigate, useLocation } from 'react-router-dom'
-import ForcePasswordChange from '../../components/common/ForcePasswordChange'
-import '../../styles/variables.css'
-import '../../styles/auth.css'
-import '../../styles/charts.css'
+import ForcChange from '../../components/common/ForcePasswordChange'
 
 import RegisterTeacher from '../../components/RegisterTeacher'
 import StudentsManagement from '../../components/StudentsManagement'
 import TeachersManagement from '../../components/TeachersManagement'
-import ReportsDashboard from './ReportsDashboard'
-import AuthNavbar from '../../components/common/AuthNavbar'
-
-import CourseManagementPage from './CourseManagementPage';
-import SystemOverviewCharts from '../../components/charts/SystemOverviewCharts';
+import AdminHeader from '../../components/common/AdminHeader'
 import api from '../../services/api'
-import { routes } from '../../utils/routes'
 // React Icons - Updated for better UI
 import { 
+  FaUsers, 
+  FaGraduationCap, 
+  FaBookOpen, 
+  FaDollarSign,
   FaUserGraduate,
   FaChalkboardTeacher,
   FaCalendarAlt,
   FaCreditCard,
   FaChartLine,
   FaCog,
-  FaBuilding
+  FaSignOutAlt,
+  FaTasks
 } from 'react-icons/fa'
 
 const AdminDashboard = () => {
   const { user, logout, mustChangePassword } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
   const [showPasswordChange, setShowPasswordChange] = useState(mustChangePassword)
 
   const [showRegisterTeacher, setShowRegisterTeacher] = useState(false)
   const [showStudentsManagement, setShowStudentsManagement] = useState(false)
   const [showTeachersManagement, setShowTeachersManagement] = useState(false)
-  const [showCourseManagement, setShowCourseManagement] = useState(false)
-  const [showReports, setShowReports] = useState(false)
   const [stats, setStats] = useState({
     totalStudents: 0,
     newStudents: 0,
@@ -86,13 +78,15 @@ const AdminDashboard = () => {
     setShowPasswordChange(false)
   }
 
+
+
   const handleTeacherRegistered = () => {
     setShowRegisterTeacher(false)
     // Immediate refresh after teacher registration
     fetchStats()
   }
 
-  // Extract fetchStats function for reusability
+  // Extraer la función fetchStats para poder reutilizarla
   const fetchStats = async () => {
     try {
       setLoading(true)
@@ -177,7 +171,30 @@ const AdminDashboard = () => {
         // Get active teachers count from teacher stats if available
         const activeTeachersFromStats = teacherStats?.overview?.active || teachers.filter(t => t.isActive !== false).length
 
+        console.log('Calculated stats:', {
+          totalStudents: students.length,
+          newStudents,
+          activeStudents,
+          totalTeachers: teachers.length,
+          activeTeachers: teacherStats.overview.active,
+          uniqueSpecialties,
+          teacherSpecialties,
+          specialtyStats
+        })
 
+        // Debug: Let's see what student states we have
+        const studentStates = students.reduce((acc, student) => {
+          const state = student.estadoAcademico || 'sin_estado'
+          acc[state] = (acc[state] || 0) + 1
+          return acc
+        }, {})
+        
+        console.log('Student states breakdown:', studentStates)
+        console.log('Students created in last 30 days:', students.filter(s => new Date(s.createdAt) > thirtyDaysAgo).map(s => ({
+          name: s.firstName + ' ' + s.lastName,
+          createdAt: s.createdAt,
+          estado: s.estadoAcademico
+        })))
 
         // Fetch financial data for revenue chart
         let revenueData = []
@@ -265,6 +282,7 @@ const AdminDashboard = () => {
   }
 
 
+
   // Show register teacher modal
   if (showRegisterTeacher) {
     return (
@@ -304,16 +322,8 @@ const AdminDashboard = () => {
     )
   }
 
-  // Scroll to top when switching views
-  useEffect(() => {
-    if (showStudentsManagement || showTeachersManagement || showCourseManagement || showReports) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [showStudentsManagement, showTeachersManagement, showCourseManagement, showReports]);
-
   // Show students management
   if (showStudentsManagement) {
-    console.log('Rendering StudentsManagement component');
     return (
       <section className="section visible" style={{ paddingTop: '80px' }}>
         <div className="container dashboard-container">
@@ -324,7 +334,8 @@ const AdminDashboard = () => {
             fetchStats()
           }} />
         </div>
-      </section>
+        <StudentsManagement />
+      </div>
     )
   }
 
@@ -367,7 +378,7 @@ const AdminDashboard = () => {
   return (
     <div className="dashboard-container">
         {/* Header */}
-        <AuthNavbar user={user} onLogout={handleLogout} showBackButton={false} />
+        <AdminHeader user={user} onLogout={handleLogout} />
 
         {/* System Overview Charts */}
         <SystemOverviewCharts 
@@ -377,135 +388,159 @@ const AdminDashboard = () => {
         />
 
         {/* Quick Actions */}
-        <div className="dashboard-section">
-          <h3 className="dashboard-section__title">Acciones Rápidas</h3>
+        <div style={{ marginBottom: '3rem' }}>
+          <h3 style={{ 
+            color: 'var(--primary)', 
+            marginBottom: '1.5rem',
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <FaTasks /> Acciones Rápidas
+          </h3>
           
-          <div className="quick-actions-grid">
-            {/* Student Management Card */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaUserGraduate /></div>
-              <h4 className="action-card__title">Gestión de Estudiantes</h4>
-              <p className="action-card__description">
-                Ver, editar y gestionar información de estudiantes, estados académicos y progreso.
+          <div className="services-grid" style={{ 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            <div className="service-card">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaUserGraduate />
+              </div>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+                Gestión de Estudiantes
+              </h4>
+              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Ver, editar y gestionar información de estudiantes, estados académicos y progreso
               </p>
               <button 
-                type="button"
-                className="cta-btn action-card__button" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Setting showStudentsManagement to true');
-                  setShowStudentsManagement(true);
+                className="cta-btn" 
+                style={{ 
+                  width: '100%',
+                  transform: 'none !important',
+                  transition: 'none !important'
+                }}
+                onClick={() => {
+                  console.log('Click en Gestionar Estudiantes')
+                  setShowStudentsManagement(true)
                 }}
               >
-                Gestionar Estudiantes
+                Gestión de Estudiantes
               </button>
             </div>
             
-            {/* Teacher Management Card */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaChalkboardTeacher /></div>
-              <h4 className="action-card__title">Gestión de Profesores</h4>
-              <p className="action-card__description">
-                Registrar profesores, gestionar especialidades y configurar sus horarios disponibles.
-              </p>
-              <button className="cta-btn action-card__button" onClick={() => setShowTeachersManagement(true)}>
-                Gestionar Profesores
-              </button>
-            </div>
-            
-            {/* Course Management Card */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaCalendarAlt /></div>
-              <h4 className="action-card__title">Gestión de Cursos</h4>
-              <p className="action-card__description">
-                Crear y editar la oferta académica de la institución (cursos grupales, individuales, etc.).
-              </p>
-              <button className="cta-btn action-card__button" onClick={() => setShowCourseManagement(true)}>
-                Gestionar Cursos
-              </button>
-            </div>
-            
-            {/* Reports Card */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaChartLine /></div>
-              <h4 className="action-card__title">Reportes</h4>
-              <p className="action-card__description">
-                Estadísticas académicas, reportes financieros y exportación de datos importantes.
+            <div className="service-card">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaChalkboardTeacher />
+              </div>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+                Gestión de Profesores
+              </h4>
+              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Registrar profesores, gestionar especialidades, configurar horarios
               </p>
               <button 
-                className="cta-btn action-card__button"
-                onClick={() => setShowReports(true)}
+                className="cta-btn" 
+                style={{ 
+                  width: '100%',
+                  transform: 'none !important',
+                  transition: 'none !important'
+                }}
+                onClick={() => {
+                  console.log('Click en Gestión de Profesores')
+                  setShowTeachersManagement(true)
+                }}
               >
-                Ver Reportes
+                Gestión de Profesores
               </button>
             </div>
             
-            {/* Payments and Finance Card */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaCreditCard /></div>
-              <h4 className="action-card__title">Pagos y Finanzas</h4>
-              <p className="action-card__description">
-                Gestionar pagos, generar facturas, revisar los ingresos y controlar las deudas.
+            <div className="service-card">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaCalendarAlt />
+              </div>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+                Gestión de Clases
+              </h4>
+              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Programar clases, asignar profesores, gestionar horarios
               </p>
-              <button className="cta-btn action-card__button" onClick={() => navigate(routes.DASHBOARD.FINANCIAL)}>
+              <button className="cta-btn" style={{ width: '100%' }}>
+                Gestionar Clases
+              </button>
+            </div>
+            
+            <div className="service-card">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaCreditCard />
+              </div>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+                Pagos y Finanzas
+              </h4>
+              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Gestionar pagos, generar facturas, revisar ingresos
+              </p>
+              <button className="cta-btn" style={{ width: '100%' }}>
                 Ver Finanzas
               </button>
             </div>
             
-            {/* Corporate Panel Card */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaBuilding /></div>
-              <h4 className="action-card__title">Panel Corporativo</h4>
-              <p className="action-card__description">
-                Vista empresarial, gestión de empleados, pagos corporativos
+            <div className="service-card">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaChartLine />
+              </div>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+                Reportes
+              </h4>
+              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Estadísticas académicas, reportes financieros, exportaciones
               </p>
-              <button className="cta-btn action-card__button" onClick={() => navigate('/dashboard/company')}>
-                Ver Panel Corporativo
+              <button className="cta-btn" style={{ width: '100%' }}>
+                Ver Reportes
               </button>
             </div>
             
-            {/* Configuration Card */}
-            <div className="service-card action-card">
-              <div className="action-card__icon"><FaCog /></div>
-              <h4 className="action-card__title">Configuración</h4>
-              <p className="action-card__description">
-                Configurar sistema, gestionar roles de usuario y ajustar parámetros generales.
+            <div className="service-card">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+                <FaCog />
+              </div>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+                Configuración
+              </h4>
+              <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Configurar sistema, gestionar roles, ajustar parámetros
               </p>
-              <button className="cta-btn action-card__button" onClick={() => alert('FUNCIONALIDAD PENDIENTE')}>
+              <button className="cta-btn" style={{ width: '100%' }}>
                 Configurar Sistema
               </button>
             </div>
-
-
           </div>
         </div>
+
         {/* Admin Profile Info */}
-        <div className="service-card profile-info-card" style={{ marginBottom: '2rem' }}>
-          <h3 className="profile-info-card__title" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
-            Información Personal
+        <div className="service-card" style={{ marginBottom: '2rem' }}>
+          <h3 style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
+            👤 Información Personal
           </h3>
-          <div className="profile-info-grid">
-            <div className="profile-info-item">
-              <span className="profile-label">Nombre:</span>
-              <span className="profile-value">{user?.firstName} {user?.lastName}</span>
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1rem',
+            textAlign: 'left'
+          }}>
+            <div>
+              <p><strong>Nombre:</strong> {user?.firstName} {user?.lastName}</p>
+              <p><strong>Email:</strong> {user?.email}</p>
             </div>
-            <div className="profile-info-item">
-              <span className="profile-label">Email:</span>
-              <span className="profile-value">{user?.email}</span>
-            </div>
-            <div className="profile-info-item">
-              <span className="profile-label">DNI:</span>
-              <span className="profile-value">{user?.dni}</span>
-            </div>
-            <div className="profile-info-item">
-              <span className="profile-label">Rol:</span>
-              <span className="profile-value">Administrador</span>
+            <div>
+              <p><strong>DNI:</strong> {user?.dni}</p>
+              <p><strong>Rol:</strong> Administrador</p>
             </div>
             {user?.phone && (
-              <div className="profile-info-item">
-                <span className="profile-label">Teléfono:</span>
-                <span className="profile-value">{user.phone}</span>
+              <div>
+                <p><strong>Teléfono:</strong> {user.phone}</p>
               </div>
             )}
           </div>
