@@ -92,145 +92,91 @@ const AdminDashboard = () => {
     fetchStats()
   }
 
-  // Extract fetchStats function for reusability
+  // Extract fetchStats function for reusability - optimized for speed
   const fetchStats = async () => {
     try {
       setLoading(true)
-      console.log('🔄 Fetching dashboard stats...')
       
-      // Test authentication first
-      const token = localStorage.getItem('token')
-      console.log('🔑 Token exists:', !!token)
-      console.log('👤 Current user:', user)
-      
-      // Get essential data only - reduce API calls for faster loading
-      const [studentsResponse, teachersResponse, teacherStatsResponse] = await Promise.allSettled([
-        api.get('/students?limit=50'), // Reduce limit for faster response
-        api.get('/teachers?limit=50'), // Reduce limit for faster response  
-        api.get('/teachers/stats')
+      // Fast initial load with minimal data
+      const [studentsResponse, teachersResponse] = await Promise.all([
+        api.get('/students?limit=10'), // Reduced limit for faster response
+        api.get('/teachers?limit=10')  // Reduced limit for faster response
       ])
       
-      // Extract successful responses and log them
-      const studentsRes = studentsResponse.status === 'fulfilled' ? studentsResponse.value : { data: { success: false } }
-      const teachersRes = teachersResponse.status === 'fulfilled' ? teachersResponse.value : { data: { success: false } }
-      const teacherStatsRes = teacherStatsResponse.status === 'fulfilled' ? teacherStatsResponse.value : { data: { success: false } }
-      
-      console.log('📊 API Responses:', {
-        students: { 
-          success: studentsRes.data.success, 
-          count: studentsRes.data.data?.students?.length || 0
-        },
-        teachers: { 
-          success: teachersRes.data.success, 
-          count: teachersRes.data.data?.teachers?.length || 0
-        },
-        teacherStats: { 
-          success: teacherStatsRes.data.success
-        }
-      })
-      
-      // Process data even if some calls fail, but require at least students and teachers
-      if (studentsRes.data.success && teachersRes.data.success) {
-        const students = Array.isArray(studentsRes.data.data?.students) ? studentsRes.data.data.students : 
-                        Array.isArray(studentsRes.data.data) ? studentsRes.data.data : []
-        const teachers = Array.isArray(teachersRes.data.data?.teachers) ? teachersRes.data.data.teachers : 
-                        Array.isArray(teachersRes.data.data?.professors) ? teachersRes.data.data.professors : 
-                        Array.isArray(teachersRes.data.data) ? teachersRes.data.data : []
-        const teacherStats = teacherStatsRes.data.data
+      if (studentsResponse.data.success && teachersResponse.data.success) {
+        const students = studentsResponse.data.data?.students || []
+        const teachers = teachersResponse.data.data?.teachers || teachersResponse.data.data?.professors || []
         
-        console.log('📊 Raw data extracted:', {
-          studentsCount: students.length,
-          teachersCount: teachers.length,
-          teacherStats: teacherStats,
-          sampleStudent: students[0],
-          sampleTeacher: teachers[0]
-        })
-        
-        // Calculate new students (last 30 days)
+        // Quick calculations with available data
         const thirtyDaysAgo = new Date()
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-        const newStudents = students.filter(s => 
-          new Date(s.createdAt) > thirtyDaysAgo
-        ).length
-
-        // Calculate active students
-        const activeStudents = students.filter(s => 
-          s.estadoAcademico === 'en_curso' || s.estadoAcademico === 'inscrito'
-        ).length
+        const newStudents = students.filter(s => new Date(s.createdAt) > thirtyDaysAgo).length
+        const activeStudents = students.filter(s => s.estadoAcademico === 'en_curso' || s.estadoAcademico === 'inscrito').length
+        const activeTeachers = teachers.filter(t => t.isActive !== false).length
         
-        console.log('🎯 Calculated values:', {
-          totalStudents: students.length,
-          newStudents,
-          activeStudents,
-          totalTeachers: teachers.length
-        })
-
-        // Use teacher stats from API for specialties
-        const specialtyStats = teacherStats?.bySpecialty || []
-        const teacherSpecialties = specialtyStats.map(spec => spec._id || spec.name)
-        const uniqueSpecialties = specialtyStats.length
-        const specialtyData = specialtyStats.slice(0, 5).map(spec => ({
-          name: spec._id || spec.name,
-          count: spec.count
-        }))
-        
-        // Get active teachers count from teacher stats if available
-        const activeTeachersFromStats = teacherStats?.overview?.active || teachers.filter(t => t.isActive !== false).length
-
-
-
-        // Fetch financial data for revenue chart
-        let revenueData = []
-        let totalIncome = 0
-        try {
-          const financialResponse = await api.get('/reportes-financieros/dashboard/financiero')
-          if (financialResponse.data.success) {
-            totalIncome = financialResponse.data.data.totalIncome || 0
-            // Create mock monthly data since API doesn't provide monthly breakdown
-            const currentDate = new Date()
-            for (let i = 5; i >= 0; i--) {
-              const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
-              revenueData.push({
-                month: date.toISOString(),
-                amount: i === 0 ? totalIncome : Math.floor(totalIncome * (0.7 + Math.random() * 0.6))
-              })
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching financial data:', error)
-        }
-
-        const newStats = {
+        // Set initial stats quickly
+        const initialStats = {
           totalStudents: students.length,
           newStudents,
           activeStudents,
           totalTeachers: teachers.length,
-          activeTeachers: activeTeachersFromStats,
-          uniqueSpecialties,
-          teacherSpecialties,
-          specialtyData,
-          scheduledClasses: 0, // Load in background
-          upcomingClasses: 0, // Load in background
-          pendingPayments: { count: 0, amount: 0 }, // Load in background
-          monthlyRevenue: totalIncome,
-          revenueData: revenueData,
-          completedClasses: 0, // Load in background
-          cancelledClasses: 0 // Load in background 
+          activeTeachers,
+          uniqueSpecialties: 0,
+          teacherSpecialties: [],
+          specialtyData: [],
+          scheduledClasses: 0,
+          upcomingClasses: 0,
+          pendingPayments: { count: 0, amount: 0 },
+          monthlyRevenue: 0,
+          revenueData: [],
+          completedClasses: 0,
+          cancelledClasses: 0
         }
         
-        console.log('Dashboard stats updated:', {
-          totalStudents: newStats.totalStudents,
-          activeStudents: newStats.activeStudents
-        })
+        setStats(initialStats)
+        setLoading(false)
         
-        setStats(newStats)
+        // Load additional data in background
+        setTimeout(async () => {
+          try {
+            const [teacherStatsResponse, financialResponse] = await Promise.allSettled([
+              api.get('/teachers/stats'),
+              api.get('/reportes-financieros/dashboard/financiero')
+            ])
+            
+            let updatedStats = { ...initialStats }
+            
+            if (teacherStatsResponse.status === 'fulfilled' && teacherStatsResponse.value.data.success) {
+              const teacherStats = teacherStatsResponse.value.data.data
+              const specialtyStats = teacherStats?.bySpecialty || []
+              updatedStats.uniqueSpecialties = specialtyStats.length
+              updatedStats.specialtyData = specialtyStats.slice(0, 5).map(spec => ({
+                name: spec._id || spec.name,
+                count: spec.count
+              }))
+            }
+            
+            if (financialResponse.status === 'fulfilled' && financialResponse.value.data.success) {
+              const totalIncome = financialResponse.value.data.data.totalIncome || 0
+              updatedStats.monthlyRevenue = totalIncome
+              
+              const currentDate = new Date()
+              updatedStats.revenueData = Array.from({ length: 6 }, (_, i) => {
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - (5 - i), 1)
+                return {
+                  month: date.toISOString(),
+                  amount: i === 5 ? totalIncome : Math.floor(totalIncome * (0.7 + Math.random() * 0.6))
+                }
+              })
+            }
+            
+            setStats(updatedStats)
+          } catch (error) {
+            console.error('Background data loading error:', error)
+          }
+        }, 100)
+        
       } else {
-        console.error('❌ Failed to fetch dashboard data:', {
-          studentsSuccess: studentsRes.data.success,
-          teachersSuccess: teachersRes.data.success,
-          teacherStatsSuccess: teacherStatsRes.data.success
-        })
-        // Set minimal stats to avoid showing 0s when there's actually data
         setStats({
           totalStudents: 0,
           newStudents: 0,
@@ -248,13 +194,10 @@ const AdminDashboard = () => {
           completedClasses: 0,
           cancelledClasses: 0
         })
+        setLoading(false)
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
-      if (error.response?.status === 401) {
-        // Optionally redirect to login or refresh token
-      }
-    } finally {
       setLoading(false)
     }
   }

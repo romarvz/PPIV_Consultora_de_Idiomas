@@ -19,102 +19,79 @@ const ReportsDashboard = ({ onClose }) => {
   useEffect(() => {
     loadReports()
     
-    // Set up polling for real-time report updates every 45 seconds
+    // Set up polling for report updates every 1 hour (3600000 ms)
     const pollInterval = setInterval(() => {
       // Only update if page is visible and not currently loading
       if (!document.hidden && !loading) {
         loadReports()
       }
-    }, 45000)
-    
-    // Listen for page visibility changes to update when user returns
-    const handleVisibilityChange = () => {
-      if (!document.hidden && !loading) {
-        loadReports() // Immediate update when page becomes visible
-      }
-    }
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    }, 3600000) // 1 hour = 60 * 60 * 1000 = 3600000 ms
     
     // Cleanup on unmount
     return () => {
       clearInterval(pollInterval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 
   const loadReports = async () => {
     setLoading(true)
     try {
-      // Función helper para agregar timeout a una promesa
-      const withTimeout = (promise, timeoutMs) => {
-        return Promise.race([
-          promise,
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout: La carga está tardando demasiado')), timeoutMs)
-          )
-        ])
-      }
-      
-      // Cargar reportes con timeout individual de 30 segundos cada uno
-      const [academicResponse, financialResponse, recentReportsResponse, studentsResponse] = await Promise.all([
-        withTimeout(apiAdapter.reports.academicDashboard(), 30000),
-        withTimeout(apiAdapter.reports.financial(), 30000),
-        withTimeout(api.get('/reportes-academicos/recientes?limite=50'), 30000),
-        withTimeout(api.get('/students?limit=1000'), 30000)
+      // Fast initial load with essential data only
+      const [studentsResponse] = await Promise.all([
+        api.get('/students?limit=20') // Reduced limit for faster response
       ])
       
-      // Get real-time student count
+      // Set basic student count immediately
       let realTimeStudentCount = 0
       if (studentsResponse?.data?.success) {
         const students = studentsResponse.data.data?.students || []
         realTimeStudentCount = students.length
-      }
-      
-      if (academicResponse?.data?.success) {
-        const academicDataReceived = academicResponse.data.data
-        console.log('[ReportsDashboard] Datos académicos recibidos:', {
-          total: academicDataReceived?.total,
-          studentsCount: academicDataReceived?.students?.length,
-          averageAttendance: academicDataReceived?.averageAttendance,
-          realTimeCount: realTimeStudentCount
-        })
         
-        // Update total with real-time count
-        const updatedAcademicData = {
-          ...academicDataReceived,
+        // Set minimal academic data for immediate display
+        const basicAcademicData = {
           total: realTimeStudentCount,
-          realTimeTotal: realTimeStudentCount
+          realTimeTotal: realTimeStudentCount,
+          students: students.slice(0, 10), // Show first 10 for quick display
+          averageAttendance: 0 // Will be calculated in background
         }
-        setAcademicData(updatedAcademicData)
-      } else {
-        console.warn('La respuesta académica no fue exitosa:', academicResponse?.data)
-        // No limpiar los datos existentes si hay error - mantener los datos previos
+        setAcademicData(basicAcademicData)
       }
       
-      if (financialResponse?.data?.success) {
-        setFinancialData(financialResponse.data.data)
-      } else {
-        console.warn('La respuesta financiera no fue exitosa:', financialResponse?.data)
-        // No limpiar los datos existentes si hay error - mantener los datos previos
-      }
+      setLoading(false)
+      
+      // Load detailed data in background
+      setTimeout(async () => {
+        try {
+          const [academicResponse, financialResponse, recentReportsResponse] = await Promise.allSettled([
+            apiAdapter.reports.academicDashboard(),
+            apiAdapter.reports.financial(),
+            api.get('/reportes-academicos/recientes?limite=20') // Reduced limit
+          ])
+          
+          if (academicResponse.status === 'fulfilled' && academicResponse.value?.data?.success) {
+            const academicDataReceived = academicResponse.value.data.data
+            const updatedAcademicData = {
+              ...academicDataReceived,
+              total: realTimeStudentCount,
+              realTimeTotal: realTimeStudentCount
+            }
+            setAcademicData(updatedAcademicData)
+          }
+          
+          if (financialResponse.status === 'fulfilled' && financialResponse.value?.data?.success) {
+            setFinancialData(financialResponse.value.data.data)
+          }
 
-      if (recentReportsResponse?.data?.success) {
-        setRecentReports(recentReportsResponse.data.data || [])
-      } else {
-        console.warn('La respuesta de reportes recientes no fue exitosa:', recentReportsResponse?.data)
-        // No limpiar los reportes recientes si hay error - mantener los datos previos
-      }
+          if (recentReportsResponse.status === 'fulfilled' && recentReportsResponse.value?.data?.success) {
+            setRecentReports(recentReportsResponse.value.data.data || [])
+          }
+        } catch (error) {
+          console.error('Background loading error:', error)
+        }
+      }, 100)
+      
     } catch (error) {
       console.error('Error loading reports:', error)
-      console.error('Error completo:', error.response?.data || error.message)
-      // No limpiar los datos existentes si hay error - mantener los datos previos
-      // Solo establecer null si es la primera carga (no hay datos previos)
-      
-      if (error.message.includes('Timeout')) {
-        alert('⚠️ La carga de reportes está tardando demasiado. Por favor, intente recargar la página.')
-      }
-    } finally {
       setLoading(false)
     }
   }
