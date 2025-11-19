@@ -81,9 +81,9 @@ const startServer = async () => {
     app.use('/api/students', studentRoutes);
     app.use('/api/teachers', teacherRoutes);
 
-    const dashboardRoutes = require('./routes/dashboard');
+    // const dashboardRoutes = require('./routes/dashboard');
     const auditoriaRoutes = require('./routes/auditoria');
-    app.use('/api/dashboard', dashboardRoutes);
+    // app.use('/api/dashboard', dashboardRoutes);
     app.use('/api/auditoria', auditoriaRoutes);
 
     const cursosRoutes = require('./routes/cursos');
