@@ -113,12 +113,37 @@ inscripcionSchema.virtual('estaCompleta').get(function() {
   return this.progreso.porcentaje >= 100;
 });
 
+// Función helper para comparar niveles académicos
+// Retorna true si el nivel del estudiante es igual o superior al nivel requerido del curso
+function validarNivelEstudiante(nivelEstudiante, nivelCurso) {
+  const niveles = {
+    'A1': 1,
+    'A2': 2,
+    'B1': 3,
+    'B2': 4,
+    'C1': 5,
+    'C2': 6
+  };
+  
+  const nivelEstudianteNum = niveles[nivelEstudiante];
+  const nivelCursoNum = niveles[nivelCurso];
+  
+  // Si alguno de los niveles no es válido, retornar false
+  if (!nivelEstudianteNum || !nivelCursoNum) {
+    return false;
+  }
+  
+  // El estudiante puede inscribirse si su nivel es igual o superior al del curso
+  return nivelEstudianteNum >= nivelCursoNum;
+}
+
 // Middleware pre-save: validar que estudiante y curso existen
 inscripcionSchema.pre('save', async function(next) {
   // Validar estudiante
   if (this.isNew || this.isModified('estudiante')) {
     const BaseUser = mongoose.model('BaseUser');
-    const estudiante = await BaseUser.findById(this.estudiante);
+    const Estudiante = mongoose.model('Estudiante');
+    const estudiante = await Estudiante.findById(this.estudiante);
     
     if (!estudiante) {
       return next(new Error('El estudiante no existe'));
@@ -126,6 +151,22 @@ inscripcionSchema.pre('save', async function(next) {
     
     if (estudiante.role !== 'estudiante') {
       return next(new Error('El usuario no es un estudiante'));
+    }
+    
+    // Validar nivel del estudiante con el nivel del curso
+    if (this.isNew || this.isModified('curso')) {
+      const Curso = mongoose.model('Curso');
+      const curso = await Curso.findById(this.curso);
+      
+      if (curso) {
+        // Verificar que el estudiante tenga el nivel requerido
+        if (!validarNivelEstudiante(estudiante.nivel, curso.nivel)) {
+          return next(new Error(
+            `El estudiante tiene nivel ${estudiante.nivel} y no puede inscribirse a un curso de nivel ${curso.nivel}. ` +
+            `Se requiere nivel ${curso.nivel} o superior.`
+          ));
+        }
+      }
     }
   }
   
@@ -144,6 +185,21 @@ inscripcionSchema.pre('save', async function(next) {
     
     if (curso.estado === 'completado') {
       return next(new Error('No se puede inscribir a un curso completado'));
+    }
+    
+    // Validar nivel del estudiante con el nivel del curso (si no se validó antes)
+    if (!this.isModified('estudiante') && this.estudiante) {
+      const Estudiante = mongoose.model('Estudiante');
+      const estudiante = await Estudiante.findById(this.estudiante);
+      
+      if (estudiante && estudiante.nivel) {
+        if (!validarNivelEstudiante(estudiante.nivel, curso.nivel)) {
+          return next(new Error(
+            `El estudiante tiene nivel ${estudiante.nivel} y no puede inscribirse a un curso de nivel ${curso.nivel}. ` +
+            `Se requiere nivel ${curso.nivel} o superior.`
+          ));
+        }
+      }
     }
   }
   

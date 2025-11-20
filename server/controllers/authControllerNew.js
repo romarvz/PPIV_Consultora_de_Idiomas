@@ -107,6 +107,45 @@ const register = async (req, res) => {
     }
 
     
+    // Para estudiantes, mapear condicion a estadoAcademico y condicion válida
+    let condicionFinal = condicion;
+    let estadoAcademicoFinal = estadoAcademico;
+    
+    if (role === 'estudiante') {
+      // Si viene condicion pero no estadoAcademico, mapear condicion a estadoAcademico
+      if (condicion && !estadoAcademico) {
+        const condicionToEstadoMap = {
+          'inscrito': 'inscrito',
+          'activo': 'en_curso',
+          'en_curso': 'en_curso',
+          'inactivo': 'suspendido',
+          'suspendido': 'suspendido',
+          'graduado': 'graduado'
+        };
+        estadoAcademicoFinal = condicionToEstadoMap[condicion] || 'inscrito';
+      }
+      
+      // Mapear condicion a valores válidos para el enum de BaseUser
+      // condicion solo acepta: 'activo', 'inactivo', 'graduado'
+      if (condicion === 'inscrito' || condicion === 'en_curso') {
+        condicionFinal = 'activo';
+      } else if (condicion === 'suspendido') {
+        condicionFinal = 'inactivo';
+      } else if (condicion === 'graduado') {
+        condicionFinal = 'graduado';
+      } else if (!condicion || !['activo', 'inactivo', 'graduado'].includes(condicion)) {
+        condicionFinal = 'activo'; // Valor por defecto válido
+      }
+      
+      // Si no viene estadoAcademico, usar el valor por defecto
+      if (!estadoAcademicoFinal) {
+        estadoAcademicoFinal = 'inscrito';
+      }
+    } else {
+      // Para otros roles, usar condicion directamente o 'activo' por defecto
+      condicionFinal = condicion || 'activo';
+    }
+
     const baseUserData = {
       email,
       password: password || dni, // for students, default password is dni
@@ -117,7 +156,7 @@ const register = async (req, res) => {
       dni,
       mustChangePassword: false,
       isActive: true,
-      condicion: condicion || (role === 'estudiante' ? 'inscrito' : 'activo')
+      condicion: condicionFinal
     };
 
     // Create user based on role
@@ -125,22 +164,10 @@ const register = async (req, res) => {
     
     switch (role) {
       case 'estudiante':
-        // Mapear condicion a estadoAcademico si es necesario para compatibilidad
-        let estadoAcademicoFinal = estadoAcademico;
-        if (condicion && !estadoAcademico) {
-          // Mapear condicion a estadoAcademico
-          const condicionToEstadoMap = {
-            'inscrito': 'inscrito',
-            'activo': 'en_curso',
-            'inactivo': 'suspendido',
-            'graduado': 'graduado'
-          };
-          estadoAcademicoFinal = condicionToEstadoMap[condicion] || 'inscrito';
-        }
         newUser = new Estudiante({
           ...baseUserData,
           nivel,
-          estadoAcademico: estadoAcademicoFinal || 'inscrito'
+          estadoAcademico: estadoAcademicoFinal
         });
         break;
         

@@ -1,6 +1,6 @@
 // services/cursosService.js
 const mongoose = require('mongoose');
-const { Curso, Inscripcion, BaseUser, Horario, Clase } = require('../models');
+const { Curso, Inscripcion, BaseUser, Estudiante, Horario, Clase } = require('../models');
 
 const MIN_CLASS_DURATION = 30;
 const MAX_CLASS_DURATION = 180;
@@ -404,6 +404,29 @@ exports.getCursosActivos = async () => {
 /**
  * Inscribir estudiante a curso
  */
+// Función helper para validar nivel del estudiante
+function validarNivelEstudiante(nivelEstudiante, nivelCurso) {
+  const niveles = {
+    'A1': 1,
+    'A2': 2,
+    'B1': 3,
+    'B2': 4,
+    'C1': 5,
+    'C2': 6
+  };
+  
+  const nivelEstudianteNum = niveles[nivelEstudiante];
+  const nivelCursoNum = niveles[nivelCurso];
+  
+  // Si alguno de los niveles no es válido, retornar false
+  if (!nivelEstudianteNum || !nivelCursoNum) {
+    return false;
+  }
+  
+  // El estudiante puede inscribirse si su nivel es igual o superior al del curso
+  return nivelEstudianteNum >= nivelCursoNum;
+}
+
 exports.inscribirEstudiante = async (cursoId, estudianteId) => {
   const curso = await Curso.findById(cursoId);
   
@@ -416,13 +439,25 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
   }
   
   // Verify that student exists
-  const estudiante = await BaseUser.findById(estudianteId);
+  const estudiante = await Estudiante.findById(estudianteId);
   if (!estudiante) {
     throw new Error('Estudiante no encontrado');
   }
   
   if (estudiante.role !== 'estudiante') {
     throw new Error('El usuario especificado no es un estudiante');
+  }
+  
+  // Validar nivel del estudiante
+  if (!estudiante.nivel) {
+    throw new Error('El estudiante no tiene un nivel académico asignado');
+  }
+  
+  if (!validarNivelEstudiante(estudiante.nivel, curso.nivel)) {
+    throw new Error(
+      `El estudiante tiene nivel ${estudiante.nivel} y no puede inscribirse a un curso de nivel ${curso.nivel}. ` +
+      `Se requiere nivel ${curso.nivel} o superior.`
+    );
   }
   
   // Verify that student is not already enrolled

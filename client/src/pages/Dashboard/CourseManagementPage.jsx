@@ -40,7 +40,7 @@ const CourseManagementPage = () => {
 
       const [coursesResponse, teachersResponse] = await Promise.all([
         apiAdapter.cursos.getAll(queryParams), // Usamos 'cursos'
-        apiAdapter.profesores.getAll({ status: 'activo' }) // Solo profesores activos
+        apiAdapter.profesores.getAll({ status: 'activo', limit: 100 }) // Solo profesores activos, sin límite de 10
       ]);
 
       if (coursesResponse.data.success) {

@@ -1,5 +1,6 @@
 /**
- * Capitaliza la primera letra de un string y pone el resto en minúscula
+ * Capitaliza la primera letra de cada palabra en un string
+ * Maneja correctamente nombres y apellidos compuestos (ej: "San Martín", "María José")
  * @param {string} str - String a capitalizar
  * @returns {string} String capitalizado
  */
@@ -18,8 +19,15 @@ function capitalizeName(str) {
     ? trimmed.toLowerCase() 
     : trimmed;
   
-  // Capitalizar primera letra, resto en minúscula
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+  // Dividir por espacios y capitalizar cada palabra
+  return normalized
+    .split(/\s+/) // Dividir por uno o más espacios
+    .map(word => {
+      if (word.length === 0) return word;
+      // Capitalizar primera letra de cada palabra, resto en minúscula
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' '); // Unir con un solo espacio
 }
 
 /**

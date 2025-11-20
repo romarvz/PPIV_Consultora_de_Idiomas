@@ -1,3 +1,6 @@
+// Asegurar que dotenv se carga antes de leer las variables
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+
 const { v2: cloudinary } = require('cloudinary')
 
 const {
