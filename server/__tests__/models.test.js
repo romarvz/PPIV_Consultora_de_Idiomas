@@ -15,7 +15,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
+  // ⚠️ REMOVIDO: dropDatabase() era peligroso y podía borrar la BD de producción
+  // Solo cerramos la conexión sin borrar datos
   await mongoose.connection.close();
   console.log('✅ MongoDB Test desconectado');
 });
