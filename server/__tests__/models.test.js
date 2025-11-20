@@ -60,24 +60,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  try {
-    // SOLO limpiar si estamos en entorno de test y base de datos de test
-    if (isTestEnvironment() && mongoose.connection.db.databaseName.includes('test')) {
-      // Limpiar colecciones en lugar de drop database completo
-      const collections = mongoose.connection.collections;
-      for (const key in collections) {
-        await collections[key].deleteMany({});
-      }
-      console.log('✅ Datos de test limpiados');
-    } else {
-      console.warn('⚠️ No se limpiaron datos - verificaciones de seguridad fallaron');
-    }
-  } catch (error) {
-    console.error('❌ Error limpiando datos de test:', error);
-  } finally {
-    await mongoose.connection.close();
-    console.log('✅ Conexión de test cerrada');
-  }
+  // ⚠️ REMOVIDO: dropDatabase() era peligroso y podía borrar la BD de producción
+  // Solo cerramos la conexión sin borrar datos
+  await mongoose.connection.close();
+  console.log('✅ MongoDB Test desconectado');
 });
 
 afterEach(async () => {

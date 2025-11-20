@@ -164,9 +164,12 @@ async function restoreFromBackup(backupCollectionName) {
     }
 
 
-    await mongoose.connection.db.collection('users').drop();
+    // ⚠️ REMOVIDO: drop() era peligroso y podía borrar la colección de producción
+    // En su lugar, se recomienda hacer backup manual antes de restaurar
+    // await mongoose.connection.db.collection('users').drop();
     
-  
+    // Restaurar desde backup
+    // NOTA: Esta operación ahora requiere que la colección 'users' esté vacía o se elimine manualmente
     await mongoose.connection.db.collection(backupCollectionName).aggregate([
       { $out: 'users' }
     ]).toArray();
