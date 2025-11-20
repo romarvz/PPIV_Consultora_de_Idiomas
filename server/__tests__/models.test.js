@@ -8,22 +8,85 @@ const BaseUser = require('../models/BaseUser');
 
 jest.setTimeout(30000);
 
+// CONFIGURACIÓN DE SEGURIDAD PARA TESTS
+const isTestEnvironment = () => {
+  return (
+    process.env.NODE_ENV === 'test' || 
+    process.env.JEST_WORKER_ID !== undefined ||
+    process.argv.some(arg => arg.includes('jest'))
+  );
+};
+
+const getTestDbUri = () => {
+  // SOLO usar URIs de bases de datos de test
+  const testUri = process.env.MONGO_TEST_URI;
+  
+  if (!testUri) {
+    throw new Error('❌ MONGO_TEST_URI no está configurada. Los tests requieren una base de datos específica para testing.');
+  }
+  
+  // Verificar que la URI sea claramente una base de datos de test
+  if (!testUri.includes('_test') && !testUri.includes('test_')) {
+    throw new Error('❌ SEGURIDAD: La URI de test debe contener "_test" o "test_" para evitar eliminar datos importantes.');
+  }
+  
+  return testUri;
+};
+
 beforeAll(async () => {
-  const mongoUri = process.env.MONGO_TEST_URI || 'mongodb://127.0.0.1:27017/idiomas_test';
-  await mongoose.connect(mongoUri);
-  console.log('✅ MongoDB Test conectado');
+  // Verificaciones de seguridad antes de conectar
+  if (!isTestEnvironment()) {
+    throw new Error('❌ SEGURIDAD: Este archivo solo debe ejecutarse en entorno de testing');
+  }
+  
+  try {
+    const mongoUri = getTestDbUri();
+    console.log('🔒 Conectando a base de datos de test:', mongoUri.replace(/\/\/.*@/, '//***@')); // Ocultar credenciales en log
+    
+    await mongoose.connect(mongoUri);
+    console.log('✅ MongoDB Test conectado de forma segura');
+    
+    // Verificar que estamos en la base de datos correcta
+    const dbName = mongoose.connection.db.databaseName;
+    if (!dbName.includes('test')) {
+      await mongoose.connection.close();
+      throw new Error(`❌ SEGURIDAD: Base de datos "${dbName}" no parece ser de testing`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error en configuración de tests:', error.message);
+    process.exit(1);
+  }
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  console.log('✅ MongoDB Test desconectado');
+  try {
+    // SOLO limpiar si estamos en entorno de test y base de datos de test
+    if (isTestEnvironment() && mongoose.connection.db.databaseName.includes('test')) {
+      // Limpiar colecciones en lugar de drop database completo
+      const collections = mongoose.connection.collections;
+      for (const key in collections) {
+        await collections[key].deleteMany({});
+      }
+      console.log('✅ Datos de test limpiados');
+    } else {
+      console.warn('⚠️ No se limpiaron datos - verificaciones de seguridad fallaron');
+    }
+  } catch (error) {
+    console.error('❌ Error limpiando datos de test:', error);
+  } finally {
+    await mongoose.connection.close();
+    console.log('✅ Conexión de test cerrada');
+  }
 });
 
 afterEach(async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    await collections[key].deleteMany();
+  // Limpiar solo si estamos en entorno de test seguro
+  if (isTestEnvironment() && mongoose.connection.db.databaseName.includes('test')) {
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+      await collections[key].deleteMany({});
+    }
   }
 });
 
