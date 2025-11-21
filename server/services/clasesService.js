@@ -725,6 +725,12 @@ exports.getAsistenciaEstudiante = async (estudianteId, cursoId = null) => {
     estaCercaDelLimite = inasistenciasActuales >= minFaltas;
   }
   
+  // Si hay clases completadas disponibles y el estudiante no asistió a ninguna,
+  // también debe estar en riesgo
+  if (estadisticas.totalClases > 0 && estadisticas.clasesAsistidas === 0) {
+    estaCercaDelLimite = true;
+  }
+  
   // Obtener nombre del curso si se proporciona cursoId
   let cursoNombre = null;
   if (cursoId && cursoId !== 'null') {

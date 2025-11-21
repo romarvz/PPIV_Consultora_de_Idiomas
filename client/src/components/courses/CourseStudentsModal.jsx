@@ -86,7 +86,7 @@ const emptyStyles = {
   color: '#6c757d'
 };
 
-const CourseStudentsModal = ({ course, onClose }) => {
+const CourseStudentsModal = ({ course, onClose, onStudentRemoved }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -160,6 +160,10 @@ const CourseStudentsModal = ({ course, onClose }) => {
         })
       );
       setFeedback('Estudiante desinscripto correctamente.');
+      // Notificar al componente padre que se borró un estudiante
+      if (onStudentRemoved) {
+        onStudentRemoved();
+      }
     } catch (err) {
       console.error('Error al desinscribir estudiante:', err);
       const message = err?.response?.data?.error

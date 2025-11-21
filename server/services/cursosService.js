@@ -294,7 +294,9 @@ exports.updateCurso = async (cursoId, updateData) => {
 };
 
 /**
- * Eliminar curso (soft delete)
+ * Eliminar curso
+ * Si el curso NO está cancelado: lo cancela (soft delete)
+ * Si el curso YA está cancelado: lo elimina permanentemente
  */
 exports.deleteCurso = async (cursoId) => {
   const curso = await Curso.findById(cursoId);
@@ -313,11 +315,75 @@ exports.deleteCurso = async (cursoId) => {
     throw new Error('No se puede eliminar un curso con inscripciones activas');
   }
   
-  // Change status to cancelled
+  // Si el curso ya está cancelado, eliminarlo permanentemente
+  if (curso.estado === 'cancelado') {
+    // Eliminar inscripciones relacionadas (solo canceladas)
+    await Inscripcion.deleteMany({ curso: cursoId });
+    
+    // Eliminar clases relacionadas
+    await Clase.deleteMany({ curso: cursoId });
+    
+    // Eliminar el curso permanentemente
+    await Curso.findByIdAndDelete(cursoId);
+    
+    return { eliminado: true, mensaje: 'Curso eliminado permanentemente' };
+  }
+  
+  // Si no está cancelado, cancelarlo (soft delete)
   curso.estado = 'cancelado';
   await curso.save();
   
-  return curso;
+  return { eliminado: false, mensaje: 'Curso cancelado', curso };
+};
+
+/**
+ * Eliminar permanentemente cursos cancelados
+ * Elimina cursos cancelados y sus relaciones (inscripciones canceladas, clases)
+ */
+exports.eliminarCursosCancelados = async () => {
+  // Buscar todos los cursos cancelados
+  const cursosCancelados = await Curso.find({ estado: 'cancelado' });
+  
+  if (cursosCancelados.length === 0) {
+    return { eliminados: 0, mensaje: 'No hay cursos cancelados para eliminar' };
+  }
+  
+  let eliminados = 0;
+  const errores = [];
+  
+  for (const curso of cursosCancelados) {
+    try {
+      // Verificar que no tenga inscripciones activas (por seguridad)
+      const inscripcionesActivas = await Inscripcion.countDocuments({
+        curso: curso._id,
+        estado: { $in: ['pendiente', 'confirmada'] }
+      });
+      
+      if (inscripcionesActivas > 0) {
+        errores.push(`Curso ${curso.nombre} tiene ${inscripcionesActivas} inscripciones activas`);
+        continue;
+      }
+      
+      // Eliminar inscripciones relacionadas (solo canceladas)
+      await Inscripcion.deleteMany({ curso: curso._id });
+      
+      // Eliminar clases relacionadas
+      await Clase.deleteMany({ curso: curso._id });
+      
+      // Eliminar el curso
+      await Curso.findByIdAndDelete(curso._id);
+      
+      eliminados++;
+    } catch (error) {
+      errores.push(`Error eliminando curso ${curso.nombre}: ${error.message}`);
+    }
+  }
+  
+  return {
+    eliminados,
+    total: cursosCancelados.length,
+    errores: errores.length > 0 ? errores : undefined
+  };
 };
 
 /**
@@ -358,10 +424,29 @@ exports.listarCursos = async (filtros = {}, paginacion = {}) => {
       .limit(limit)
       .sort({ fechaInicio: -1 });
     
+    // Agregar conteo de estudiantes inscritos (confirmados) a cada curso
+    const cursosConEstudiantes = await Promise.all(
+      cursos.map(async (curso) => {
+        const cursoObj = curso.toObject ? curso.toObject() : curso;
+        // Contar inscripciones confirmadas para este curso
+        const estudiantesCount = await Inscripcion.countDocuments({
+          curso: curso._id,
+          estado: 'confirmada'
+        });
+        cursoObj.estudiantesCount = estudiantesCount;
+        // También populamos estudiantes para compatibilidad con código existente
+        // Si el curso tiene estudiantes populados, los mantenemos; si no, usamos un array vacío
+        cursoObj.estudiantes = Array.isArray(curso.estudiantes) && curso.estudiantes.length > 0 
+          ? curso.estudiantes 
+          : [];
+        return cursoObj;
+      })
+    );
+    
     const total = await Curso.countDocuments(query);
     
     return {
-      cursos,
+      cursos: cursosConEstudiantes,
       pagination: {
         page,
         limit,
@@ -448,6 +533,11 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
     throw new Error('El usuario especificado no es un estudiante');
   }
   
+  // Validar estado académico del estudiante
+  if (estudiante.estadoAcademico === 'suspendido') {
+    throw new Error('El estudiante está suspendido y no puede inscribirse a cursos. Debe cambiar su estado académico a activo primero.');
+  }
+  
   // Validar nivel del estudiante
   if (!estudiante.nivel) {
     throw new Error('El estudiante no tiene un nivel académico asignado');
@@ -460,20 +550,42 @@ exports.inscribirEstudiante = async (cursoId, estudianteId) => {
     );
   }
   
-  // Verify that student is not already enrolled
+  // Verify that student is not already enrolled (solo activas)
   const inscripcionExistente = await Inscripcion.verificarInscripcion(estudianteId, cursoId);
   if (inscripcionExistente) {
     throw new Error('El estudiante ya está inscrito en este curso');
   }
-
+  
+  // Verificar si existe una inscripción cancelada y eliminarla para permitir una nueva
+  const inscripcionCancelada = await Inscripcion.findOne({
+    estudiante: estudianteId,
+    curso: cursoId,
+    estado: 'cancelada'
+  });
+  
+  if (inscripcionCancelada) {
+    // Eliminar la inscripción cancelada para permitir crear una nueva
+    await Inscripcion.findByIdAndDelete(inscripcionCancelada._id);
+  }
+  
   const limiteVacantes = Number(curso.vacantesMaximas);
   if (Number.isFinite(limiteVacantes) && limiteVacantes > 0) {
-    const inscripcionesActivas = await Inscripcion.countDocuments({
+    // Contar solo inscripciones confirmadas (consistente con listarCursos que solo cuenta 'confirmada')
+    // Las inscripciones 'pendiente' no ocupan vacante hasta que se confirmen
+    const inscripcionesConfirmadas = await Inscripcion.countDocuments({
       curso: cursoId,
-      estado: { $in: ['pendiente', 'confirmada'] }
+      estado: 'confirmada'
     });
-    if (inscripcionesActivas >= limiteVacantes) {
-      throw new Error('No hay vacantes disponibles en este curso');
+    
+    // Debug logging
+    console.log(`[INSCRIPCION] Curso: ${curso.nombre} (${cursoId})`);
+    console.log(`[INSCRIPCION] Límite: ${limiteVacantes}, Confirmadas: ${inscripcionesConfirmadas}, Disponibles: ${limiteVacantes - inscripcionesConfirmadas}`);
+    
+    // Verificar si hay espacio disponible
+    if (inscripcionesConfirmadas >= limiteVacantes) {
+      const errorMsg = `No hay vacantes disponibles en este curso. Hay ${inscripcionesConfirmadas} estudiantes inscritos de ${limiteVacantes} vacantes disponibles.`;
+      console.log(`[INSCRIPCION] ERROR: ${errorMsg}`);
+      throw new Error(errorMsg);
     }
   }
   
@@ -554,6 +666,12 @@ exports.getEstudiantesCurso = async (cursoId) => {
         // En riesgo: tiene al menos 1 falta y está a 1–2 faltas del límite,
         // en el límite o por encima del límite.
         estaCercaDelLimite = inasistenciasActuales >= minFaltas;
+      }
+      
+      // Si hay clases completadas disponibles y el estudiante no asistió a ninguna,
+      // también debe estar en riesgo
+      if (estadisticas.totalClases > 0 && estadisticas.clasesAsistidas === 0) {
+        estaCercaDelLimite = true;
       }
 
       return {

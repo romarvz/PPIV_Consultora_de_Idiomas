@@ -149,12 +149,34 @@ const CourseManagementPage = () => {
   };
 
   const handleDelete = async (courseId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este curso?')) {
-      try {
-        // --- CAMBIO AQUÍ: Usamos la ruta en español ---
-        await apiAdapter.cursos.delete(courseId);
+    const course = courses.find(c => c._id === courseId);
+    const isCancelado = course?.estado === 'cancelado';
+    
+    const mensaje = isCancelado
+      ? '¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE este curso cancelado? Esta acción no se puede deshacer.'
+      : '¿Estás seguro de que quieres cancelar este curso? Podrás eliminarlo permanentemente después.';
+    
+    // Mostrar confirmación siempre
+    const confirmar = window.confirm(mensaje);
+    if (!confirmar) {
+      return; // Usuario canceló la acción
+    }
+    
+    try {
+      await apiAdapter.cursos.delete(courseId);
+      
+      if (isCancelado) {
+        // Si estaba cancelado, se eliminó permanentemente - remover de la lista
         setCourses(prevCourses => prevCourses.filter(c => c._id !== courseId));
-      } catch (error) { alert('Error al eliminar el curso.'); }
+        alert('Curso eliminado permanentemente.');
+      } else {
+        // Si no estaba cancelado, se canceló - refrescar datos para actualizar el estado
+        await fetchData();
+        alert('Curso cancelado exitosamente. Puedes eliminarlo permanentemente haciendo clic en eliminar nuevamente.');
+      }
+    } catch (error) {
+      const errorMsg = error?.response?.data?.error || error?.message || 'Error al eliminar el curso.';
+      alert(errorMsg);
     }
   };
 
@@ -316,9 +338,10 @@ const CourseManagementPage = () => {
             </thead>
             <tbody>
               {filteredCourses.map((course) => {
-                const inscritos = Array.isArray(course.estudiantes)
-                  ? course.estudiantes.length
-                  : (course.estudiantesCount || 0);
+                // Priorizar estudiantesCount si está disponible (más preciso), sino usar el array de estudiantes
+                const inscritos = course.estudiantesCount !== undefined 
+                  ? course.estudiantesCount 
+                  : (Array.isArray(course.estudiantes) ? course.estudiantes.length : 0);
                 const capacidad = course.vacantesMaximas ?? 30;
                 const vacantesDisponibles = capacidad ? Math.max(capacidad - inscritos, 0) : null;
 
@@ -501,6 +524,10 @@ const CourseManagementPage = () => {
         <CourseStudentsModal
           course={studentsModalCourse}
           onClose={handleCloseStudents}
+          onStudentRemoved={() => {
+            // Refrescar los datos cuando se borra un estudiante
+            fetchData();
+          }}
         />
       )}
       </div>

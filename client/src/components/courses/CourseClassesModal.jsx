@@ -131,8 +131,31 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
       setLoading(true);
       const response = await apiAdapter.classes.getAll({ curso: course._id });
       const lista = response?.data?.data || [];
+      
+      // Filtrar clases canceladas y clases después de fechaFin del curso
+      const fechaFinCurso = course?.fechaFin ? new Date(course.fechaFin) : null;
+      const filteredClasses = lista.filter(clase => {
+        // Excluir clases canceladas
+        if (clase.estado === 'cancelada') {
+          return false;
+        }
+        
+        // Excluir clases después de fechaFin del curso (si existe)
+        if (fechaFinCurso && clase.fechaHora) {
+          const fechaClase = new Date(clase.fechaHora);
+          // Agregar 1 día de margen para evitar problemas de zona horaria
+          const fechaFinConMargen = new Date(fechaFinCurso);
+          fechaFinConMargen.setDate(fechaFinConMargen.getDate() + 1);
+          if (fechaClase > fechaFinConMargen) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
       // Sort by date order regardless of status
-      const sortedClasses = lista.sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+      const sortedClasses = filteredClasses.sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
       setClasses(sortedClasses);
     } catch (err) {
       console.error('Error cargando clases:', err);

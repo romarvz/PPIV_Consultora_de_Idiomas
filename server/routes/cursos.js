@@ -181,6 +181,13 @@ router.delete(
   cursosController.eliminarCurso
 );
 
+// Delete all cancelled courses permanently
+router.delete(
+  '/cancelados',
+  requireRole(['admin']),
+  cursosController.eliminarCursosCancelados
+);
+
 // Enroll student to course (admin or course teacher)
 router.post(
   '/:id/inscribir',

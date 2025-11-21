@@ -92,13 +92,16 @@ const CourseEnrollmentModal = ({ course, onClose, onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
 
   const capacidad = Number(course?.vacantesMaximas ?? 30);
-  const inscritos = Array.isArray(course?.estudiantes)
-    ? course.estudiantes.length
-    : (course?.estudiantesCount || 0);
+  // Priorizar estudiantesCount si está disponible (más preciso), sino usar el array de estudiantes
+  const inscritos = course?.estudiantesCount !== undefined 
+    ? course.estudiantesCount 
+    : (Array.isArray(course?.estudiantes) ? course.estudiantes.length : 0);
   const vacantesRestantes = Number.isFinite(capacidad)
     ? Math.max(capacidad - inscritos, 0)
     : null;
-  const cursoLleno = vacantesRestantes !== null && vacantesRestantes <= 0;
+  // NO bloquear la inscripción en el frontend - dejar que el backend valide
+  // El backend tiene la información más actualizada
+  const cursoLleno = false; // Siempre permitir intentar inscribir, el backend validará
 
   useEffect(() => {
     setSelectedStudent('');
@@ -316,11 +319,6 @@ const CourseEnrollmentModal = ({ course, onClose, onSuccess }) => {
               <div style={{ padding: '0.75rem', background: '#f0f6fb', borderRadius: '8px', color: '#0F5C8C', fontWeight: 600 }}>
                 {course?.nombre || course?.name}
               </div>
-              {Number.isFinite(capacidad) && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: cursoLleno ? '#c0392b' : '#0F5C8C' }}>
-                  Vacantes: {Math.max(inscritos, 0)} / {capacidad} {vacantesRestantes !== null && `– ${vacantesRestantes} disponibles`}
-                </div>
-              )}
             </div>
 
             <div style={{ marginBottom: '1rem' }}>

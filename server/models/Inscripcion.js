@@ -1,6 +1,51 @@
 // models/Inscripcion.js
 const mongoose = require('mongoose');
 
+// Helper function para obtener modelos de forma segura
+// Maneja especialmente el caso de discriminadores como Estudiante
+function getModel(modelName) {
+  // Primero intentar obtener desde mongoose.models (modelos ya cargados)
+  if (mongoose.models[modelName]) {
+    return mongoose.models[modelName];
+  }
+  
+  try {
+    return mongoose.model(modelName);
+  } catch (error) {
+    // Si el modelo no está registrado, intentar cargarlo
+    if (error.name === 'MissingSchemaError' || error.message.includes('hasn\'t been registered')) {
+      // Para Estudiante, usar BaseUser con filtro ya que es un discriminador
+      if (modelName === 'Estudiante') {
+        // Estudiante es un discriminador, usar BaseUser directamente
+        // pero necesitamos asegurarnos de que BaseUser esté cargado
+        if (!mongoose.models.BaseUser) {
+          require('./BaseUser');
+        }
+        // Cargar Estudiante para registrar el discriminador
+        if (!mongoose.models.Estudiante) {
+          require('./Estudiante');
+        }
+        return mongoose.models.Estudiante || mongoose.model('Estudiante');
+      }
+      
+      // Para otros modelos, intentar cargarlos
+      try {
+        if (modelName === 'Curso') {
+          require('./Curso');
+        } else if (modelName === 'Clase') {
+          require('./Clase');
+        } else if (modelName === 'BaseUser') {
+          require('./BaseUser');
+        }
+        return mongoose.model(modelName);
+      } catch (directImportError) {
+        throw new Error(`Modelo ${modelName} no encontrado. Error: ${directImportError.message}`);
+      }
+    }
+    throw error;
+  }
+}
+
 const inscripcionSchema = new mongoose.Schema({
   estudiante: {
     type: mongoose.Schema.Types.ObjectId,
@@ -98,7 +143,15 @@ const inscripcionSchema = new mongoose.Schema({
 });
 
 // Índices para optimizar búsquedas
-inscripcionSchema.index({ estudiante: 1, curso: 1 }, { unique: true }); // Un estudiante solo puede inscribirse una vez al mismo curso
+// Índice único parcial: solo aplica a inscripciones activas (no canceladas)
+// Esto permite que un estudiante pueda inscribirse nuevamente después de cancelar
+inscripcionSchema.index(
+  { estudiante: 1, curso: 1 }, 
+  { 
+    unique: true,
+    partialFilterExpression: { estado: { $in: ['pendiente', 'confirmada'] } }
+  }
+);
 inscripcionSchema.index({ curso: 1, estado: 1 });
 inscripcionSchema.index({ estudiante: 1, estado: 1 });
 inscripcionSchema.index({ fechaInscripcion: -1 });
@@ -141,22 +194,26 @@ function validarNivelEstudiante(nivelEstudiante, nivelCurso) {
 inscripcionSchema.pre('save', async function(next) {
   // Validar estudiante
   if (this.isNew || this.isModified('estudiante')) {
-    const BaseUser = mongoose.model('BaseUser');
-    const Estudiante = mongoose.model('Estudiante');
-    const estudiante = await Estudiante.findById(this.estudiante);
+    const BaseUserModel = mongoose.models.BaseUser || mongoose.model('BaseUser');
+    // Buscar el estudiante usando BaseUser con filtro por role
+    const estudiante = await BaseUserModel.findOne({ 
+      _id: this.estudiante, 
+      role: 'estudiante' 
+    });
     
     if (!estudiante) {
-      return next(new Error('El estudiante no existe'));
+      return next(new Error('El estudiante no existe o no es un estudiante'));
     }
     
-    if (estudiante.role !== 'estudiante') {
-      return next(new Error('El usuario no es un estudiante'));
+    // Validar estado académico del estudiante
+    if (estudiante.estadoAcademico === 'suspendido') {
+      return next(new Error('El estudiante está suspendido y no puede inscribirse a cursos. Debe cambiar su estado académico a activo primero.'));
     }
     
     // Validar nivel del estudiante con el nivel del curso
     if (this.isNew || this.isModified('curso')) {
-      const Curso = mongoose.model('Curso');
-      const curso = await Curso.findById(this.curso);
+      const CursoModel = mongoose.models.Curso || mongoose.model('Curso');
+      const curso = await CursoModel.findById(this.curso);
       
       if (curso) {
         // Verificar que el estudiante tenga el nivel requerido
@@ -172,8 +229,8 @@ inscripcionSchema.pre('save', async function(next) {
   
   // Validar curso
   if (this.isNew || this.isModified('curso')) {
-    const Curso = mongoose.model('Curso');
-    const curso = await Curso.findById(this.curso);
+    const CursoModel = mongoose.models.Curso || mongoose.model('Curso');
+    const curso = await CursoModel.findById(this.curso);
     
     if (!curso) {
       return next(new Error('El curso no existe'));
@@ -189,11 +246,20 @@ inscripcionSchema.pre('save', async function(next) {
     
     // Validar nivel del estudiante con el nivel del curso (si no se validó antes)
     if (!this.isModified('estudiante') && this.estudiante) {
-      const Estudiante = mongoose.model('Estudiante');
-      const estudiante = await Estudiante.findById(this.estudiante);
+      const BaseUserModel = mongoose.models.BaseUser || mongoose.model('BaseUser');
+      const estudiante = await BaseUserModel.findOne({ 
+        _id: this.estudiante, 
+        role: 'estudiante' 
+      });
       
-      if (estudiante && estudiante.nivel) {
-        if (!validarNivelEstudiante(estudiante.nivel, curso.nivel)) {
+      if (estudiante) {
+        // Validar estado académico
+        if (estudiante.estadoAcademico === 'suspendido') {
+          return next(new Error('El estudiante está suspendido y no puede inscribirse a cursos. Debe cambiar su estado académico a activo primero.'));
+        }
+        
+        // Validar nivel
+        if (estudiante.nivel && !validarNivelEstudiante(estudiante.nivel, curso.nivel)) {
           return next(new Error(
             `El estudiante tiene nivel ${estudiante.nivel} y no puede inscribirse a un curso de nivel ${curso.nivel}. ` +
             `Se requiere nivel ${curso.nivel} o superior.`
@@ -209,8 +275,8 @@ inscripcionSchema.pre('save', async function(next) {
 // Middleware post-save: agregar estudiante al array del curso y a las clases existentes
 inscripcionSchema.post('save', async function(doc) {
   if (doc.estado === 'confirmada') {
-    const Curso = mongoose.model('Curso');
-    const Clase = mongoose.model('Clase');
+    const Curso = mongoose.models.Curso || mongoose.model('Curso');
+    const Clase = mongoose.models.Clase || mongoose.model('Clase');
     const curso = await Curso.findById(doc.curso);
     
     if (curso && !curso.estaInscrito(doc.estudiante)) {
@@ -235,7 +301,7 @@ inscripcionSchema.post('save', async function(doc) {
 // Middleware post-save: remover estudiante del array del curso si se cancela
 inscripcionSchema.post('save', async function(doc) {
   if (doc.estado === 'cancelada' && doc.isModified('estado')) {
-    const Curso = mongoose.model('Curso');
+    const Curso = mongoose.models.Curso || mongoose.model('Curso');
     const curso = await Curso.findById(doc.curso);
     
     if (curso && curso.estaInscrito(doc.estudiante)) {

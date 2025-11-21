@@ -204,6 +204,27 @@ exports.eliminarCurso = async (req, res) => {
 };
 
 /**
+ * Eliminar permanentemente todos los cursos cancelados
+ * DELETE /api/cursos/cancelados
+ */
+exports.eliminarCursosCancelados = async (req, res) => {
+  try {
+    const resultado = await cursosService.eliminarCursosCancelados();
+    
+    return res.status(200).json({
+      success: true,
+      message: `Se eliminaron ${resultado.eliminados} cursos cancelados`,
+      data: resultado
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
  * Cambiar estado del curso
  * PATCH /api/cursos/:id/estado
  */

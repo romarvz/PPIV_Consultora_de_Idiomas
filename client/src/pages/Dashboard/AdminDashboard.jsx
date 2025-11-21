@@ -97,107 +97,115 @@ const AdminDashboard = () => {
     try {
       setLoading(true)
       
-      // Fast initial load with minimal data
-      const [studentsResponse, teachersResponse] = await Promise.all([
-        api.get('/students?limit=10'), // Reduced limit for faster response
-        api.get('/teachers?limit=10')  // Reduced limit for faster response
+      // Use dashboard KPIs endpoint to get accurate totals
+      const [kpisResponse, studentsResponse, teachersResponse] = await Promise.allSettled([
+        api.get('/dashboard/kpis'), // Get accurate totals from backend
+        api.get('/students?limit=100'), // Get students for filtering (new students, active students)
+        api.get('/teachers?limit=100')  // Get teachers for filtering (active teachers)
       ])
       
-      if (studentsResponse.data.success && teachersResponse.data.success) {
-        const students = studentsResponse.data.data?.students || []
-        const teachers = teachersResponse.data.data?.teachers || teachersResponse.data.data?.professors || []
-        
-        // Quick calculations with available data
-        const thirtyDaysAgo = new Date()
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-        const newStudents = students.filter(s => new Date(s.createdAt) > thirtyDaysAgo).length
-        const activeStudents = students.filter(s => s.estadoAcademico === 'en_curso' || s.estadoAcademico === 'inscrito').length
-        const activeTeachers = teachers.filter(t => t.isActive !== false).length
-        
-        // Set initial stats quickly
-        const initialStats = {
-          totalStudents: students.length,
-          newStudents,
-          activeStudents,
-          totalTeachers: teachers.length,
-          activeTeachers,
-          uniqueSpecialties: 0,
-          teacherSpecialties: [],
-          specialtyData: [],
-          scheduledClasses: 0,
-          upcomingClasses: 0,
-          pendingPayments: { count: 0, amount: 0 },
-          monthlyRevenue: 0,
-          revenueData: [],
-          completedClasses: 0,
-          cancelledClasses: 0
-        }
-        
-        setStats(initialStats)
-        setLoading(false)
-        
-        // Load additional data in background
-        setTimeout(async () => {
-          try {
-            const [teacherStatsResponse, financialResponse] = await Promise.allSettled([
-              api.get('/teachers/stats'),
-              api.get('/reportes-financieros/dashboard/financiero')
-            ])
-            
-            let updatedStats = { ...initialStats }
-            
-            if (teacherStatsResponse.status === 'fulfilled' && teacherStatsResponse.value.data.success) {
-              const teacherStats = teacherStatsResponse.value.data.data
-              const specialtyStats = teacherStats?.bySpecialty || []
-              updatedStats.uniqueSpecialties = specialtyStats.length
-              updatedStats.specialtyData = specialtyStats.slice(0, 5).map(spec => ({
-                name: spec._id || spec.name,
-                count: spec.count
-              }))
-            }
-            
-            if (financialResponse.status === 'fulfilled' && financialResponse.value.data.success) {
-              const totalIncome = financialResponse.value.data.data.totalIncome || 0
-              updatedStats.monthlyRevenue = totalIncome
-              
-              const currentDate = new Date()
-              updatedStats.revenueData = Array.from({ length: 6 }, (_, i) => {
-                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - (5 - i), 1)
-                return {
-                  month: date.toISOString(),
-                  amount: i === 5 ? totalIncome : Math.floor(totalIncome * (0.7 + Math.random() * 0.6))
-                }
-              })
-            }
-            
-            setStats(updatedStats)
-          } catch (error) {
-            console.error('Background data loading error:', error)
-          }
-        }, 100)
-        
-      } else {
-        setStats({
-          totalStudents: 0,
-          newStudents: 0,
-          activeStudents: 0,
-          totalTeachers: 0,
-          activeTeachers: 0,
-          uniqueSpecialties: 0,
-          teacherSpecialties: [],
-          specialtyData: [],
-          scheduledClasses: 0,
-          upcomingClasses: 0,
-          pendingPayments: { count: 0, amount: 0 },
-          monthlyRevenue: 0,
-          revenueData: [],
-          completedClasses: 0,
-          cancelledClasses: 0
-        })
-        setLoading(false)
+      // Extract KPIs data (accurate totals)
+      let kpisData = {}
+      if (kpisResponse.status === 'fulfilled' && kpisResponse.value?.data?.success) {
+        kpisData = kpisResponse.value.data.data || {}
       }
+      
+      // Extract students and teachers for calculations
+      const students = studentsResponse.status === 'fulfilled' && studentsResponse.value?.data?.success
+        ? (studentsResponse.value.data.data?.students || [])
+        : []
+      const teachers = teachersResponse.status === 'fulfilled' && teachersResponse.value?.data?.success
+        ? (teachersResponse.value.data.data?.teachers || teachersResponse.value.data.data?.professors || [])
+        : []
+      
+      // Quick calculations with available data
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const newStudents = students.filter(s => new Date(s.createdAt) > thirtyDaysAgo).length
+      const activeStudents = students.filter(s => s.estadoAcademico === 'en_curso' || s.estadoAcademico === 'inscrito').length
+      const activeTeachers = teachers.filter(t => t.isActive !== false).length
+      
+      // Set initial stats with accurate totals from KPIs
+      const initialStats = {
+        totalStudents: kpisData.estudiantesActivos || students.length, // Use KPIs total, fallback to array length
+        newStudents,
+        activeStudents,
+        totalTeachers: kpisData.profesoresActivos || teachers.length, // Use KPIs total, fallback to array length
+        activeTeachers,
+        uniqueSpecialties: 0,
+        teacherSpecialties: [],
+        specialtyData: [],
+        scheduledClasses: 0,
+        upcomingClasses: 0,
+        pendingPayments: { count: 0, amount: 0 },
+        monthlyRevenue: kpisData.ingresosMes || 0,
+        revenueData: [],
+        completedClasses: 0,
+        cancelledClasses: 0
+      }
+      
+      setStats(initialStats)
+      setLoading(false)
+      
+      // Load additional data in background
+      setTimeout(async () => {
+        try {
+          const [teacherStatsResponse, financialResponse] = await Promise.allSettled([
+            api.get('/teachers/stats'),
+            api.get('/reportes-financieros/dashboard/financiero')
+          ])
+          
+          let updatedStats = { ...initialStats }
+          
+          if (teacherStatsResponse.status === 'fulfilled' && teacherStatsResponse.value.data.success) {
+            const teacherStats = teacherStatsResponse.value.data.data
+            const specialtyStats = teacherStats?.bySpecialty || []
+            updatedStats.uniqueSpecialties = specialtyStats.length
+            updatedStats.specialtyData = specialtyStats.slice(0, 5).map(spec => ({
+              name: spec._id || spec.name,
+              count: spec.count
+            }))
+          }
+          
+          if (financialResponse.status === 'fulfilled' && financialResponse.value.data.success) {
+            const totalIncome = financialResponse.value.data.data.totalIncome || 0
+            updatedStats.monthlyRevenue = totalIncome
+            
+            const currentDate = new Date()
+            updatedStats.revenueData = Array.from({ length: 6 }, (_, i) => {
+              const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - (5 - i), 1)
+              return {
+                month: date.toISOString(),
+                amount: i === 5 ? totalIncome : Math.floor(totalIncome * (0.7 + Math.random() * 0.6))
+              }
+            })
+          }
+          
+          setStats(updatedStats)
+        } catch (error) {
+          console.error('Background data loading error:', error)
+        }
+      }, 100)
+      
     } catch (error) {
-      console.error('Error fetching stats:', error)
+      console.error('Error fetching dashboard stats:', error)
+      setStats({
+        totalStudents: 0,
+        newStudents: 0,
+        activeStudents: 0,
+        totalTeachers: 0,
+        activeTeachers: 0,
+        uniqueSpecialties: 0,
+        teacherSpecialties: [],
+        specialtyData: [],
+        scheduledClasses: 0,
+        upcomingClasses: 0,
+        pendingPayments: { count: 0, amount: 0 },
+        monthlyRevenue: 0,
+        revenueData: [],
+        completedClasses: 0,
+        cancelledClasses: 0
+      })
       setLoading(false)
     }
   }
