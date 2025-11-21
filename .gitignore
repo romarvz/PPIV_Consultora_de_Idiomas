@@ -26,4 +26,17 @@ PLAN_DE_ACCION_PROYECTO.md
 PLANTILLA_DOCUMENTACION_PRUEBAS.md
 no.md 
 
+# Scripts de prueba y diagnóstico (no subir al repositorio)
+server/scripts/check-*.js
+server/scripts/test-*.js
+server/scripts/diagnostico-*.js
+server/scripts/fix-*.js
+server/scripts/limpiar-*.js
+server/scripts/restore-*.js
+server/scripts/seedHorariosCompletos.js
+server/scripts/eliminar-cursos-cancelados.js
+
+# Archivos temporales accidentales
+tatus
+
 
