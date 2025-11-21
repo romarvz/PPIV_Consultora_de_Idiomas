@@ -424,28 +424,53 @@ claseSchema.statics.findProximas = function(usuarioId, limite = 10) {
 
 // Método estático para obtener estadísticas de asistencia de un estudiante
 claseSchema.statics.getEstadisticasAsistencia = async function(estudianteId, cursoId = null) {
-  const query = {
-    'asistencia.estudiante': estudianteId,
+  const estudianteIdObj = typeof estudianteId === 'string' 
+    ? new mongoose.Types.ObjectId(estudianteId) 
+    : estudianteId;
+  
+  // Obtener TODAS las clases completadas del curso (o todas si no se especifica curso)
+  const queryCompletadas = {
     estado: 'completada'
   };
   
   if (cursoId) {
-    query.curso = cursoId;
+    queryCompletadas.curso = cursoId;
   }
   
-  const clases = await this.find(query);
+  // Buscar clases donde el estudiante está en el array de estudiantes
+  // O tiene registro de asistencia
+  const queryConEstudiante = {
+    ...queryCompletadas,
+    $or: [
+      { estudiantes: estudianteIdObj },
+      { 'asistencia.estudiante': estudianteIdObj }
+    ]
+  };
   
-  const totalClases = clases.length;
-  const clasesAsistidas = clases.filter(clase => 
-    clase.asistencia.some(a => 
-      a.estudiante.toString() === estudianteId.toString() && a.presente
-    )
-  ).length;
+  const clasesDelEstudiante = await this.find(queryConEstudiante);
+  
+  const totalClases = clasesDelEstudiante.length;
+  
+  // Contar las clases donde el estudiante asistió (presente = true)
+  const clasesAsistidas = clasesDelEstudiante.filter(clase => {
+    if (!clase.asistencia || clase.asistencia.length === 0) {
+      return false; // Sin registro de asistencia = no asistió
+    }
+    return clase.asistencia.some(a => {
+      const aEstudianteId = a.estudiante._id 
+        ? a.estudiante._id.toString() 
+        : a.estudiante.toString();
+      const estudianteIdStr = estudianteIdObj.toString();
+      return aEstudianteId === estudianteIdStr && a.presente === true;
+    });
+  }).length;
+  
+  const clasesFaltadas = totalClases - clasesAsistidas;
   
   return {
     totalClases,
     clasesAsistidas,
-    clasesFaltadas: totalClases - clasesAsistidas,
+    clasesFaltadas,
     porcentajeAsistencia: totalClases > 0 ? (clasesAsistidas / totalClases) * 100 : 0
   };
 };

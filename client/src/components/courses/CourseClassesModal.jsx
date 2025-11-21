@@ -132,9 +132,21 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
       const response = await apiAdapter.classes.getAll({ curso: course._id });
       const lista = response?.data?.data || [];
       
+      // Deduplicar por ID primero
+      const byId = new Map();
+      lista.forEach((clase) => {
+        if (!clase || !clase._id) {
+          return;
+        }
+        const id = clase._id.toString();
+        if (!byId.has(id)) {
+          byId.set(id, clase);
+        }
+      });
+      
       // Filtrar clases canceladas y clases después de fechaFin del curso
       const fechaFinCurso = course?.fechaFin ? new Date(course.fechaFin) : null;
-      const filteredClasses = lista.filter(clase => {
+      const filteredClasses = Array.from(byId.values()).filter(clase => {
         // Excluir clases canceladas
         if (clase.estado === 'cancelada') {
           return false;
@@ -154,8 +166,33 @@ const CourseClassesModal = ({ course, onClose, isReadOnly = false }) => {
         return true;
       });
       
+      // Deduplicar por curso + fechaHora (mantener la clase con más información)
+      const dedupeMap = new Map();
+      const score = (clase) => {
+        const updated = clase.updatedAt ? new Date(clase.updatedAt).getTime() : 0;
+        const lengthSum =
+          (clase.descripcion ? clase.descripcion.length : 0) +
+          (clase.contenido ? clase.contenido.length : 0) +
+          (clase.tareas ? clase.tareas.length : 0) +
+          (clase.notasProfesor ? clase.notasProfesor.length : 0);
+        return updated + lengthSum;
+      };
+
+      filteredClasses.forEach((clase) => {
+        if (!clase || !clase.fechaHora) {
+          return;
+        }
+        const cursoId = typeof clase.curso === 'string' ? clase.curso : clase.curso?._id || 'sin-curso';
+        const fechaHora = new Date(clase.fechaHora).toISOString();
+        const key = `${cursoId}-${fechaHora}`;
+        const current = dedupeMap.get(key);
+        if (!current || score(clase) >= score(current)) {
+          dedupeMap.set(key, clase);
+        }
+      });
+      
       // Sort by date order regardless of status
-      const sortedClasses = filteredClasses.sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+      const sortedClasses = Array.from(dedupeMap.values()).sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
       setClasses(sortedClasses);
     } catch (err) {
       console.error('Error cargando clases:', err);

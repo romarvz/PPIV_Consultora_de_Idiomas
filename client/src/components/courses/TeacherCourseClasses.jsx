@@ -73,6 +73,19 @@ const cardStyles = {
 };
 
 const dedupeClasses = (items = []) => {
+  // Primero, deduplicar por ID (si hay clases con el mismo ID, mantener solo una)
+  const byId = new Map();
+  items.forEach((clase) => {
+    if (!clase || !clase._id) {
+      return;
+    }
+    const id = clase._id.toString();
+    if (!byId.has(id)) {
+      byId.set(id, clase);
+    }
+  });
+
+  // Luego, deduplicar por curso + fechaHora (mantener la clase con más información)
   const map = new Map();
 
   const score = (clase) => {
@@ -85,12 +98,13 @@ const dedupeClasses = (items = []) => {
     return updated + lengthSum;
   };
 
-  items.forEach((clase) => {
+  Array.from(byId.values()).forEach((clase) => {
     if (!clase || !clase.fechaHora) {
       return;
     }
     const cursoId = typeof clase.curso === 'string' ? clase.curso : clase.curso?._id || 'sin-curso';
-    const key = `${cursoId}-${new Date(clase.fechaHora).toISOString()}`;
+    const fechaHora = new Date(clase.fechaHora).toISOString();
+    const key = `${cursoId}-${fechaHora}`;
     const current = map.get(key);
     if (!current || score(clase) >= score(current)) {
       map.set(key, clase);
