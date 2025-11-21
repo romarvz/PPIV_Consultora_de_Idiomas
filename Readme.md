@@ -903,7 +903,7 @@ taskkill /PID <process_id> /F
 
 ## Nuevas Funcionalidades Implementadas
 
-### **Módulo de Reportes (Verónica)**
+### **Módulo de Reportes**
 - **Perfiles de Estudiantes**: Sistema completo de perfiles con preferencias, certificados y estadísticas
 - **Reportes Académicos**: Generación automática de reportes con cálculos de asistencia y calificaciones
 - **Reportes Financieros**: Análisis financiero con tendencias, morosidad y proyecciones
@@ -931,7 +931,7 @@ taskkill /PID <process_id> /F
 - **Frontend:** React.js + Vite
 - **Backend:** Node.js
 - **Base de datos:** MongoDB
-- **Servicios:** Cloudinary (gestión de imágenes)
+- **Integración:** Firebase  preparado para futuras funcionalidades como notificaciones push
 
 ## Instalación
 
